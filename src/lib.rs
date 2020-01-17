@@ -1,25 +1,33 @@
-use serde::{Deserialize, Serialize};
-use std::net::TcpListener;
-use std::thread::spawn;
-use tungstenite::server::accept;
+use tungstenite::{client::AutoStream, connect, protocol::WebSocket, Message};
+use url::Url;
 
+mod events;
+mod requests;
 mod typedefs;
+use requests::Request;
 
-// A WebSocket echo server
-fn asd() {
-    let server = TcpListener::bind("127.0.0.1:9001").unwrap();
-    for stream in server.incoming() {
-        spawn(move || {
-            let mut websocket = accept(stream.unwrap()).unwrap();
-            loop {
-                let msg = websocket.read_message().unwrap();
+pub struct Observe {
+    socket: Option<WebSocket<AutoStream>>,
+}
 
-                // We do not want to send back ping/pong messages.
-                if msg.is_binary() || msg.is_text() {
-                    websocket.write_message(msg).unwrap();
-                }
-            }
-        });
+impl Observe {
+    pub fn new() -> Self {
+        Observe { socket: None }
+    }
+
+    pub fn connect(&mut self) {
+        let (socket, response) =
+            connect(Url::parse("ws://localhost:4444").unwrap()).expect("Can't connect");
+        self.socket = Some(socket);
+    }
+
+    pub fn get_version(&mut self) {
+        let socket = self.socket.as_mut().unwrap();
+        let req = Request::new();
+        let json = serde_json::to_string(&req).unwrap();
+        socket.write_message(Message::Text(json)).unwrap();
+        let msg = socket.read_message().expect("Error reading message");
+        println!("Received: {}", msg);
     }
 }
 
@@ -29,8 +37,9 @@ mod test {
 
     #[test]
     fn test() {
-        let t = typedefs::SceneItem::new();
-        println!("{}", serde_json::to_string(&t).unwrap());
+        let mut o = Observe::new();
+        o.connect();
+        o.get_version();
         unimplemented!();
     }
 }
