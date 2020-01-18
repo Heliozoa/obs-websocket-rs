@@ -1,11 +1,13 @@
 [package]
-name = "obs"
+name = "obs-websocket"
 version = "0.1.0"
 authors = ["Heliozoa <dm89132@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-tungstenite = "0.9.2"
+tungstenite = "0.9"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 url = "2.1"
+sha2 = "0.8.1"
+base64 = "0.11"

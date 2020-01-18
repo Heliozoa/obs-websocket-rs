@@ -1,6 +1,4 @@
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
-use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -82,7 +80,7 @@ pub struct SceneItemTransform {
     group_children: Option<Vec<SceneItemTransform>>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "kebab-case")]
 pub struct ObsStats {
     fps: f64,
@@ -96,7 +94,7 @@ pub struct ObsStats {
     free_disk_space: f64,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Flags {
     raw_value: i32,
@@ -107,10 +105,10 @@ pub struct Flags {
     service: bool,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Settings {}
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Output {
     name: String,
@@ -132,18 +130,6 @@ pub struct Output {
 pub struct Scene {
     name: String,
     sources: Vec<SceneItem>,
-}
-
-#[derive(Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub struct Event {
-    update_type: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    stream_timecode: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    rec_timecode: Option<String>,
-    #[serde(flatten)]
-    extra: HashMap<String, Value>,
 }
 
 #[cfg(test)]
