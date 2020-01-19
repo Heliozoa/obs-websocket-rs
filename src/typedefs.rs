@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "lowercase")]
 pub enum SceneItemType {
     Input,
@@ -10,7 +10,7 @@ pub enum SceneItemType {
     Unknown,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct SceneItem {
     cy: i32,
     cx: i32,
@@ -33,34 +33,95 @@ pub struct SceneItem {
     group_children: Option<Vec<SceneItem>>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Position {
-    x: i32,
-    y: i32,
-    alignment: i32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub x: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub y: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub alignment: Option<i32>,
 }
 
-#[derive(Serialize, Deserialize)]
+impl Position {
+    pub fn is_none(&self) -> bool {
+        self.x.is_none() && self.y.is_none() && self.alignment.is_none()
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Scale {
-    x: f64,
-    y: f64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub x: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub y: Option<f64>,
 }
 
-#[derive(Serialize, Deserialize)]
+impl Scale {
+    pub fn is_none(&self) -> bool {
+        self.x.is_none() && self.y.is_none()
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Crop {
-    top: i32,
-    right: i32,
-    bottom: i32,
-    left: i32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub top: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub right: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bottom: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub left: Option<i32>,
 }
 
-#[derive(Serialize, Deserialize)]
+impl Crop {
+    pub fn is_none(&self) -> bool {
+        self.top.is_none() && self.right.is_none() && self.bottom.is_none() && self.left.is_none()
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub enum BoundsType {
+    #[serde(rename = "OBS_BOUNDS_STRETCH")]
+    Stretch,
+    #[serde(rename = "OBS_BOUNDS_SCALE_INNER")]
+    ScaleInner,
+    #[serde(rename = "OBS_BOUNDS_SCALE_OUTER")]
+    ScaleOuter,
+    #[serde(rename = "OBS_BOUNDS_SCALE_TO_WIDTH")]
+    ScaleToWidth,
+    #[serde(rename = "OBS_BOUNDS_SCALE_TO_HEIGHT")]
+    ScaleToHeight,
+    #[serde(rename = "OBS_BOUNDS_MAX_ONLY")]
+    MaxOnly,
+    #[serde(rename = "OBS_BOUNDS_NONE")]
+    None,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Bounds {
-    x: f64,
-    y: f64,
+    #[serde(rename = "type")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bounds_type: Option<BoundsType>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub alignment: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub x: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub y: Option<f64>,
 }
 
-#[derive(Serialize, Deserialize)]
+impl Bounds {
+    pub fn is_none(&self) -> bool {
+        self.bounds_type.is_none()
+            && self.alignment.is_none()
+            && self.x.is_none()
+            && self.y.is_none()
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct SceneItemTransform {
     position: Position,
@@ -126,7 +187,7 @@ pub struct Output {
     total_bytes: i32,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Scene {
     name: String,
     sources: Vec<SceneItem>,

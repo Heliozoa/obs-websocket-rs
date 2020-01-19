@@ -1,5 +1,5 @@
 use super::typedefs;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
 
@@ -70,9 +70,6 @@ pub fn set_heartbeat(message_id: &str, enable: bool) -> Value {
     })
 }
 
-#[derive(Deserialize, Debug)]
-pub struct SetHeartbeat {}
-
 pub fn set_filename_formatting(message_id: &str, filename_formatting: &str) -> Value {
     json!({
         "request-type": "SetFilenameFormatting",
@@ -80,9 +77,6 @@ pub fn set_filename_formatting(message_id: &str, filename_formatting: &str) -> V
         "filename-formatting": filename_formatting,
     })
 }
-
-#[derive(Deserialize, Debug)]
-pub struct SetFilenameFormatting {}
 
 pub fn get_filename_formatting(message_id: &str) -> Value {
     json!({
@@ -111,7 +105,7 @@ pub struct GetStats {
 
 pub fn broadcast_custom_message(
     message_id: &str,
-    realm: String,
+    realm: &str,
     data: HashMap<String, String>,
 ) -> Value {
     json!({
@@ -121,9 +115,6 @@ pub fn broadcast_custom_message(
         "data": data,
     })
 }
-
-#[derive(Deserialize, Debug)]
-pub struct BroadcastCustomMessage {}
 
 pub fn get_video_info(message_id: &str) -> Value {
     json!({
@@ -180,9 +171,6 @@ pub fn start_output(message_id: &str, output_name: &str) -> Value {
     })
 }
 
-#[derive(Deserialize, Debug)]
-pub struct StartOutput {}
-
 pub fn stop_output(message_id: &str, output_name: &str) -> Value {
     json!({
         "request-type": "StopOutput",
@@ -191,9 +179,6 @@ pub fn stop_output(message_id: &str, output_name: &str) -> Value {
     })
 }
 
-#[derive(Deserialize, Debug)]
-pub struct StopOutput {}
-
 pub fn set_current_profile(message_id: &str, profile_name: &str) -> Value {
     json!({
         "request-type": "SetCurrentProfile",
@@ -201,9 +186,6 @@ pub fn set_current_profile(message_id: &str, profile_name: &str) -> Value {
         "profile-name": profile_name,
     })
 }
-
-#[derive(Deserialize, Debug)]
-pub struct SetCurrentProfile {}
 
 pub fn get_current_profile(message_id: &str) -> Value {
     json!({
@@ -244,18 +226,12 @@ pub fn start_stop_recording(message_id: &str) -> Value {
     })
 }
 
-#[derive(Deserialize, Debug)]
-pub struct StartStopRecording {}
-
 pub fn start_recording(message_id: &str) -> Value {
     json!({
         "request-type": "StartRecording",
         "message-id": message_id,
     })
 }
-
-#[derive(Deserialize, Debug)]
-pub struct StartRecording {}
 
 pub fn stop_recording(message_id: &str) -> Value {
     json!({
@@ -264,9 +240,6 @@ pub fn stop_recording(message_id: &str) -> Value {
     })
 }
 
-#[derive(Deserialize, Debug)]
-pub struct StopRecording {}
-
 pub fn pause_recording(message_id: &str) -> Value {
     json!({
         "request-type": "PauseRecording",
@@ -274,18 +247,12 @@ pub fn pause_recording(message_id: &str) -> Value {
     })
 }
 
-#[derive(Deserialize, Debug)]
-pub struct PauseRecording {}
-
 pub fn resume_recording(message_id: &str) -> Value {
     json!({
         "request-type": "ResumeRecording",
         "message-id": message_id,
     })
 }
-
-#[derive(Deserialize, Debug)]
-pub struct ResumeRecording {}
 
 pub fn set_recording_folder(message_id: &str, rec_folder: &str) -> Value {
     json!({
@@ -295,9 +262,6 @@ pub fn set_recording_folder(message_id: &str, rec_folder: &str) -> Value {
     })
 }
 
-#[derive(Deserialize, Debug)]
-pub struct SetRecordingFolder {}
-
 pub fn get_recording_folder(message_id: &str, rec_folder: &str) -> Value {
     json!({
         "request-type": "GetRecordingFolder",
@@ -305,9 +269,6 @@ pub fn get_recording_folder(message_id: &str, rec_folder: &str) -> Value {
         "rec-folder": rec_folder,
     })
 }
-
-#[derive(Deserialize, Debug)]
-pub struct GetRecordingFolder {}
 
 pub fn start_stop_replay_buffer(message_id: &str) -> Value {
     json!({
@@ -409,7 +370,88 @@ pub fn get_scene_item_properties(
 }
 
 #[derive(Deserialize, Debug)]
-#[serde(rename_all = "kebab-case")]
+#[serde(rename_all = "camelCase")]
 pub struct GetSceneItemProperties {
-    scene_collections: Vec<String>,
+    name: String,
+    position: typedefs::Position,
+    rotation: f64,
+    scale: typedefs::Scale,
+    crop: typedefs::Crop,
+    visible: bool,
+    locked: bool,
+    bounds: typedefs::Bounds,
+    source_width: i32,
+    source_height: i32,
+    width: f64,
+    height: f64,
+}
+
+pub fn set_scene_item_properties(
+    message_id: &str,
+    scene_name: Option<String>,
+    item: String,
+    position: typedefs::Position,
+    rotation: Option<f64>,
+    scale: typedefs::Scale,
+    crop: typedefs::Crop,
+    visible: Option<bool>,
+    locked: Option<bool>,
+    bounds: typedefs::Bounds,
+) -> Value {
+    #[derive(Serialize, Deserialize, Debug)]
+    #[serde(rename_all = "kebab-case")]
+    struct SetSceneItemPropertiesRequest {
+        request_type: String,
+        message_id: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        scene_name: Option<String>,
+        item: String,
+        #[serde(skip_serializing_if = "typedefs::Position::is_none")]
+        position: typedefs::Position,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        rotation: Option<f64>,
+        #[serde(skip_serializing_if = "typedefs::Scale::is_none")]
+        scale: typedefs::Scale,
+        #[serde(skip_serializing_if = "typedefs::Crop::is_none")]
+        crop: typedefs::Crop,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        visible: Option<bool>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        locked: Option<bool>,
+        #[serde(skip_serializing_if = "typedefs::Bounds::is_none")]
+        bounds: typedefs::Bounds,
+    }
+
+    let req = SetSceneItemPropertiesRequest {
+        request_type: "SetSceneItemProperties".to_string(),
+        message_id: message_id.to_string(),
+        scene_name,
+        item,
+        position,
+        rotation,
+        scale,
+        crop,
+        visible,
+        locked,
+        bounds,
+    };
+    let v = serde_json::to_value(&req).unwrap();
+    v
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct SetSceneItemProperties {
+    name: String,
+    position: typedefs::Position,
+    rotation: f64,
+    scale: typedefs::Scale,
+    crop: typedefs::Crop,
+    visible: bool,
+    locked: bool,
+    bounds: typedefs::Bounds,
+    source_width: i32,
+    source_height: i32,
+    width: f64,
+    height: f64,
 }
