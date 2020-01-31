@@ -21,9 +21,9 @@ impl Obs {
         Obs { socket: None }
     }
 
-    pub fn connect(&mut self) {
-        let (socket, _response) =
-            connect(Url::parse("ws://localhost:4444").unwrap()).expect("Can't connect");
+    pub fn connect(&mut self, port: u16) {
+        let address = format!("ws://localhost:{}", port.to_string());
+        let (socket, _response) = connect(Url::parse(&address).unwrap()).expect("Can't connect");
         self.socket = Some(socket);
     }
 
