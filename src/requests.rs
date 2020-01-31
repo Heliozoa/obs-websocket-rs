@@ -1,7 +1,6 @@
 use super::typedefs;
-use serde::{Deserialize, Serialize};
+use serde::{de, Deserialize, Deserializer, Serialize};
 use serde_json::{json, Value};
-use std::collections::HashMap;
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "lowercase")]
@@ -25,13 +24,38 @@ pub fn get_version(message_id: &str) -> Value {
     })
 }
 
-#[derive(Deserialize, Debug)]
+fn deserialize_comma_separated_string<'de, D>(d: D) -> Result<Vec<String>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    struct V {}
+
+    impl<'de> de::Visitor<'de> for V {
+        type Value = Vec<String>;
+
+        fn expecting(&self, _: &mut std::fmt::Formatter) -> std::fmt::Result {
+            unreachable!()
+        }
+
+        fn visit_str<E>(self, s: &str) -> Result<Self::Value, E>
+        where
+            E: de::Error,
+        {
+            Ok(s.split(',').map(|s| s.to_owned()).collect::<Vec<_>>())
+        }
+    }
+
+    d.deserialize_str(V {})
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub struct GetVersion {
     version: f64,
     obs_websocket_version: String,
     obs_studio_version: String,
-    available_requests: String,
+    #[serde(deserialize_with = "deserialize_comma_separated_string")]
+    available_requests: Vec<String>,
 }
 
 pub fn get_auth_required(message_id: &str) -> Value {
