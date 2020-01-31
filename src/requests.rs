@@ -65,7 +65,7 @@ pub fn get_auth_required(message_id: &str) -> Value {
     })
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Eq, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct GetAuthRequired {
     pub auth_required: bool,

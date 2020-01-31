@@ -570,34 +570,94 @@ impl Obs {
 #[cfg(test)]
 mod test {
     use super::*;
+    use serde_json::json;
+    use std::net::TcpListener;
+    use std::thread::spawn;
+    use tungstenite::server::accept;
+
+    fn init_obs(port: u16) -> Obs {
+        let mut obs = Obs::new();
+        obs.connect(port);
+        obs
+    }
+
+    fn start_mock_server(response: Value) {
+        spawn(move || {
+            let server = TcpListener::bind("localhost:4445").unwrap();
+            for stream in server.incoming() {
+                let mut websocket = accept(stream.unwrap()).unwrap();
+                let msg = websocket.read_message().unwrap();
+                println!("{}", msg);
+                websocket
+                    .write_message(Message::Text(response.to_string()))
+                    .unwrap();
+            }
+        });
+    }
 
     #[test]
     fn get_version() {
-        let mut o = Obs::new();
-        o.connect();
-        o.get_version().unwrap();
+        let response = json!({
+            "status": "ok",
+            "message-id": "0",
+            "version": 1.1,
+            "obs-websocket-version": "4.7.0",
+            "obs-studio-version": "24.0.3",
+            "available-requests": "Request1,Request2"
+        });
+        start_mock_server(response);
+        let mut obs = init_obs(4445);
+        let res = obs.get_version().unwrap();
+        assert_eq!(
+            res,
+            requests::GetVersion {
+                version: 1.1,
+                obs_websocket_version: "4.7.0".to_string(),
+                obs_studio_version: "24.0.3".to_string(),
+                available_requests: vec!["Request1".to_string(), "Request2".to_string()],
+            }
+        );
     }
 
     #[test]
-    fn get_auth_required() {
-        let mut o = Obs::new();
-        o.connect();
-        o.get_auth_required().unwrap();
+    fn get_auth_required_true() {
+        let response = json!({
+            "status": "ok",
+            "message-id": "0",
+            "authRequired": true,
+            "challenge": "ch",
+            "salt": "sa",
+        });
+        start_mock_server(response);
+        let mut obs = init_obs(4445);
+        let res = obs.get_auth_required().unwrap();
+        assert_eq!(
+            res,
+            requests::GetAuthRequired {
+                auth_required: true,
+                challenge: Some("ch".to_string()),
+                salt: Some("sa".to_string())
+            }
+        );
     }
 
     #[test]
-    fn authenticate() {
-        let mut o = Obs::new();
-        o.connect();
-        o.authenticate().unwrap();
-    }
-
-    #[test]
-    fn list_profiles() {
-        let mut o = Obs::new();
-        o.connect();
-        let res = o.list_profiles().unwrap();
-        println!("{:?}", res);
-        unimplemented!()
+    fn get_auth_required_false() {
+        let response = json!({
+            "status": "ok",
+            "message-id": "0",
+            "authRequired": false,
+        });
+        start_mock_server(response);
+        let mut obs = init_obs(4445);
+        let res = obs.get_auth_required().unwrap();
+        assert_eq!(
+            res,
+            requests::GetAuthRequired {
+                auth_required: false,
+                challenge: None,
+                salt: None,
+            }
+        );
     }
 }
