@@ -442,3 +442,7 @@ pub struct SetSceneItemProperties {
     width: f64,
     height: f64,
 }
+
+pub fn reset_scene_item(scene_name: Option<String>, item: String) -> Value {
+    json!({"scene-name": scene_name, "item": item})
+}

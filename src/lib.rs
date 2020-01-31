@@ -220,7 +220,7 @@ impl Obs {
         scene_name: Option<String>,
         item: String,
     ) -> Result<requests::Response> {
-        unimplemented!()
+        self.get(requests::reset_scene_item(scene_name, item))
     }
 
     pub fn delete_scene_item(
