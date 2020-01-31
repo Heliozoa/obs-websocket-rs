@@ -103,11 +103,7 @@ pub struct GetStats {
     stats: typedefs::ObsStats,
 }
 
-pub fn broadcast_custom_message(
-    message_id: &str,
-    realm: &str,
-    data: HashMap<String, String>,
-) -> Value {
+pub fn broadcast_custom_message(message_id: &str, realm: &str, data: Value) -> Value {
     json!({
         "request-type": "BroadcastCustomMessage",
         "message-id": message_id,
@@ -171,11 +167,12 @@ pub fn start_output(message_id: &str, output_name: &str) -> Value {
     })
 }
 
-pub fn stop_output(message_id: &str, output_name: &str) -> Value {
+pub fn stop_output(message_id: &str, output_name: &str, force: bool) -> Value {
     json!({
         "request-type": "StopOutput",
         "message-id": message_id,
         "outputName": output_name,
+        "force": force,
     })
 }
 
@@ -386,6 +383,30 @@ pub struct GetSceneItemProperties {
     height: f64,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "kebab-case")]
+struct SetSceneItemPropertiesRequest {
+    request_type: String,
+    message_id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    scene_name: Option<String>,
+    item: String,
+    #[serde(skip_serializing_if = "typedefs::Position::is_none")]
+    position: typedefs::Position,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    rotation: Option<f64>,
+    #[serde(skip_serializing_if = "typedefs::Scale::is_none")]
+    scale: typedefs::Scale,
+    #[serde(skip_serializing_if = "typedefs::Crop::is_none")]
+    crop: typedefs::Crop,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    visible: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    locked: Option<bool>,
+    #[serde(skip_serializing_if = "typedefs::Bounds::is_none")]
+    bounds: typedefs::Bounds,
+}
+
 pub fn set_scene_item_properties(
     message_id: &str,
     scene_name: Option<String>,
@@ -398,30 +419,6 @@ pub fn set_scene_item_properties(
     locked: Option<bool>,
     bounds: typedefs::Bounds,
 ) -> Value {
-    #[derive(Serialize, Deserialize, Debug)]
-    #[serde(rename_all = "kebab-case")]
-    struct SetSceneItemPropertiesRequest {
-        request_type: String,
-        message_id: String,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        scene_name: Option<String>,
-        item: String,
-        #[serde(skip_serializing_if = "typedefs::Position::is_none")]
-        position: typedefs::Position,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        rotation: Option<f64>,
-        #[serde(skip_serializing_if = "typedefs::Scale::is_none")]
-        scale: typedefs::Scale,
-        #[serde(skip_serializing_if = "typedefs::Crop::is_none")]
-        crop: typedefs::Crop,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        visible: Option<bool>,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        locked: Option<bool>,
-        #[serde(skip_serializing_if = "typedefs::Bounds::is_none")]
-        bounds: typedefs::Bounds,
-    }
-
     let req = SetSceneItemPropertiesRequest {
         request_type: "SetSceneItemProperties".to_string(),
         message_id: message_id.to_string(),

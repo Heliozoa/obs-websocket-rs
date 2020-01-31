@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "lowercase")]
@@ -167,7 +168,7 @@ pub struct Flags {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Settings {}
+pub struct OutputSettings {}
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -178,7 +179,7 @@ pub struct Output {
     width: i32,
     height: i32,
     flags: Flags,
-    settings: Settings,
+    settings: OutputSettings,
     active: bool,
     reconnecting: bool,
     congestion: f64,
@@ -191,6 +192,61 @@ pub struct Output {
 pub struct Scene {
     name: String,
     sources: Vec<SceneItem>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Item {
+    name: String,
+    id: i32,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "lowercase")]
+pub enum Align {
+    Left,
+    Center,
+    Right,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Font {
+    face: Option<String>,
+    flags: Option<i32>,
+    size: Option<i32>,
+    style: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "lowercase")]
+pub enum MovementType {
+    Up,
+    Down,
+    Top,
+    Bottom,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "kebab-case")]
+pub struct StreamSettings {
+    server: Option<String>,
+    key: Option<String>,
+    use_auth: Option<bool>,
+    username: Option<String>,
+    password: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Stream {
+    #[serde(rename = "type")]
+    stream_type: Option<String>,
+    metadata: Option<Value>,
+    settings: StreamSettings,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct WithTransition {
+    name: String,
+    duration: Option<i32>,
 }
 
 #[cfg(test)]

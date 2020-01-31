@@ -97,7 +97,7 @@ impl Obs {
     pub fn broadcast_custom_message(
         &mut self,
         realm: &str,
-        data: HashMap<String, String>,
+        data: Value,
     ) -> Result<requests::Response> {
         self.get(requests::broadcast_custom_message("0", realm, data))
     }
@@ -118,8 +118,8 @@ impl Obs {
         self.get(requests::start_output("0", output_name))
     }
 
-    pub fn stop_output(&mut self, output_name: &str) -> Result<requests::Response> {
-        self.get(requests::stop_output("0", output_name))
+    pub fn stop_output(&mut self, output_name: &str, force: bool) -> Result<requests::Response> {
+        self.get(requests::stop_output("0", output_name, force))
     }
 
     pub fn set_current_profile(&mut self, profile_name: &str) -> Result<requests::Response> {
@@ -178,8 +178,8 @@ impl Obs {
         self.get(requests::save_replay_buffer("0"))
     }
 
-    pub fn set_current_scene_collection(&mut self, rec_folder: &str) -> Result<requests::Response> {
-        self.get(requests::set_current_scene_collection("0", rec_folder))
+    pub fn set_current_scene_collection(&mut self, sc_name: &str) -> Result<requests::Response> {
+        self.get(requests::set_current_scene_collection("0", sc_name))
     }
 
     pub fn get_current_scene_collection(&mut self) -> Result<requests::Response> {
@@ -213,6 +213,357 @@ impl Obs {
         self.get(requests::set_scene_item_properties(
             "0", scene_name, item, position, rotation, scale, crop, visible, locked, bounds,
         ))
+    }
+
+    pub fn reset_scene_item(
+        &mut self,
+        scene_name: Option<String>,
+        item: String,
+    ) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn delete_scene_item(
+        &mut self,
+        scene: Option<String>,
+        item: typedefs::Item,
+    ) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn duplicate_scene_item(
+        &mut self,
+        from_scene: Option<String>,
+        to_scene: Option<String>,
+        item: typedefs::Item,
+    ) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn set_current_scene(&mut self, scene_name: String) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn get_current_scene(&mut self) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn get_scene_list(&mut self) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn reorder_scene_items(
+        &mut self,
+        scene: Option<String>,
+        items: Vec<typedefs::Item>,
+    ) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn get_sources_list(&mut self) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn get_source_types_list(&mut self) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn get_volume(&mut self, source: String) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn set_volume(&mut self, source: String, volume: f64) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn get_mute(&mut self, source: String) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn set_mute(&mut self, source: String, mute: bool) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn toggle_mute(&mut self, source: String) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn set_sync_offset(&mut self, source: String, offset: i32) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn get_sync_offset(&mut self, source: String) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn get_source_settings(
+        &mut self,
+        source_name: String,
+        source_type: Option<String>,
+    ) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn set_source_settings(
+        &mut self,
+        source_name: String,
+        source_type: Option<String>,
+        source_settings: Value,
+    ) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn get_text_gdi_plus_properties(&mut self, source: String) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn set_text_gdi_plus_properties(
+        &mut self,
+        source: String,
+        align: typedefs::Align,
+        bk_color: Option<i32>,
+        bk_opacity: Option<i32>,
+        chatlog: Option<bool>,
+        chatlog_lines: Option<i32>,
+        color: Option<i32>,
+        extents: Option<bool>,
+        extents_cx: Option<bool>,
+        extents_cy: Option<bool>,
+        file: Option<String>,
+        read_from_file: Option<bool>,
+        font: typedefs::Font,
+        gradient: Option<bool>,
+        gradient_color: Option<i32>,
+        gradient_dir: Option<f64>,
+        gradient_opacity: Option<i32>,
+        outline: Option<bool>,
+        outline_color: Option<i32>,
+        outline_size: Option<i32>,
+        outline_opacity: Option<i32>,
+        text: Option<String>,
+        valign: Option<String>,
+        vertical: Option<bool>,
+        render: Option<bool>,
+    ) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn get_text_freetype_2_properties(&mut self, source: String) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn set_text_freetype_2_properties(
+        &mut self,
+        source: String,
+        color_1: Option<i32>,
+        color_2: Option<i32>,
+        custom_width: Option<i32>,
+        drop_shadow: Option<i32>,
+        font: typedefs::Font,
+        from_file: Option<bool>,
+        log_mode: Option<bool>,
+        outline: Option<bool>,
+        text: Option<String>,
+        text_file: Option<String>,
+        word_wrap: Option<bool>,
+    ) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn get_browser_source_properties(&mut self, source: String) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn set_browser_source_properties(
+        &mut self,
+        source: String,
+        is_local_file: Option<bool>,
+        local_file: Option<String>,
+        url: Option<String>,
+        css: Option<String>,
+        width: Option<i32>,
+        height: Option<i32>,
+        fps: Option<i32>,
+        shutdown: Option<bool>,
+        render: Option<bool>,
+    ) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn get_special_sources(&mut self) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn get_source_filters(&mut self, source_name: String) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn get_source_filter_info(
+        &mut self,
+        source_name: String,
+        filter_name: String,
+    ) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn add_filter_to_source(
+        &mut self,
+        source_name: String,
+        filter_name: String,
+        filter_type: String,
+        filter_settings: Value,
+    ) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn remove_filter_from_source(
+        &mut self,
+        source_name: String,
+        filter_name: String,
+    ) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn reorder_source_filter(
+        &mut self,
+        source_name: String,
+        filter_name: String,
+        new_index: i32,
+    ) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn move_source_filter(
+        &mut self,
+        source_name: String,
+        filter_name: String,
+        movement_type: typedefs::MovementType,
+    ) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn set_source_filter_settings(
+        &mut self,
+        source_name: String,
+        filter_name: String,
+        filter_settings: Value,
+    ) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn set_source_filter_visibility(
+        &mut self,
+        source_name: String,
+        filter_name: String,
+        filter_enabled: bool,
+    ) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn take_source_screenshot(
+        &mut self,
+        source_name: String,
+        embed_picture_format: Option<String>,
+        save_to_file_path: Option<String>,
+        width: Option<i32>,
+        height: Option<i32>,
+    ) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn get_streaming_status(&mut self) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn toggle_streaming(&mut self) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn start_streaming(&mut self, stream: typedefs::Stream) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn stop_streaming(&mut self) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn set_stream_settings(
+        &mut self,
+        stream_type: String,
+        settings: typedefs::StreamSettings,
+        save: bool,
+    ) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn get_stream_settings(&mut self) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn save_stream_settings(&mut self) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn send_captions(&mut self, text: String) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn get_studio_mode_status(&mut self) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn get_preview_scene(
+        &mut self,
+        name: String,
+        sources: Vec<typedefs::SceneItem>,
+    ) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn set_preview_scene(&mut self, scene_name: String) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn transition_to_program(
+        &mut self,
+        with_transition: Option<typedefs::WithTransition>,
+    ) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn enable_studio_mode(&mut self) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn disable_studio_mode(&mut self) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn toggle_studio_mode(&mut self) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn get_transition_list(&mut self) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn get_current_transition(&mut self) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn set_current_transition(
+        &mut self,
+        transition_name: String,
+    ) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn set_transition_duration(&mut self, duration: i32) -> Result<requests::Response> {
+        unimplemented!()
+    }
+
+    pub fn get_transition_duration(&mut self) -> Result<requests::Response> {
+        unimplemented!()
     }
 }
 
