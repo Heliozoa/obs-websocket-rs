@@ -51,11 +51,11 @@ where
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub struct GetVersion {
-    version: f64,
-    obs_websocket_version: String,
-    obs_studio_version: String,
+    pub version: f64,
+    pub obs_websocket_version: String,
+    pub obs_studio_version: String,
     #[serde(deserialize_with = "deserialize_comma_separated_string")]
-    available_requests: Vec<String>,
+    pub available_requests: Vec<String>,
 }
 
 pub fn get_auth_required(message_id: &str) -> Value {
