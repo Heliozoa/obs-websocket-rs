@@ -182,11 +182,11 @@ impl Obs {
         self.get(requests::set_current_scene_collection("0", sc_name))
     }
 
-    pub fn get_current_scene_collection(&mut self) -> Result<requests::Response> {
+    pub fn get_current_scene_collection(&mut self) -> Result<requests::GetCurrentSceneCollection> {
         self.get(requests::get_current_scene_collection("0"))
     }
 
-    pub fn list_current_scene_collection(&mut self) -> Result<requests::Response> {
+    pub fn list_current_scene_collection(&mut self) -> Result<requests::ListSceneCollections> {
         self.get(requests::list_scene_collections("0"))
     }
 

@@ -126,7 +126,7 @@ pub struct GetVideoInfo {
     base_height: i32,
     output_width: i32,
     output_height: i32,
-    scale_type: i32,
+    scale_type: String,
     fps: f64,
     video_format: String,
     color_space: String,
@@ -267,15 +267,18 @@ pub fn get_recording_folder(message_id: &str, rec_folder: &str) -> Value {
     })
 }
 
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "kebab-case")]
+pub struct GetRecordingFolder {
+    rec_folder: String,
+}
+
 pub fn start_stop_replay_buffer(message_id: &str) -> Value {
     json!({
         "request-type": "StartStopReplayBuffer",
         "message-id": message_id,
     })
 }
-
-#[derive(Deserialize, Debug)]
-pub struct StartStopReplayBuffer {}
 
 pub fn start_replay_buffer(message_id: &str) -> Value {
     json!({
@@ -284,18 +287,12 @@ pub fn start_replay_buffer(message_id: &str) -> Value {
     })
 }
 
-#[derive(Deserialize, Debug)]
-pub struct StartReplayBuffer {}
-
 pub fn stop_replay_buffer(message_id: &str) -> Value {
     json!({
         "request-type": "StopReplayBuffer",
         "message-id": message_id,
     })
 }
-
-#[derive(Deserialize, Debug)]
-pub struct StopReplayBuffer {}
 
 pub fn save_replay_buffer(message_id: &str) -> Value {
     json!({
@@ -304,9 +301,6 @@ pub fn save_replay_buffer(message_id: &str) -> Value {
     })
 }
 
-#[derive(Deserialize, Debug)]
-pub struct SaveReplayBuffer {}
-
 pub fn set_current_scene_collection(message_id: &str, sc_name: &str) -> Value {
     json!({
         "request-type": "SetCurrentSceneCollection",
@@ -314,9 +308,6 @@ pub fn set_current_scene_collection(message_id: &str, sc_name: &str) -> Value {
         "sc-name": sc_name,
     })
 }
-
-#[derive(Deserialize, Debug)]
-pub struct SetCurrentSceneCollection {}
 
 pub fn get_current_scene_collection(message_id: &str) -> Value {
     json!({
@@ -357,12 +348,11 @@ pub fn get_scene_item_properties(
             "item": item,
         })
     } else {
-        let v = json!({
+        json!({
             "request-type": "GetSceneItemProperties",
             "message-id": message_id,
             "item": item,
-        });
-        v
+        })
     }
 }
 
