@@ -2,17 +2,17 @@ use super::typedefs;
 use serde::{de, Deserialize, Deserializer, Serialize};
 use serde_json::{json, Value};
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Eq, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum Status {
     Ok,
     Error,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Eq, PartialEq)]
+#[serde(rename_all = "kebab-case")]
 pub struct Response {
-    #[serde(rename = "message-id")]
-    message_id: String,
+    pub message_id: String,
     pub status: Status,
     pub error: Option<String>,
 }

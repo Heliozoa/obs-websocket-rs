@@ -1,16 +1,17 @@
-use base64;
-use serde::de::DeserializeOwned;
-use serde_json::Value;
-use sha2::{Digest, Sha256};
-use std::collections::HashMap;
-use tungstenite::{client::AutoStream, connect, protocol::WebSocket, Message};
-use url::Url;
-
+mod error;
 mod events;
 mod requests;
 mod typedefs;
 
-type Result<T> = std::result::Result<T, String>;
+use base64;
+use error::Error;
+use serde::de::DeserializeOwned;
+use serde_json::Value;
+use sha2::{Digest, Sha256};
+use tungstenite::{client::AutoStream, connect, protocol::WebSocket, Message};
+use url::Url;
+
+type Result<T> = std::result::Result<T, error::Error>;
 
 pub struct Obs {
     socket: Option<WebSocket<AutoStream>>,
@@ -21,27 +22,29 @@ impl Obs {
         Obs { socket: None }
     }
 
-    pub fn connect(&mut self, port: u16) {
+    pub fn connect(&mut self, port: u16) -> Result<()> {
         let address = format!("ws://localhost:{}", port.to_string());
-        let (socket, _response) = connect(Url::parse(&address).unwrap()).expect("Can't connect");
+        let (socket, _response) = connect(Url::parse(&address)?)?;
         self.socket = Some(socket);
+        Ok(())
     }
 
     fn get<T: DeserializeOwned>(&mut self, json: Value) -> Result<T> {
+        if let None = self.socket {
+            return Err(Error::Custom("not connected".to_string()));
+        }
         let socket = self.socket.as_mut().unwrap();
         let json = json.to_string();
         println!("SENT: {}", json);
-        socket.write_message(Message::Text(json)).unwrap();
-        let response = socket
-            .read_message()
-            .expect("Error reading message")
-            .to_string();
+        socket.write_message(Message::Text(json))?;
+        let response = socket.read_message()?.to_string();
         println!("RECV: {}", response);
-        let parsed: requests::Response = serde_json::from_str(&response).unwrap();
+        let parsed: requests::Response = serde_json::from_str(&response)?;
         if let requests::Status::Ok = parsed.status {
-            Ok(serde_json::from_str(&response).unwrap())
+            Ok(serde_json::from_str(&response)?)
         } else {
-            Err(parsed.error.unwrap())
+            let error_msg = parsed.error.unwrap();
+            Err(Error::ObsError(error_msg))
         }
     }
 
@@ -53,10 +56,9 @@ impl Obs {
         self.get(requests::get_auth_required("0"))
     }
 
-    pub fn authenticate(&mut self) -> Result<requests::Response> {
-        let auth: requests::GetAuthRequired = self.get(requests::get_auth_required("0")).unwrap();
+    pub fn authenticate(&mut self, password: &str) -> Result<requests::Response> {
+        let auth: requests::GetAuthRequired = self.get(requests::get_auth_required("0"))?;
         if auth.auth_required {
-            let password = "todo";
             let challenge = auth.challenge.unwrap();
             let salt = auth.salt.unwrap();
 
@@ -67,11 +69,9 @@ impl Obs {
             let auth_response_string = format!("{}{}", secret, challenge);
             let auth_response_hash = Sha256::digest(auth_response_string.as_bytes());
             let auth_response = base64::encode(&auth_response_hash);
-            Ok(self
-                .get(requests::authenticate("0", &auth_response))
-                .unwrap())
+            Ok(self.get(requests::authenticate("0", &auth_response))?)
         } else {
-            Err("no auth required".to_string())
+            Err(Error::ObsError("no auth required".to_string()))
         }
     }
 
@@ -572,27 +572,31 @@ mod test {
     use super::*;
     use serde_json::json;
     use std::net::TcpListener;
-    use std::thread::spawn;
+    use std::thread::{spawn, JoinHandle};
     use tungstenite::server::accept;
 
     fn init_obs(port: u16) -> Obs {
         let mut obs = Obs::new();
-        obs.connect(port);
+        obs.connect(port).unwrap();
         obs
     }
 
-    fn start_mock_server(response: Value) {
-        spawn(move || {
+    fn start_mock_server(responses: Vec<Value>) -> JoinHandle<()> {
+        let handle = spawn(move || {
+            let mut responses = responses.iter().cycle();
             let server = TcpListener::bind("localhost:4445").unwrap();
             for stream in server.incoming() {
+                println!("incoming");
                 let mut websocket = accept(stream.unwrap()).unwrap();
-                let msg = websocket.read_message().unwrap();
-                println!("{}", msg);
+                let _msg = websocket.read_message().unwrap();
                 websocket
-                    .write_message(Message::Text(response.to_string()))
+                    .write_message(Message::Text(responses.next().unwrap().to_string()))
                     .unwrap();
+                println!("sent");
             }
+            println!("end");
         });
+        handle
     }
 
     #[test]
@@ -605,7 +609,7 @@ mod test {
             "obs-studio-version": "24.0.3",
             "available-requests": "Request1,Request2"
         });
-        start_mock_server(response);
+        start_mock_server(vec![response]);
         let mut obs = init_obs(4445);
         let res = obs.get_version().unwrap();
         assert_eq!(
@@ -628,7 +632,7 @@ mod test {
             "challenge": "ch",
             "salt": "sa",
         });
-        start_mock_server(response);
+        start_mock_server(vec![response]);
         let mut obs = init_obs(4445);
         let res = obs.get_auth_required().unwrap();
         assert_eq!(
@@ -648,7 +652,7 @@ mod test {
             "message-id": "0",
             "authRequired": false,
         });
-        start_mock_server(response);
+        start_mock_server(vec![response]);
         let mut obs = init_obs(4445);
         let res = obs.get_auth_required().unwrap();
         assert_eq!(
@@ -657,6 +661,36 @@ mod test {
                 auth_required: false,
                 challenge: None,
                 salt: None,
+            }
+        );
+    }
+
+    #[test]
+    fn authenticate() {
+        let responses = vec![
+            json!({
+                "status": "ok",
+                "message-id": "0",
+                "authRequired": true,
+                "challenge": "123",
+                "salt": "456",
+            }),
+            json!({
+                "status": "ok",
+                "message-id": "0",
+            }),
+        ];
+        let handle = start_mock_server(responses);
+        let mut obs = init_obs(4445);
+        let res = obs.authenticate("todo");
+        let res = res.unwrap();
+        handle.join().unwrap();
+        assert_eq!(
+            res,
+            requests::Response {
+                message_id: "0".to_string(),
+                status: requests::Status::Ok,
+                error: None,
             }
         );
     }
