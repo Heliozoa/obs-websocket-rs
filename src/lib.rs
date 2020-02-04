@@ -783,4 +783,68 @@ mod test {
             }
         );
     }
+
+    #[test]
+    fn get_filename_formatting() {
+        let request = json!({
+            "request-type": "GetFilenameFormatting",
+            "message-id": "0",
+        });
+        let response = json!({
+            "status": "ok",
+            "message-id": "0",
+            "filename-formatting": "test",
+        });
+        let (mut obs, _handle) = init(vec![request], vec![response]);
+        let res = obs.get_filename_formatting().unwrap();
+        obs.close();
+        assert_eq!(
+            res,
+            requests::GetFilenameFormatting {
+                filename_formatting: "test".to_string(),
+            }
+        );
+    }
+
+    #[test]
+    fn get_stats() {
+        let request = json!({
+            "request-type": "GetStats",
+            "message-id": "0",
+        });
+        let response = json!({
+            "status": "ok",
+            "message-id": "0",
+            "stats": {
+                "fps": 0.0,
+                "render-total-frames": 1,
+                "render-missed-frames": 2,
+                "output-total-frames": 3,
+                "output-skipped-frames": 4,
+                "average-frame-time": 5.0,
+                "cpu-usage": 6.0,
+                "memory-usage": 7.0,
+                "free-disk-space": 8.0,
+            }
+        });
+        let (mut obs, _handle) = init(vec![request], vec![response]);
+        let res = obs.get_stats().unwrap();
+        obs.close();
+        assert_eq!(
+            res,
+            requests::GetStats {
+                stats: typedefs::ObsStats {
+                    fps: 0.0,
+                    render_total_frames: 1,
+                    render_missed_frames: 2,
+                    output_total_frames: 3,
+                    output_skipped_frames: 4,
+                    average_frame_time: 5.0,
+                    cpu_usage: 6.0,
+                    memory_usage: 7.0,
+                    free_disk_space: 8.0,
+                }
+            }
+        );
+    }
 }

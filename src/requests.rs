@@ -109,10 +109,10 @@ pub fn get_filename_formatting(message_id: &str) -> Value {
     })
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Eq, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub struct GetFilenameFormatting {
-    filename_formatting: String,
+    pub filename_formatting: String,
 }
 
 pub fn get_stats(message_id: &str) -> Value {
@@ -122,9 +122,9 @@ pub fn get_stats(message_id: &str) -> Value {
     })
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, PartialEq)]
 pub struct GetStats {
-    stats: typedefs::ObsStats,
+    pub stats: typedefs::ObsStats,
 }
 
 pub fn broadcast_custom_message(message_id: &str, realm: &str, data: Value) -> Value {

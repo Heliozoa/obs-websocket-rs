@@ -142,18 +142,18 @@ pub struct SceneItemTransform {
     group_children: Option<Vec<SceneItemTransform>>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub struct ObsStats {
-    fps: f64,
-    render_total_frames: i32,
-    render_missed_frames: i32,
-    output_total_frames: i32,
-    output_skipped_frames: i32,
-    average_frame_time: f64,
-    cpu_usage: f64,
-    memory_usage: f64,
-    free_disk_space: f64,
+    pub fps: f64,
+    pub render_total_frames: i32,
+    pub render_missed_frames: i32,
+    pub output_total_frames: i32,
+    pub output_skipped_frames: i32,
+    pub average_frame_time: f64,
+    pub cpu_usage: f64,
+    pub memory_usage: f64,
+    pub free_disk_space: f64,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
