@@ -25,7 +25,9 @@ impl Obs {
 
     pub fn connect(&mut self, port: u16) -> Result<()> {
         let address = format!("ws://localhost:{}", port.to_string());
+        debug!("connecting to {}", address);
         let (socket, _response) = connect(Url::parse(&address)?)?;
+        debug!("connected");
         self.socket = Some(socket);
         Ok(())
     }
@@ -36,10 +38,10 @@ impl Obs {
         }
         let socket = self.socket.as_mut().unwrap();
         let json = json.to_string();
-        println!("SENT: {}", json);
+        debug!("SENT: {}", json);
         socket.write_message(Message::Text(json))?;
         let response = socket.read_message()?.to_string();
-        println!("RECV: {}", response);
+        debug!("RECV: {}", response);
         let parsed: requests::Response = serde_json::from_str(&response)?;
         if let requests::Status::Ok = parsed.status {
             Ok(serde_json::from_str(&response)?)
