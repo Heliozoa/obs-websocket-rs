@@ -12,7 +12,7 @@ use sha2::{Digest, Sha256};
 use tungstenite::{client::AutoStream, connect, protocol::WebSocket, Message};
 use url::Url;
 
-type Result<T> = std::result::Result<T, error::Error>;
+type Result<T> = std::result::Result<T, Error>;
 
 pub struct Obs {
     socket: Option<WebSocket<AutoStream>>,
