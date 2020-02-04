@@ -5,6 +5,7 @@ mod typedefs;
 
 use base64;
 use error::Error;
+use log::{debug, info};
 use serde::de::DeserializeOwned;
 use serde_json::Value;
 use sha2::{Digest, Sha256};
