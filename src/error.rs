@@ -6,23 +6,25 @@ use url::ParseError;
 pub enum Error {
     Custom(String),
     ObsError(String),
-    Other,
+    Tungstenite(TungsteniteError),
+    Json(JsonError),
+    Parse(ParseError),
 }
 
 impl From<TungsteniteError> for Error {
     fn from(err: TungsteniteError) -> Error {
-        Error::Other
+        Error::Tungstenite(err)
     }
 }
 
 impl From<JsonError> for Error {
     fn from(err: JsonError) -> Error {
-        Error::Other
+        Error::Json(err)
     }
 }
 
 impl From<ParseError> for Error {
     fn from(err: ParseError) -> Error {
-        Error::Other
+        Error::Parse(err)
     }
 }
