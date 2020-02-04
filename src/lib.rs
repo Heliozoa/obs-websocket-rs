@@ -600,13 +600,23 @@ mod test {
             let mut requests = requests.iter().cycle();
             let mut responses = responses.iter().cycle();
             for stream in server.incoming() {
-                let mut websocket = accept(stream.unwrap()).unwrap();
-                let msg = websocket.read_message().unwrap().to_string();
-                let parsed = serde_json::from_str::<Value>(&msg).unwrap();
-                assert_eq!(&parsed, requests.next().unwrap());
-                websocket
-                    .write_message(Message::Text(responses.next().unwrap().to_string()))
-                    .unwrap();
+                debug!("incoming connection");
+                let mut websocket =
+                    accept(stream.expect("stream error")).expect("failed to accept");
+                loop {
+                    let msg = websocket.read_message().expect("failed to read msg");
+                    if let Message::Close(_) = msg {
+                        return;
+                    }
+                    let parsed = serde_json::from_str::<Value>(&msg.to_string())
+                        .expect("failed to deserialize");
+                    assert_eq!(&parsed, requests.next().expect("missing requests"));
+                    websocket
+                        .write_message(Message::Text(
+                            responses.next().expect("missing responses").to_string(),
+                        ))
+                        .expect("failed to write");
+                }
             }
         });
         (port, handle)
@@ -627,9 +637,10 @@ mod test {
             "obs-studio-version": "24.0.3",
             "available-requests": "Request1,Request2"
         });
-        let (port, handle) = start_mock_server(vec![request], vec![response]);
+        let (port, _handle) = start_mock_server(vec![request], vec![response]);
         let mut obs = init_obs(port);
         let res = obs.get_version().unwrap();
+        obs.close();
         assert_eq!(
             res,
             requests::GetVersion {
@@ -655,9 +666,10 @@ mod test {
             "challenge": "ch",
             "salt": "sa",
         });
-        let (port, handle) = start_mock_server(vec![request], vec![response]);
+        let (port, _handle) = start_mock_server(vec![request], vec![response]);
         let mut obs = init_obs(port);
         let res = obs.get_auth_required().unwrap();
+        obs.close();
         assert_eq!(
             res,
             requests::GetAuthRequired {
@@ -680,9 +692,10 @@ mod test {
             "message-id": "0",
             "authRequired": false,
         });
-        let (port, handle) = start_mock_server(vec![request], vec![response]);
+        let (port, _handle) = start_mock_server(vec![request], vec![response]);
         let mut obs = init_obs(port);
         let res = obs.get_auth_required().unwrap();
+        obs.close();
         assert_eq!(
             res,
             requests::GetAuthRequired {
@@ -720,11 +733,10 @@ mod test {
                 "message-id": "0",
             }),
         ];
-        let (port, handle) = start_mock_server(requests, responses);
+        let (port, _handle) = start_mock_server(requests, responses);
         let mut obs = init_obs(port);
-        let res = obs.authenticate("todo");
-        let res = res.unwrap();
-        handle.join().unwrap();
+        let res = obs.authenticate("todo").unwrap();
+        obs.close();
         assert_eq!(
             res,
             requests::Response {
@@ -747,9 +759,10 @@ mod test {
             "status": "ok",
             "message-id": "0",
         });
-        let (port, handle) = start_mock_server(vec![request], vec![response]);
+        let (port, _handle) = start_mock_server(vec![request], vec![response]);
         let mut obs = init_obs(port);
         let res = obs.set_heartbeat(true).unwrap();
+        obs.close();
         assert_eq!(
             res,
             requests::Response {
@@ -763,13 +776,19 @@ mod test {
     #[test]
     fn set_filename_formatting() {
         init();
+        let request = json!({
+            "request-type": "SetFilenameFormatting",
+            "message-id": "0",
+            "filename-formatting": "test",
+        });
         let response = json!({
             "status": "ok",
             "message-id": "0",
         });
-        let (port, handle) = start_mock_server(vec![], vec![response]);
+        let (port, _handle) = start_mock_server(vec![request], vec![response]);
         let mut obs = init_obs(port);
         let res = obs.set_filename_formatting("test").unwrap();
+        obs.close();
         assert_eq!(
             res,
             requests::Response {
