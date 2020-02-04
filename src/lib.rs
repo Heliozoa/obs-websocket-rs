@@ -578,18 +578,23 @@ mod test {
     use std::thread::{spawn, JoinHandle};
     use tungstenite::server::accept;
 
+    fn init() {
+        let _ = env_logger::builder().is_test(true).try_init();
+    }
+
     fn init_obs(port: u16) -> Obs {
-        env_logger::init();
         let mut obs = Obs::new();
         obs.connect(port).unwrap();
         obs
     }
 
-    fn start_mock_server(requests: Vec<Value>, responses: Vec<Value>) -> JoinHandle<()> {
+    fn start_mock_server(requests: Vec<Value>, responses: Vec<Value>) -> (u16, JoinHandle<()>) {
+        let server = TcpListener::bind("localhost:0").unwrap();
+        let port = server.local_addr().unwrap().port();
+        debug!("mock server started at {}", port);
         let handle = spawn(move || {
             let mut requests = requests.iter().cycle();
             let mut responses = responses.iter().cycle();
-            let server = TcpListener::bind("localhost:4445").unwrap();
             for stream in server.incoming() {
                 let mut websocket = accept(stream.unwrap()).unwrap();
                 let msg = websocket.read_message().unwrap().to_string();
@@ -600,11 +605,12 @@ mod test {
                     .unwrap();
             }
         });
-        handle
+        (port, handle)
     }
 
     #[test]
     fn get_version() {
+        init();
         let request = json!({
             "request-type": "GetVersion",
             "message-id": "0",
@@ -617,8 +623,8 @@ mod test {
             "obs-studio-version": "24.0.3",
             "available-requests": "Request1,Request2"
         });
-        start_mock_server(vec![request], vec![response]);
-        let mut obs = init_obs(4445);
+        let (port, handle) = start_mock_server(vec![request], vec![response]);
+        let mut obs = init_obs(port);
         let res = obs.get_version().unwrap();
         assert_eq!(
             res,
@@ -633,6 +639,7 @@ mod test {
 
     #[test]
     fn get_auth_required_true() {
+        init();
         let request = json!({
             "request-type": "GetAuthRequired",
             "message-id": "0",
@@ -644,8 +651,8 @@ mod test {
             "challenge": "ch",
             "salt": "sa",
         });
-        start_mock_server(vec![request], vec![response]);
-        let mut obs = init_obs(4445);
+        let (port, handle) = start_mock_server(vec![request], vec![response]);
+        let mut obs = init_obs(port);
         let res = obs.get_auth_required().unwrap();
         assert_eq!(
             res,
@@ -659,6 +666,7 @@ mod test {
 
     #[test]
     fn get_auth_required_false() {
+        init();
         let request = json!({
             "request-type": "GetAuthRequired",
             "message-id": "0",
@@ -668,8 +676,8 @@ mod test {
             "message-id": "0",
             "authRequired": false,
         });
-        start_mock_server(vec![request], vec![response]);
-        let mut obs = init_obs(4445);
+        let (port, handle) = start_mock_server(vec![request], vec![response]);
+        let mut obs = init_obs(port);
         let res = obs.get_auth_required().unwrap();
         assert_eq!(
             res,
@@ -683,6 +691,7 @@ mod test {
 
     #[test]
     fn authenticate() {
+        init();
         let requests = vec![
             json!({
                 "request-type": "GetAuthRequired",
@@ -707,8 +716,8 @@ mod test {
                 "message-id": "0",
             }),
         ];
-        let handle = start_mock_server(requests, responses);
-        let mut obs = init_obs(4445);
+        let (port, handle) = start_mock_server(requests, responses);
+        let mut obs = init_obs(port);
         let res = obs.authenticate("todo");
         let res = res.unwrap();
         handle.join().unwrap();
@@ -724,12 +733,18 @@ mod test {
 
     #[test]
     fn set_heartbeat() {
+        init();
+        let request = json!({
+            "request-type": "SetHeartbeat",
+            "message-id": "0",
+            "enable": true,
+        });
         let response = json!({
             "status": "ok",
             "message-id": "0",
         });
-        start_mock_server(vec![], vec![response]);
-        let mut obs = init_obs(4445);
+        let (port, handle) = start_mock_server(vec![request], vec![response]);
+        let mut obs = init_obs(port);
         let res = obs.set_heartbeat(true).unwrap();
         assert_eq!(
             res,
@@ -743,12 +758,13 @@ mod test {
 
     #[test]
     fn set_filename_formatting() {
+        init();
         let response = json!({
             "status": "ok",
             "message-id": "0",
         });
-        start_mock_server(vec![], vec![response]);
-        let mut obs = init_obs(4445);
+        let (port, handle) = start_mock_server(vec![], vec![response]);
+        let mut obs = init_obs(port);
         let res = obs.set_filename_formatting("test").unwrap();
         assert_eq!(
             res,
