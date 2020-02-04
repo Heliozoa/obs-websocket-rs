@@ -32,6 +32,10 @@ impl Obs {
         Ok(())
     }
 
+    pub fn close(self) {
+        self.socket.unwrap().close(None).unwrap();
+    }
+
     fn get<T: DeserializeOwned>(&mut self, json: Value) -> Result<T> {
         if let None = self.socket {
             return Err(Error::Custom("not connected".to_string()));
