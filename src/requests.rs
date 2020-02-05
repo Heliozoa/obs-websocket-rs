@@ -177,10 +177,10 @@ pub fn get_output_info(message_id: &str, output_name: &str) -> Value {
     })
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct GetOutputInfo {
-    output_info: typedefs::Output,
+    pub output_info: typedefs::Output,
 }
 
 pub fn start_output(message_id: &str, output_name: &str) -> Value {
@@ -215,16 +215,10 @@ pub fn get_current_profile(message_id: &str) -> Value {
     })
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
-pub struct GetCurrentProfile {
-    profile_name: String,
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "kebab-case")]
-struct Profile {
-    profile_name: String,
+pub struct Profile {
+    pub profile_name: String,
 }
 
 pub fn list_profiles(message_id: &str) -> Value {
@@ -234,10 +228,10 @@ pub fn list_profiles(message_id: &str) -> Value {
     })
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 pub struct ListProfiles {
-    profiles: Vec<Profile>,
+    pub profiles: Vec<Profile>,
 }
 
 pub fn start_stop_recording(message_id: &str) -> Value {
@@ -283,18 +277,17 @@ pub fn set_recording_folder(message_id: &str, rec_folder: &str) -> Value {
     })
 }
 
-pub fn get_recording_folder(message_id: &str, rec_folder: &str) -> Value {
+pub fn get_recording_folder(message_id: &str) -> Value {
     json!({
         "request-type": "GetRecordingFolder",
         "message-id": message_id,
-        "rec-folder": rec_folder,
     })
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 pub struct GetRecordingFolder {
-    rec_folder: String,
+    pub rec_folder: String,
 }
 
 pub fn start_stop_replay_buffer(message_id: &str) -> Value {

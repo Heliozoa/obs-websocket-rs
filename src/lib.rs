@@ -133,7 +133,7 @@ impl Obs {
         self.get(requests::set_current_profile("0", profile_name))
     }
 
-    pub fn get_current_profile(&mut self) -> Result<requests::GetCurrentProfile> {
+    pub fn get_current_profile(&mut self) -> Result<requests::Profile> {
         self.get(requests::get_current_profile("0"))
     }
 
@@ -165,8 +165,8 @@ impl Obs {
         self.get(requests::set_recording_folder("0", rec_folder))
     }
 
-    pub fn get_recording_folder(&mut self, rec_folder: &str) -> Result<requests::Response> {
-        self.get(requests::get_recording_folder("0", rec_folder))
+    pub fn get_recording_folder(&mut self) -> Result<requests::GetRecordingFolder> {
+        self.get(requests::get_recording_folder("0"))
     }
 
     pub fn toggle_replay_buffer(&mut self) -> Result<requests::Response> {
@@ -976,6 +976,361 @@ mod test {
                     dropped_frames: 4,
                     total_bytes: 5,
                 }]
+            }
+        );
+    }
+
+    #[test]
+    fn get_output_info() {
+        let request = json!({
+            "request-type": "GetOutputInfo",
+            "message-id": "0",
+            "outputName": "output1",
+        });
+        let response = json!({
+            "status": "ok",
+            "message-id": "0",
+            "outputInfo": {
+                "name": "simple_file_output",
+                "type": "ffmpeg_muxer",
+                "width": 0,
+                "height": 1,
+                "flags": {
+                    "rawValue": 6,
+                    "audio": true,
+                    "video": true,
+                    "encoded": true,
+                    "multiTrack": true,
+                    "service": true,
+                },
+                "settings": {},
+                "active": false,
+                "reconnecting": false,
+                "congestion": 2.0,
+                "totalFrames": 3,
+                "droppedFrames": 4,
+                "totalBytes": 5,
+            },
+        });
+        let (mut obs, _handle) = init(vec![request], vec![response]);
+        let res = obs.get_output_info("output1").unwrap();
+        obs.close();
+        assert_eq!(
+            res,
+            requests::GetOutputInfo {
+                output_info: typedefs::Output {
+                    name: "simple_file_output".to_string(),
+                    output_type: "ffmpeg_muxer".to_string(),
+                    width: 0,
+                    height: 1,
+                    flags: typedefs::Flags {
+                        raw_value: 6,
+                        audio: true,
+                        video: true,
+                        encoded: true,
+                        multi_track: true,
+                        service: true,
+                    },
+                    settings: std::collections::HashMap::new(),
+                    active: false,
+                    reconnecting: false,
+                    congestion: 2.0,
+                    total_frames: 3,
+                    dropped_frames: 4,
+                    total_bytes: 5,
+                }
+            }
+        );
+    }
+
+    #[test]
+    fn start_output() {
+        let request = json!({
+            "request-type": "StartOutput",
+            "message-id": "0",
+            "outputName": "output1",
+        });
+        let response = json!({
+            "status": "ok",
+            "message-id": "0",
+        });
+        let (mut obs, _handle) = init(vec![request], vec![response]);
+        let res = obs.start_output("output1").unwrap();
+        obs.close();
+        assert_eq!(
+            res,
+            requests::Response {
+                status: requests::Status::Ok,
+                message_id: "0".to_string(),
+                error: None,
+            }
+        );
+    }
+
+    #[test]
+    fn stop_output() {
+        let request = json!({
+            "request-type": "StopOutput",
+            "message-id": "0",
+            "outputName": "output1",
+            "force": false,
+        });
+        let response = json!({
+            "status": "ok",
+            "message-id": "0",
+        });
+        let (mut obs, _handle) = init(vec![request], vec![response]);
+        let res = obs.stop_output("output1", false).unwrap();
+        obs.close();
+        assert_eq!(
+            res,
+            requests::Response {
+                status: requests::Status::Ok,
+                message_id: "0".to_string(),
+                error: None,
+            }
+        );
+    }
+
+    #[test]
+    fn set_current_profile() {
+        let request = json!({
+            "request-type": "SetCurrentProfile",
+            "message-id": "0",
+            "profile-name": "p",
+        });
+        let response = json!({
+            "status": "ok",
+            "message-id": "0",
+        });
+        let (mut obs, _handle) = init(vec![request], vec![response]);
+        let res = obs.set_current_profile("p").unwrap();
+        obs.close();
+        assert_eq!(
+            res,
+            requests::Response {
+                status: requests::Status::Ok,
+                message_id: "0".to_string(),
+                error: None,
+            }
+        );
+    }
+
+    #[test]
+    fn get_current_profile() {
+        let request = json!({
+            "request-type": "GetCurrentProfile",
+            "message-id": "0",
+        });
+        let response = json!({
+            "status": "ok",
+            "message-id": "0",
+            "profile-name": "p",
+        });
+        let (mut obs, _handle) = init(vec![request], vec![response]);
+        let res = obs.get_current_profile().unwrap();
+        obs.close();
+        assert_eq!(
+            res,
+            requests::Profile {
+                profile_name: "p".to_string(),
+            }
+        );
+    }
+
+    #[test]
+    fn list_profiles() {
+        let request = json!({
+            "request-type": "ListProfiles",
+            "message-id": "0",
+        });
+        let response = json!({
+            "status": "ok",
+            "message-id": "0",
+            "profiles": [
+                {
+                    "profile-name": "p1",
+                },
+                {
+                    "profile-name": "p2",
+                }
+            ],
+        });
+        let (mut obs, _handle) = init(vec![request], vec![response]);
+        let res = obs.list_profiles().unwrap();
+        obs.close();
+        assert_eq!(
+            res,
+            requests::ListProfiles {
+                profiles: vec![
+                    requests::Profile {
+                        profile_name: "p1".to_string()
+                    },
+                    requests::Profile {
+                        profile_name: "p2".to_string()
+                    },
+                ]
+            }
+        );
+    }
+
+    #[test]
+    fn toggle_recording() {
+        let request = json!({
+            "request-type": "StartStopRecording",
+            "message-id": "0",
+        });
+        let response = json!({
+            "status": "ok",
+            "message-id": "0",
+        });
+        let (mut obs, _handle) = init(vec![request], vec![response]);
+        let res = obs.toggle_recording().unwrap();
+        obs.close();
+        assert_eq!(
+            res,
+            requests::Response {
+                status: requests::Status::Ok,
+                message_id: "0".to_string(),
+                error: None,
+            }
+        );
+    }
+
+    #[test]
+    fn start_recording() {
+        let request = json!({
+            "request-type": "StartRecording",
+            "message-id": "0",
+        });
+        let response = json!({
+            "status": "ok",
+            "message-id": "0",
+        });
+        let (mut obs, _handle) = init(vec![request], vec![response]);
+        let res = obs.start_recording().unwrap();
+        obs.close();
+        assert_eq!(
+            res,
+            requests::Response {
+                status: requests::Status::Ok,
+                message_id: "0".to_string(),
+                error: None,
+            }
+        );
+    }
+
+    #[test]
+    fn stop_recording() {
+        let request = json!({
+            "request-type": "StopRecording",
+            "message-id": "0",
+        });
+        let response = json!({
+            "status": "ok",
+            "message-id": "0",
+        });
+        let (mut obs, _handle) = init(vec![request], vec![response]);
+        let res = obs.stop_recording().unwrap();
+        obs.close();
+        assert_eq!(
+            res,
+            requests::Response {
+                status: requests::Status::Ok,
+                message_id: "0".to_string(),
+                error: None,
+            }
+        );
+    }
+
+    #[test]
+    fn pause_recording() {
+        let request = json!({
+            "request-type": "PauseRecording",
+            "message-id": "0",
+        });
+        let response = json!({
+            "status": "ok",
+            "message-id": "0",
+        });
+        let (mut obs, _handle) = init(vec![request], vec![response]);
+        let res = obs.pause_recording().unwrap();
+        obs.close();
+        assert_eq!(
+            res,
+            requests::Response {
+                status: requests::Status::Ok,
+                message_id: "0".to_string(),
+                error: None,
+            }
+        );
+    }
+
+    #[test]
+    fn resume_recording() {
+        let request = json!({
+            "request-type": "ResumeRecording",
+            "message-id": "0",
+        });
+        let response = json!({
+            "status": "ok",
+            "message-id": "0",
+        });
+        let (mut obs, _handle) = init(vec![request], vec![response]);
+        let res = obs.resume_recording().unwrap();
+        obs.close();
+        assert_eq!(
+            res,
+            requests::Response {
+                status: requests::Status::Ok,
+                message_id: "0".to_string(),
+                error: None,
+            }
+        );
+    }
+
+    #[test]
+    fn set_recording_folder() {
+        let request = json!({
+            "request-type": "SetRecordingFolder",
+            "message-id": "0",
+            "rec-folder": "path",
+        });
+        let response = json!({
+            "status": "ok",
+            "message-id": "0",
+        });
+        let (mut obs, _handle) = init(vec![request], vec![response]);
+        let res = obs.set_recording_folder("path").unwrap();
+        obs.close();
+        assert_eq!(
+            res,
+            requests::Response {
+                status: requests::Status::Ok,
+                message_id: "0".to_string(),
+                error: None,
+            }
+        );
+    }
+
+    #[test]
+    fn get_recording_folder() {
+        let request = json!({
+            "request-type": "GetRecordingFolder",
+            "message-id": "0",
+        });
+        let response = json!({
+            "status": "ok",
+            "message-id": "0",
+            "rec-folder": "path",
+        });
+        let (mut obs, _handle) = init(vec![request], vec![response]);
+        let res = obs.get_recording_folder().unwrap();
+        obs.close();
+        assert_eq!(
+            res,
+            requests::GetRecordingFolder {
+                rec_folder: "path".to_string(),
             }
         );
     }
