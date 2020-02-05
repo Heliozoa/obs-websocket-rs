@@ -619,6 +619,17 @@ mod test {
         (obs, handle)
     }
 
+    fn request_test<T, U>(requests: Vec<Value>, responses: Vec<Value>, expected: T, method: U)
+    where
+        T: PartialEq + std::fmt::Debug,
+        U: Fn(&mut Obs) -> Result<T>,
+    {
+        let (mut obs, _handle) = init(requests, responses);
+        let res = method(&mut obs).unwrap();
+        obs.close();
+        assert_eq!(res, expected);
+    }
+
     #[test]
     fn get_version() {
         let request = json!({
@@ -1239,16 +1250,5 @@ mod test {
         };
         let method = |obs: &mut Obs| obs.get_recording_folder();
         request_test(vec![request], vec![response], expected, method);
-    }
-
-    fn request_test<T, U>(requests: Vec<Value>, responses: Vec<Value>, expected: T, method: U)
-    where
-        T: PartialEq + std::fmt::Debug,
-        U: Fn(&mut Obs) -> Result<T>,
-    {
-        let (mut obs, _handle) = init(requests, responses);
-        let res = method(&mut obs).unwrap();
-        obs.close();
-        assert_eq!(res, expected);
     }
 }
