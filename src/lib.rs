@@ -839,7 +839,7 @@ mod test {
             let data = json!({
                 "custom": "fields",
             });
-            obs.broadcast_custom_message("test", data);
+            obs.broadcast_custom_message("test", data)
         };
         request_test(vec![request], vec![response], expected, method);
     }
@@ -1244,7 +1244,7 @@ mod test {
     fn request_test<T, U>(requests: Vec<Value>, responses: Vec<Value>, expected: T, method: U)
     where
         T: PartialEq + std::fmt::Debug,
-        U: FnOnce(&mut Obs) -> Result<T>,
+        U: Fn(&mut Obs) -> Result<T>,
     {
         let (mut obs, _handle) = init(requests, responses);
         let res = method(&mut obs).unwrap();
