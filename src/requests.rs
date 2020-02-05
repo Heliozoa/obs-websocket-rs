@@ -1,4 +1,3 @@
-use super::responses;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
@@ -355,28 +354,54 @@ struct SetSceneItemPropertiesRequest {
 
 pub fn set_scene_item_properties(
     message_id: &str,
-    scene_name: Option<String>,
-    item: String,
-    position: Position,
+    scene_name: Option<&str>,
+    item: &str,
+    position_x: Option<f64>,
+    position_y: Option<f64>,
+    position_alignment: Option<i32>,
     rotation: Option<f64>,
-    scale: Scale,
-    crop: Crop,
+    scale_x: Option<f64>,
+    scale_y: Option<f64>,
+    crop_top: Option<i32>,
+    crop_right: Option<i32>,
+    crop_bottom: Option<i32>,
+    crop_left: Option<i32>,
     visible: Option<bool>,
     locked: Option<bool>,
-    bounds: Bounds,
+    bounds_type: Option<BoundsType>,
+    bounds_alignment: Option<i32>,
+    bounds_x: Option<f64>,
+    bounds_y: Option<f64>,
 ) -> Value {
     let req = SetSceneItemPropertiesRequest {
         request_type: "SetSceneItemProperties".to_string(),
         message_id: message_id.to_string(),
-        scene_name,
-        item,
-        position,
+        scene_name: scene_name.map(|s| s.to_string()),
+        item: item.to_string(),
+        position: Position {
+            x: position_x,
+            y: position_y,
+            alignment: position_alignment,
+        },
         rotation,
-        scale,
-        crop,
+        scale: Scale {
+            x: scale_x,
+            y: scale_y,
+        },
+        crop: Crop {
+            top: crop_top,
+            right: crop_right,
+            bottom: crop_bottom,
+            left: crop_left,
+        },
         visible,
         locked,
-        bounds,
+        bounds: Bounds {
+            bounds_type,
+            alignment: bounds_alignment,
+            x: bounds_x,
+            y: bounds_y,
+        },
     };
     let v = serde_json::to_value(&req).unwrap();
     v

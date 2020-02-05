@@ -44,14 +44,19 @@ impl Obs {
         let json = json.to_string();
         debug!("SENT: {}", json);
         socket.write_message(Message::Text(json))?;
-        let response = socket.read_message()?.to_string();
-        debug!("RECV: {}", response);
-        let parsed: responses::Response = serde_json::from_str(&response)?;
-        if let responses::Status::Ok = parsed.status {
-            Ok(serde_json::from_str(&response)?)
-        } else {
-            let error_msg = parsed.error.unwrap();
-            Err(Error::ObsError(error_msg))
+        loop {
+            let response = socket.read_message()?.to_string();
+            debug!("RECV: {}", response);
+            let parsed: responses::Message = serde_json::from_str(&response)?;
+            if parsed.message_id.is_some() {
+                let parsed: responses::Response = serde_json::from_str(&response)?;
+                if let responses::Status::Ok = parsed.status {
+                    return Ok(serde_json::from_str(&response)?);
+                } else {
+                    let error_msg = parsed.error.unwrap();
+                    return Err(Error::ObsError(error_msg));
+                }
+            }
         }
     }
 
@@ -207,18 +212,45 @@ impl Obs {
 
     pub fn set_scene_item_properties(
         &mut self,
-        scene_name: Option<String>,
-        item: String,
-        position: requests::Position,
+        scene_name: Option<&str>,
+        item: &str,
+        position_x: Option<f64>,
+        position_y: Option<f64>,
+        position_alignment: Option<i32>,
         rotation: Option<f64>,
-        scale: requests::Scale,
-        crop: requests::Crop,
+        scale_x: Option<f64>,
+        scale_y: Option<f64>,
+        crop_top: Option<i32>,
+        crop_right: Option<i32>,
+        crop_bottom: Option<i32>,
+        crop_left: Option<i32>,
         visible: Option<bool>,
         locked: Option<bool>,
-        bounds: requests::Bounds,
-    ) -> Result<responses::SetSceneItemProperties> {
+        bounds_type: Option<requests::BoundsType>,
+        bounds_alignment: Option<i32>,
+        bounds_x: Option<f64>,
+        bounds_y: Option<f64>,
+    ) -> Result<responses::Response> {
         self.get(requests::set_scene_item_properties(
-            "0", scene_name, item, position, rotation, scale, crop, visible, locked, bounds,
+            "0",
+            scene_name,
+            item,
+            position_x,
+            position_y,
+            position_alignment,
+            rotation,
+            scale_x,
+            scale_y,
+            crop_top,
+            crop_right,
+            crop_bottom,
+            crop_left,
+            visible,
+            locked,
+            bounds_type,
+            bounds_alignment,
+            bounds_x,
+            bounds_y,
         ))
     }
 
@@ -1473,5 +1505,15 @@ mod test {
         };
         let method = |obs: &mut Obs| obs.get_scene_item_properties(Some("scene"), "source");
         request_test(vec![request], vec![response], expected, method);
+    }
+
+    #[test]
+    fn asd() {
+        let mut obs = init_without_server(4444);
+        obs.set_scene_item_properties(
+            None, "asd", None, None, None, None, None, None, None, None, None, None, None, None,
+            None, None, None, None,
+        )
+        .unwrap();
     }
 }

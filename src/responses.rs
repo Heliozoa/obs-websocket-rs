@@ -10,10 +10,25 @@ pub enum Status {
 
 #[derive(Deserialize, Debug, Eq, PartialEq)]
 #[serde(rename_all = "kebab-case")]
+pub struct Message {
+    pub message_id: Option<String>,
+    pub update_type: Option<String>,
+}
+
+#[derive(Deserialize, Debug, Eq, PartialEq)]
+#[serde(rename_all = "kebab-case")]
 pub struct Response {
     pub message_id: String,
     pub status: Status,
     pub error: Option<String>,
+}
+
+#[derive(Deserialize, Debug, Eq, PartialEq)]
+#[serde(rename_all = "kebab-case")]
+pub struct Event {
+    pub update_type: String,
+    pub stream_timecode: Option<String>,
+    pub rec_timecode: Option<String>,
 }
 
 fn deserialize_comma_separated_string<'de, D>(d: D) -> Result<Vec<String>, D::Error>
@@ -174,6 +189,7 @@ pub enum SceneItemType {
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct SceneItem {
     cy: i32,
     cx: i32,
@@ -188,11 +204,7 @@ pub struct SceneItem {
     volume: i32,
     x: i32,
     y: i32,
-    #[serde(rename = "parentGroupName")]
-    #[serde(skip_serializing_if = "Option::is_none")]
     parent_group_name: Option<String>,
-    #[serde(rename = "groupChildren")]
-    #[serde(skip_serializing_if = "Option::is_none")]
     group_children: Option<Vec<SceneItem>>,
 }
 
@@ -238,7 +250,6 @@ pub enum BoundsType {
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct Bounds {
     #[serde(rename = "type")]
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub bounds_type: BoundsType,
     pub alignment: i32,
     pub x: f64,
@@ -259,9 +270,7 @@ pub struct SceneItemTransform {
     source_height: i32,
     width: f64,
     height: f64,
-    #[serde(skip_serializing_if = "Option::is_none")]
     parent_group_name: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     group_children: Option<Vec<SceneItemTransform>>,
 }
 
