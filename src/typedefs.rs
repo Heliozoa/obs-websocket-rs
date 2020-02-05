@@ -35,12 +35,12 @@ pub struct SceneItem {
     group_children: Option<Vec<SceneItem>>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Position {
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub x: Option<i32>,
+    pub x: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub y: Option<i32>,
+    pub y: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub alignment: Option<i32>,
 }
@@ -51,7 +51,7 @@ impl Position {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Scale {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub x: Option<f64>,
@@ -65,7 +65,7 @@ impl Scale {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct Crop {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub top: Option<i32>,
@@ -83,7 +83,7 @@ impl Crop {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub enum BoundsType {
     #[serde(rename = "OBS_BOUNDS_NONE")]
     None,
@@ -101,7 +101,7 @@ pub enum BoundsType {
     MaxOnly,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Bounds {
     #[serde(rename = "type")]
     #[serde(skip_serializing_if = "Option::is_none")]

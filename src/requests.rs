@@ -333,10 +333,10 @@ pub fn get_current_scene_collection(message_id: &str) -> Value {
     })
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 pub struct GetCurrentSceneCollection {
-    sc_name: String,
+    pub sc_name: String,
 }
 
 pub fn list_scene_collections(message_id: &str) -> Value {
@@ -346,17 +346,13 @@ pub fn list_scene_collections(message_id: &str) -> Value {
     })
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 pub struct ListSceneCollections {
-    scene_collections: Vec<String>,
+    pub scene_collections: Vec<String>,
 }
 
-pub fn get_scene_item_properties(
-    message_id: &str,
-    scene_name: Option<String>,
-    item: String,
-) -> Value {
+pub fn get_scene_item_properties(message_id: &str, scene_name: Option<&str>, item: &str) -> Value {
     if scene_name.is_some() {
         json!({
             "request-type": "GetSceneItemProperties",
@@ -373,21 +369,21 @@ pub fn get_scene_item_properties(
     }
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct GetSceneItemProperties {
-    name: String,
-    position: typedefs::Position,
-    rotation: f64,
-    scale: typedefs::Scale,
-    crop: typedefs::Crop,
-    visible: bool,
-    locked: bool,
-    bounds: typedefs::Bounds,
-    source_width: i32,
-    source_height: i32,
-    width: f64,
-    height: f64,
+    pub name: String,
+    pub position: typedefs::Position,
+    pub rotation: f64,
+    pub scale: typedefs::Scale,
+    pub crop: typedefs::Crop,
+    pub visible: bool,
+    pub locked: bool,
+    pub bounds: typedefs::Bounds,
+    pub source_width: i32,
+    pub source_height: i32,
+    pub width: f64,
+    pub height: f64,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

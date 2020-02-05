@@ -193,14 +193,14 @@ impl Obs {
         self.get(requests::get_current_scene_collection("0"))
     }
 
-    pub fn list_current_scene_collection(&mut self) -> Result<requests::ListSceneCollections> {
+    pub fn list_scene_collections(&mut self) -> Result<requests::ListSceneCollections> {
         self.get(requests::list_scene_collections("0"))
     }
 
     pub fn get_scene_item_properties(
         &mut self,
-        scene_name: Option<String>,
-        item: String,
+        scene_name: Option<&str>,
+        item: &str,
     ) -> Result<requests::GetSceneItemProperties> {
         self.get(requests::get_scene_item_properties("0", scene_name, item))
     }
@@ -582,40 +582,41 @@ mod test {
     use std::thread::{spawn, JoinHandle};
     use tungstenite::server::accept;
 
-    fn init(requests: Vec<Value>, responses: Vec<Value>) -> (Obs, JoinHandle<()>) {
-        fn start_mock_server(requests: Vec<Value>, responses: Vec<Value>) -> (u16, JoinHandle<()>) {
-            let server = TcpListener::bind("localhost:0").unwrap();
-            let port = server.local_addr().unwrap().port();
-            debug!("mock server started at {}", port);
-            let handle = spawn(move || {
-                let mut requests = requests.iter().cycle();
-                let mut responses = responses.iter().cycle();
-                for stream in server.incoming() {
-                    debug!("incoming connection");
-                    let mut websocket =
-                        accept(stream.expect("stream error")).expect("failed to accept");
-                    loop {
-                        let msg = websocket.read_message().expect("failed to read msg");
-                        if let Message::Close(_) = msg {
-                            return;
-                        }
-                        let parsed = serde_json::from_str::<Value>(&msg.to_string())
-                            .expect("failed to deserialize");
-                        assert_eq!(&parsed, requests.next().expect("missing requests"));
-                        websocket
-                            .write_message(Message::Text(
-                                responses.next().expect("missing responses").to_string(),
-                            ))
-                            .expect("failed to write");
-                    }
-                }
-            });
-            (port, handle)
-        }
+    fn init_without_server(port: u16) -> Obs {
         let _ = env_logger::builder().is_test(true).try_init();
-        let (port, handle) = start_mock_server(requests, responses);
         let mut obs = Obs::new();
         obs.connect(port).unwrap();
+        obs
+    }
+
+    fn init(requests: Vec<Value>, responses: Vec<Value>) -> (Obs, JoinHandle<()>) {
+        let server = TcpListener::bind("localhost:0").unwrap();
+        let port = server.local_addr().unwrap().port();
+        debug!("mock server started at {}", port);
+        let handle = spawn(move || {
+            let mut requests = requests.iter().cycle();
+            let mut responses = responses.iter().cycle();
+            for stream in server.incoming() {
+                debug!("incoming connection");
+                let mut websocket =
+                    accept(stream.expect("stream error")).expect("failed to accept");
+                loop {
+                    let msg = websocket.read_message().expect("failed to read msg");
+                    if let Message::Close(_) = msg {
+                        return;
+                    }
+                    let parsed = serde_json::from_str::<Value>(&msg.to_string())
+                        .expect("failed to deserialize");
+                    assert_eq!(&parsed, requests.next().expect("missing requests"));
+                    websocket
+                        .write_message(Message::Text(
+                            responses.next().expect("missing responses").to_string(),
+                        ))
+                        .expect("failed to write");
+                }
+            }
+        });
+        let obs = init_without_server(port);
         (obs, handle)
     }
 
@@ -1249,6 +1250,217 @@ mod test {
             rec_folder: "path".to_string(),
         };
         let method = |obs: &mut Obs| obs.get_recording_folder();
+        request_test(vec![request], vec![response], expected, method);
+    }
+
+    #[test]
+    fn toggle_replay_buffer() {
+        let request = json!({
+            "request-type": "StartStopReplayBuffer",
+            "message-id": "0",
+        });
+        let response = json!({
+            "status": "ok",
+            "message-id": "0",
+        });
+        let expected = requests::Response {
+            status: requests::Status::Ok,
+            message_id: "0".to_string(),
+            error: None,
+        };
+        let method = |obs: &mut Obs| obs.toggle_replay_buffer();
+        request_test(vec![request], vec![response], expected, method);
+    }
+
+    #[test]
+    fn start_replay_buffer() {
+        let request = json!({
+            "request-type": "StartReplayBuffer",
+            "message-id": "0",
+        });
+        let response = json!({
+            "status": "ok",
+            "message-id": "0",
+        });
+        let expected = requests::Response {
+            status: requests::Status::Ok,
+            message_id: "0".to_string(),
+            error: None,
+        };
+        let method = |obs: &mut Obs| obs.start_replay_buffer();
+        request_test(vec![request], vec![response], expected, method);
+    }
+
+    #[test]
+    fn stop_replay_buffer() {
+        let request = json!({
+            "request-type": "StopReplayBuffer",
+            "message-id": "0",
+        });
+        let response = json!({
+            "status": "ok",
+            "message-id": "0",
+        });
+        let expected = requests::Response {
+            status: requests::Status::Ok,
+            message_id: "0".to_string(),
+            error: None,
+        };
+        let method = |obs: &mut Obs| obs.stop_replay_buffer();
+        request_test(vec![request], vec![response], expected, method);
+    }
+
+    #[test]
+    fn save_replay_buffer() {
+        let request = json!({
+            "request-type": "SaveReplayBuffer",
+            "message-id": "0",
+        });
+        let response = json!({
+            "status": "ok",
+            "message-id": "0",
+        });
+        let expected = requests::Response {
+            status: requests::Status::Ok,
+            message_id: "0".to_string(),
+            error: None,
+        };
+        let method = |obs: &mut Obs| obs.save_replay_buffer();
+        request_test(vec![request], vec![response], expected, method);
+    }
+
+    #[test]
+    fn set_current_scene_collection() {
+        let request = json!({
+            "request-type": "SetCurrentSceneCollection",
+            "message-id": "0",
+            "sc-name": "scene",
+        });
+        let response = json!({
+            "status": "ok",
+            "message-id": "0",
+        });
+        let expected = requests::Response {
+            status: requests::Status::Ok,
+            message_id: "0".to_string(),
+            error: None,
+        };
+        let method = |obs: &mut Obs| obs.set_current_scene_collection("scene");
+        request_test(vec![request], vec![response], expected, method);
+    }
+
+    #[test]
+    fn get_current_scene_collection() {
+        let request = json!({
+            "request-type": "GetCurrentSceneCollection",
+            "message-id": "0",
+        });
+        let response = json!({
+            "status": "ok",
+            "message-id": "0",
+            "sc-name": "scene",
+        });
+        let expected = requests::GetCurrentSceneCollection {
+            sc_name: "scene".to_string(),
+        };
+        let method = |obs: &mut Obs| obs.get_current_scene_collection();
+        request_test(vec![request], vec![response], expected, method);
+    }
+
+    #[test]
+    fn list_scene_collections() {
+        let request = json!({
+            "request-type": "ListSceneCollections",
+            "message-id": "0",
+        });
+        let response = json!({
+            "status": "ok",
+            "message-id": "0",
+            "scene-collections": [
+                "scene1",
+                "scene2",
+            ],
+        });
+        let expected = requests::ListSceneCollections {
+            scene_collections: vec!["scene1".to_string(), "scene2".to_string()],
+        };
+        let method = |obs: &mut Obs| obs.list_scene_collections();
+        request_test(vec![request], vec![response], expected, method);
+    }
+
+    #[test]
+    fn get_scene_item_properties() {
+        let request = json!({
+            "request-type": "GetSceneItemProperties",
+            "message-id": "0",
+            "scene-name": "scene",
+            "item": "source"
+        });
+        let response = json!({
+            "status": "ok",
+            "message-id": "0",
+            "name": "source",
+            "position": {
+                "x": 0,
+                "y": 1,
+                "alignment": 2,
+            },
+            "rotation": 3.0,
+            "scale": {
+                "x": 4.0,
+                "y": 5.0,
+            },
+            "crop": {
+                "top": 6,
+                "right": 7,
+                "bottom": 8,
+                "left": 9,
+            },
+            "visible": true,
+            "locked": true,
+            "bounds": {
+                "type": "OBS_BOUNDS_STRETCH",
+                "alignment": 10,
+                "x": 11.0,
+                "y": 12.0,
+            },
+            "sourceWidth": 13,
+            "sourceHeight": 14,
+            "width": 15.0,
+            "height": 16.0,
+        });
+        let expected = requests::GetSceneItemProperties {
+            name: "source".to_string(),
+            position: typedefs::Position {
+                x: Some(0.0),
+                y: Some(1.0),
+                alignment: Some(2),
+            },
+            rotation: 3.0,
+            scale: typedefs::Scale {
+                x: Some(4.0),
+                y: Some(5.0),
+            },
+            crop: typedefs::Crop {
+                top: Some(6),
+                right: Some(7),
+                bottom: Some(8),
+                left: Some(9),
+            },
+            visible: true,
+            locked: true,
+            bounds: typedefs::Bounds {
+                bounds_type: Some(typedefs::BoundsType::Stretch),
+                alignment: Some(10),
+                x: Some(11.0),
+                y: Some(12.0),
+            },
+            source_width: 13,
+            source_height: 14,
+            width: 15.0,
+            height: 16.0,
+        };
+        let method = |obs: &mut Obs| obs.get_scene_item_properties(Some("scene"), "source");
         request_test(vec![request], vec![response], expected, method);
     }
 }
