@@ -189,7 +189,7 @@ impl Obs {
         self.get(requests::set_current_scene_collection("0", sc_name))
     }
 
-    pub fn get_current_scene_collection(&mut self) -> Result<requests::GetCurrentSceneCollection> {
+    pub fn get_current_scene_collection(&mut self) -> Result<requests::SceneCollection> {
         self.get(requests::get_current_scene_collection("0"))
     }
 
@@ -1360,7 +1360,7 @@ mod test {
             "message-id": "0",
             "sc-name": "scene",
         });
-        let expected = requests::GetCurrentSceneCollection {
+        let expected = requests::SceneCollection {
             sc_name: "scene".to_string(),
         };
         let method = |obs: &mut Obs| obs.get_current_scene_collection();
@@ -1377,12 +1377,23 @@ mod test {
             "status": "ok",
             "message-id": "0",
             "scene-collections": [
-                "scene1",
-                "scene2",
+                {
+                    "sc-name": "scene1",
+                },
+                {
+                    "sc-name": "scene2",
+                }
             ],
         });
         let expected = requests::ListSceneCollections {
-            scene_collections: vec!["scene1".to_string(), "scene2".to_string()],
+            scene_collections: vec![
+                requests::SceneCollection {
+                    sc_name: "scene1".to_string(),
+                },
+                requests::SceneCollection {
+                    sc_name: "scene2".to_string(),
+                },
+            ],
         };
         let method = |obs: &mut Obs| obs.list_scene_collections();
         request_test(vec![request], vec![response], expected, method);

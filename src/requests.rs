@@ -335,7 +335,7 @@ pub fn get_current_scene_collection(message_id: &str) -> Value {
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
-pub struct GetCurrentSceneCollection {
+pub struct SceneCollection {
     pub sc_name: String,
 }
 
@@ -349,7 +349,7 @@ pub fn list_scene_collections(message_id: &str) -> Value {
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 pub struct ListSceneCollections {
-    pub scene_collections: Vec<String>,
+    pub scene_collections: Vec<SceneCollection>,
 }
 
 pub fn get_scene_item_properties(message_id: &str, scene_name: Option<&str>, item: &str) -> Value {
