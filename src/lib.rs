@@ -209,13 +209,13 @@ impl Obs {
         &mut self,
         scene_name: Option<String>,
         item: String,
-        position: responses::Position,
+        position: requests::Position,
         rotation: Option<f64>,
-        scale: responses::Scale,
-        crop: responses::Crop,
+        scale: requests::Scale,
+        crop: requests::Crop,
         visible: Option<bool>,
         locked: Option<bool>,
-        bounds: responses::Bounds,
+        bounds: requests::Bounds,
     ) -> Result<responses::SetSceneItemProperties> {
         self.get(requests::set_scene_item_properties(
             "0", scene_name, item, position, rotation, scale, crop, visible, locked, bounds,

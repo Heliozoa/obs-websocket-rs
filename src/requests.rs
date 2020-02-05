@@ -241,7 +241,95 @@ pub fn get_scene_item_properties(message_id: &str, scene_name: Option<&str>, ite
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Debug, PartialEq)]
+pub struct Position {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    x: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    y: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    alignment: Option<i32>,
+}
+
+impl Position {
+    pub fn is_none(&self) -> bool {
+        self.x.is_none() && self.y.is_none() && self.alignment.is_none()
+    }
+}
+
+#[derive(Serialize, Debug, PartialEq)]
+pub struct Scale {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub x: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub y: Option<f64>,
+}
+
+impl Scale {
+    pub fn is_none(&self) -> bool {
+        self.x.is_none() && self.y.is_none()
+    }
+}
+
+#[derive(Serialize, Debug, PartialEq, Eq)]
+pub struct Crop {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub top: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub right: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bottom: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub left: Option<i32>,
+}
+
+impl Crop {
+    pub fn is_none(&self) -> bool {
+        self.top.is_none() && self.right.is_none() && self.bottom.is_none() && self.left.is_none()
+    }
+}
+
+#[derive(Serialize, Debug, PartialEq, Eq)]
+pub enum BoundsType {
+    #[serde(rename = "OBS_BOUNDS_NONE")]
+    None,
+    #[serde(rename = "OBS_BOUNDS_STRETCH")]
+    Stretch,
+    #[serde(rename = "OBS_BOUNDS_SCALE_INNER")]
+    ScaleInner,
+    #[serde(rename = "OBS_BOUNDS_SCALE_OUTER")]
+    ScaleOuter,
+    #[serde(rename = "OBS_BOUNDS_SCALE_TO_WIDTH")]
+    ScaleToWidth,
+    #[serde(rename = "OBS_BOUNDS_SCALE_TO_HEIGHT")]
+    ScaleToHeight,
+    #[serde(rename = "OBS_BOUNDS_MAX_ONLY")]
+    MaxOnly,
+}
+
+#[derive(Serialize, Debug, PartialEq)]
+pub struct Bounds {
+    #[serde(rename = "type")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bounds_type: Option<BoundsType>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub alignment: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub x: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub y: Option<f64>,
+}
+
+impl Bounds {
+    pub fn is_none(&self) -> bool {
+        self.bounds_type.is_none()
+            && self.alignment.is_none()
+            && self.x.is_none()
+            && self.y.is_none()
+    }
+}
+
+#[derive(Serialize, Debug)]
 #[serde(rename_all = "kebab-case")]
 struct SetSceneItemPropertiesRequest {
     request_type: String,
@@ -249,33 +337,33 @@ struct SetSceneItemPropertiesRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     scene_name: Option<String>,
     item: String,
-    #[serde(skip_serializing_if = "responses::Position::is_none")]
-    position: responses::Position,
+    #[serde(skip_serializing_if = "Position::is_none")]
+    position: Position,
     #[serde(skip_serializing_if = "Option::is_none")]
     rotation: Option<f64>,
-    #[serde(skip_serializing_if = "responses::Scale::is_none")]
-    scale: responses::Scale,
-    #[serde(skip_serializing_if = "responses::Crop::is_none")]
-    crop: responses::Crop,
+    #[serde(skip_serializing_if = "Scale::is_none")]
+    scale: Scale,
+    #[serde(skip_serializing_if = "Crop::is_none")]
+    crop: Crop,
     #[serde(skip_serializing_if = "Option::is_none")]
     visible: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     locked: Option<bool>,
-    #[serde(skip_serializing_if = "responses::Bounds::is_none")]
-    bounds: responses::Bounds,
+    #[serde(skip_serializing_if = "Bounds::is_none")]
+    bounds: Bounds,
 }
 
 pub fn set_scene_item_properties(
     message_id: &str,
     scene_name: Option<String>,
     item: String,
-    position: responses::Position,
+    position: Position,
     rotation: Option<f64>,
-    scale: responses::Scale,
-    crop: responses::Crop,
+    scale: Scale,
+    crop: Crop,
     visible: Option<bool>,
     locked: Option<bool>,
-    bounds: responses::Bounds,
+    bounds: Bounds,
 ) -> Value {
     let req = SetSceneItemPropertiesRequest {
         request_type: "SetSceneItemProperties".to_string(),

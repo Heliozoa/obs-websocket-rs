@@ -1,4 +1,4 @@
-use serde::{de, Deserialize, Deserializer, Serialize};
+use serde::{de, Deserialize, Deserializer};
 use serde_json::Value;
 use std::collections::HashMap;
 
@@ -164,7 +164,7 @@ pub struct SetSceneItemProperties {
     height: f64,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Deserialize, Debug)]
 #[serde(rename_all = "lowercase")]
 pub enum SceneItemType {
     Input,
@@ -174,7 +174,7 @@ pub enum SceneItemType {
     Unknown,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Deserialize, Debug)]
 pub struct SceneItem {
     cy: i32,
     cx: i32,
@@ -197,7 +197,7 @@ pub struct SceneItem {
     group_children: Option<Vec<SceneItem>>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq)]
 pub struct Position {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub x: Option<f64>,
@@ -207,13 +207,7 @@ pub struct Position {
     pub alignment: Option<i32>,
 }
 
-impl Position {
-    pub fn is_none(&self) -> bool {
-        self.x.is_none() && self.y.is_none() && self.alignment.is_none()
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq)]
 pub struct Scale {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub x: Option<f64>,
@@ -227,7 +221,7 @@ impl Scale {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 pub struct Crop {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub top: Option<i32>,
@@ -245,7 +239,7 @@ impl Crop {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 pub enum BoundsType {
     #[serde(rename = "OBS_BOUNDS_NONE")]
     None,
@@ -263,7 +257,7 @@ pub enum BoundsType {
     MaxOnly,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq)]
 pub struct Bounds {
     #[serde(rename = "type")]
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -285,7 +279,7 @@ impl Bounds {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct SceneItemTransform {
     position: Position,
@@ -305,7 +299,7 @@ pub struct SceneItemTransform {
     group_children: Option<Vec<SceneItemTransform>>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub struct ObsStats {
     pub fps: f64,
@@ -319,7 +313,7 @@ pub struct ObsStats {
     pub free_disk_space: f64,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct Flags {
     pub raw_value: i32,
@@ -330,7 +324,7 @@ pub struct Flags {
     pub service: bool,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Output {
     pub name: String,
@@ -348,19 +342,19 @@ pub struct Output {
     pub total_bytes: i32,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Deserialize, Debug)]
 pub struct Scene {
     name: String,
     sources: Vec<SceneItem>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Deserialize, Debug)]
 pub struct Item {
     name: String,
     id: i32,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Deserialize, Debug)]
 #[serde(rename_all = "lowercase")]
 pub enum Align {
     Left,
@@ -368,7 +362,7 @@ pub enum Align {
     Right,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Deserialize, Debug)]
 pub struct Font {
     face: Option<String>,
     flags: Option<i32>,
@@ -376,7 +370,7 @@ pub struct Font {
     style: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Deserialize, Debug)]
 #[serde(rename_all = "lowercase")]
 pub enum MovementType {
     Up,
@@ -385,7 +379,7 @@ pub enum MovementType {
     Bottom,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Deserialize, Debug)]
 #[serde(rename_all = "kebab-case")]
 pub struct StreamSettings {
     server: Option<String>,
@@ -395,7 +389,7 @@ pub struct StreamSettings {
     password: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Deserialize, Debug)]
 pub struct Stream {
     #[serde(rename = "type")]
     stream_type: Option<String>,
@@ -403,13 +397,13 @@ pub struct Stream {
     settings: StreamSettings,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Deserialize, Debug)]
 pub struct WithTransition {
     name: String,
     duration: Option<i32>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 pub enum ScaleType {
     #[serde(rename = "VIDEO_SCALE_DEFAULT")]
     Default,
@@ -423,7 +417,7 @@ pub enum ScaleType {
     Bicubic,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 pub enum VideoFormat {
     #[serde(rename = "VIDEO_FORMAT_NONE")]
     None,
@@ -461,7 +455,7 @@ pub enum VideoFormat {
     AYUV,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 pub enum ColorSpace {
     #[serde(rename = "VIDEO_CS_DEFAULT")]
     Default,
@@ -473,7 +467,7 @@ pub enum ColorSpace {
     SRGB,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 pub enum ColorRange {
     #[serde(rename = "VIDEO_RANGE_DEFAULT")]
     Default,
@@ -481,9 +475,4 @@ pub enum ColorRange {
     Partial,
     #[serde(rename = "VIDEO_RANGE_FULL")]
     Full,
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
 }
