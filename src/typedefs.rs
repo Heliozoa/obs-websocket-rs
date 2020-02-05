@@ -85,6 +85,8 @@ impl Crop {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum BoundsType {
+    #[serde(rename = "OBS_BOUNDS_NONE")]
+    None,
     #[serde(rename = "OBS_BOUNDS_STRETCH")]
     Stretch,
     #[serde(rename = "OBS_BOUNDS_SCALE_INNER")]
@@ -97,8 +99,6 @@ pub enum BoundsType {
     ScaleToHeight,
     #[serde(rename = "OBS_BOUNDS_MAX_ONLY")]
     MaxOnly,
-    #[serde(rename = "OBS_BOUNDS_NONE")]
-    None,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -249,38 +249,72 @@ pub struct WithTransition {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub enum ScaleType {
-    #[serde(rename = "VIDEO_SCALE_BILINEAR")]
-    Bilinear,
     #[serde(rename = "VIDEO_SCALE_DEFAULT")]
     Default,
+    #[serde(rename = "VIDEO_SCALE_POINT")]
+    Point,
     #[serde(rename = "VIDEO_SCALE_FAST_BILINEAR")]
     FastBilinear,
+    #[serde(rename = "VIDEO_SCALE_BILINEAR")]
+    Bilinear,
     #[serde(rename = "VIDEO_SCALE_BICUBIC")]
     Bicubic,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub enum VideoFormat {
-    #[serde(rename = "VIDEO_FORMAT_NV12")]
-    NV12,
+    #[serde(rename = "VIDEO_FORMAT_NONE")]
+    None,
     #[serde(rename = "VIDEO_FORMAT_I420")]
     I420,
+    #[serde(rename = "VIDEO_FORMAT_NV12")]
+    NV12,
+    #[serde(rename = "VIDEO_FORMAT_YVYU")]
+    YVYU,
+    #[serde(rename = "VIDEO_FORMAT_YUY2")]
+    YUY2,
+    #[serde(rename = "VIDEO_FORMAT_UYVY")]
+    UYVY,
+    #[serde(rename = "VIDEO_FORMAT_RGBA")]
+    RGBA,
+    #[serde(rename = "VIDEO_FORMAT_BGRA")]
+    BGRA,
+    #[serde(rename = "VIDEO_FORMAT_BGRX")]
+    BGRX,
+    #[serde(rename = "VIDEO_FORMAT_Y800")]
+    Y800,
     #[serde(rename = "VIDEO_FORMAT_I444")]
     I444,
-    #[serde(rename = "VIDEO_FORMAT_RGBA")]
-    RGB,
+    #[serde(rename = "VIDEO_FORMAT_BGR3")]
+    BGR3,
+    #[serde(rename = "VIDEO_FORMAT_I422")]
+    I422,
+    #[serde(rename = "VIDEO_FORMAT_I40A")]
+    I40A,
+    #[serde(rename = "VIDEO_FORMAT_I42A")]
+    I42A,
+    #[serde(rename = "VIDEO_FORMAT_YUVA")]
+    YUVA,
+    #[serde(rename = "VIDEO_FORMAT_AYUV")]
+    AYUV,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub enum ColorSpace {
-    #[serde(rename = "VIDEO_CS_709")]
-    CS709,
+    #[serde(rename = "VIDEO_CS_DEFAULT")]
+    Default,
     #[serde(rename = "VIDEO_CS_601")]
     CS601,
+    #[serde(rename = "VIDEO_CS_709")]
+    CS709,
+    #[serde(rename = "VIDEO_CS_SRGB")]
+    SRGB,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub enum ColorRange {
+    #[serde(rename = "VIDEO_RANGE_DEFAULT")]
+    Default,
     #[serde(rename = "VIDEO_RANGE_PARTIAL")]
     Partial,
     #[serde(rename = "VIDEO_RANGE_FULL")]
