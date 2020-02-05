@@ -382,6 +382,30 @@ pub fn set_scene_item_properties(
     v
 }
 
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "kebab-case")]
+pub struct StreamSettings {
+    server: String,
+    key: String,
+    use_auth: bool,
+    username: String,
+    password: String,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Stream {
+    #[serde(rename = "type")]
+    stream_type: Option<String>,
+    metadata: Option<Value>,
+    settings: StreamSettings,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct WithTransition {
+    name: String,
+    duration: Option<i32>,
+}
+
 pub fn reset_scene_item(scene_name: Option<String>, item: String) -> Value {
     json!({"scene-name": scene_name, "item": item})
 }

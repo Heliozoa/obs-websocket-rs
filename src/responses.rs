@@ -1,5 +1,4 @@
 use serde::{de, Deserialize, Deserializer};
-use serde_json::Value;
 use std::collections::HashMap;
 
 #[derive(Deserialize, Debug, Eq, PartialEq)]
@@ -199,44 +198,23 @@ pub struct SceneItem {
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct Position {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub x: Option<f64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub y: Option<f64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub alignment: Option<i32>,
+    pub x: f64,
+    pub y: f64,
+    pub alignment: i32,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct Scale {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub x: Option<f64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub y: Option<f64>,
-}
-
-impl Scale {
-    pub fn is_none(&self) -> bool {
-        self.x.is_none() && self.y.is_none()
-    }
+    pub x: f64,
+    pub y: f64,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 pub struct Crop {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub top: Option<i32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub right: Option<i32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub bottom: Option<i32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub left: Option<i32>,
-}
-
-impl Crop {
-    pub fn is_none(&self) -> bool {
-        self.top.is_none() && self.right.is_none() && self.bottom.is_none() && self.left.is_none()
-    }
+    pub top: i32,
+    pub right: i32,
+    pub bottom: i32,
+    pub left: i32,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
@@ -261,22 +239,10 @@ pub enum BoundsType {
 pub struct Bounds {
     #[serde(rename = "type")]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub bounds_type: Option<BoundsType>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub alignment: Option<i32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub x: Option<f64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub y: Option<f64>,
-}
-
-impl Bounds {
-    pub fn is_none(&self) -> bool {
-        self.bounds_type.is_none()
-            && self.alignment.is_none()
-            && self.x.is_none()
-            && self.y.is_none()
-    }
+    pub bounds_type: BoundsType,
+    pub alignment: i32,
+    pub x: f64,
+    pub y: f64,
 }
 
 #[derive(Deserialize, Debug)]
@@ -364,10 +330,10 @@ pub enum Align {
 
 #[derive(Deserialize, Debug)]
 pub struct Font {
-    face: Option<String>,
-    flags: Option<i32>,
-    size: Option<i32>,
-    style: Option<String>,
+    face: String,
+    flags: i32,
+    size: i32,
+    style: String,
 }
 
 #[derive(Deserialize, Debug)]
@@ -377,30 +343,6 @@ pub enum MovementType {
     Down,
     Top,
     Bottom,
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "kebab-case")]
-pub struct StreamSettings {
-    server: Option<String>,
-    key: Option<String>,
-    use_auth: Option<bool>,
-    username: Option<String>,
-    password: Option<String>,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct Stream {
-    #[serde(rename = "type")]
-    stream_type: Option<String>,
-    metadata: Option<Value>,
-    settings: StreamSettings,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct WithTransition {
-    name: String,
-    duration: Option<i32>,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]

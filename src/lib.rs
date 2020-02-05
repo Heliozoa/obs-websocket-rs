@@ -489,7 +489,7 @@ impl Obs {
         unimplemented!()
     }
 
-    pub fn start_streaming(&mut self, stream: responses::Stream) -> Result<responses::Response> {
+    pub fn start_streaming(&mut self, stream: requests::Stream) -> Result<responses::Response> {
         unimplemented!()
     }
 
@@ -500,7 +500,7 @@ impl Obs {
     pub fn set_stream_settings(
         &mut self,
         stream_type: String,
-        settings: responses::StreamSettings,
+        settings: requests::StreamSettings,
         save: bool,
     ) -> Result<responses::Response> {
         unimplemented!()
@@ -536,7 +536,7 @@ impl Obs {
 
     pub fn transition_to_program(
         &mut self,
-        with_transition: Option<responses::WithTransition>,
+        with_transition: Option<requests::WithTransition>,
     ) -> Result<responses::Response> {
         unimplemented!()
     }
@@ -1446,28 +1446,25 @@ mod test {
         let expected = responses::GetSceneItemProperties {
             name: "source".to_string(),
             position: responses::Position {
-                x: Some(0.0),
-                y: Some(1.0),
-                alignment: Some(2),
+                x: 0.0,
+                y: 1.0,
+                alignment: 2,
             },
             rotation: 3.0,
-            scale: responses::Scale {
-                x: Some(4.0),
-                y: Some(5.0),
-            },
+            scale: responses::Scale { x: 4.0, y: 5.0 },
             crop: responses::Crop {
-                top: Some(6),
-                right: Some(7),
-                bottom: Some(8),
-                left: Some(9),
+                top: 6,
+                right: 7,
+                bottom: 8,
+                left: 9,
             },
             visible: true,
             locked: true,
             bounds: responses::Bounds {
-                bounds_type: Some(responses::BoundsType::Stretch),
-                alignment: Some(10),
-                x: Some(11.0),
-                y: Some(12.0),
+                bounds_type: responses::BoundsType::Stretch,
+                alignment: 10,
+                x: 11.0,
+                y: 12.0,
             },
             source_width: 13,
             source_height: 14,
