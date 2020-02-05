@@ -1,61 +1,12 @@
-use super::typedefs;
-use serde::{de, Deserialize, Deserializer, Serialize};
+use super::responses;
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-
-#[derive(Deserialize, Debug, Eq, PartialEq)]
-#[serde(rename_all = "lowercase")]
-pub enum Status {
-    Ok,
-    Error,
-}
-
-#[derive(Deserialize, Debug, Eq, PartialEq)]
-#[serde(rename_all = "kebab-case")]
-pub struct Response {
-    pub message_id: String,
-    pub status: Status,
-    pub error: Option<String>,
-}
 
 pub fn get_version(message_id: &str) -> Value {
     json!({
         "request-type": "GetVersion",
         "message-id": message_id,
     })
-}
-
-fn deserialize_comma_separated_string<'de, D>(d: D) -> Result<Vec<String>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    struct V {}
-
-    impl<'de> de::Visitor<'de> for V {
-        type Value = Vec<String>;
-
-        fn expecting(&self, _: &mut std::fmt::Formatter) -> std::fmt::Result {
-            unreachable!()
-        }
-
-        fn visit_str<E>(self, s: &str) -> Result<Self::Value, E>
-        where
-            E: de::Error,
-        {
-            Ok(s.split(',').map(|s| s.to_owned()).collect::<Vec<_>>())
-        }
-    }
-
-    d.deserialize_str(V {})
-}
-
-#[derive(Deserialize, Debug, PartialEq)]
-#[serde(rename_all = "kebab-case")]
-pub struct GetVersion {
-    pub version: f64,
-    pub obs_websocket_version: String,
-    pub obs_studio_version: String,
-    #[serde(deserialize_with = "deserialize_comma_separated_string")]
-    pub available_requests: Vec<String>,
 }
 
 pub fn get_auth_required(message_id: &str) -> Value {
@@ -65,25 +16,12 @@ pub fn get_auth_required(message_id: &str) -> Value {
     })
 }
 
-#[derive(Deserialize, Debug, Eq, PartialEq)]
-#[serde(rename_all = "camelCase")]
-pub struct GetAuthRequired {
-    pub auth_required: bool,
-    pub challenge: Option<String>,
-    pub salt: Option<String>,
-}
-
 pub fn authenticate(message_id: &str, auth: &str) -> Value {
     json!({
         "request-type": "Authenticate",
         "message-id": message_id,
         "auth": auth,
     })
-}
-
-#[derive(Deserialize, Debug)]
-pub struct Authenticate {
-    auth: String,
 }
 
 pub fn set_heartbeat(message_id: &str, enable: bool) -> Value {
@@ -109,22 +47,11 @@ pub fn get_filename_formatting(message_id: &str) -> Value {
     })
 }
 
-#[derive(Deserialize, Debug, Eq, PartialEq)]
-#[serde(rename_all = "kebab-case")]
-pub struct GetFilenameFormatting {
-    pub filename_formatting: String,
-}
-
 pub fn get_stats(message_id: &str) -> Value {
     json!({
         "request-type": "GetStats",
         "message-id": message_id,
     })
-}
-
-#[derive(Deserialize, Debug, PartialEq)]
-pub struct GetStats {
-    pub stats: typedefs::ObsStats,
 }
 
 pub fn broadcast_custom_message(message_id: &str, realm: &str, data: Value) -> Value {
@@ -143,30 +70,11 @@ pub fn get_video_info(message_id: &str) -> Value {
     })
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
-#[serde(rename_all = "camelCase")]
-pub struct GetVideoInfo {
-    pub base_width: i32,
-    pub base_height: i32,
-    pub output_width: i32,
-    pub output_height: i32,
-    pub scale_type: typedefs::ScaleType,
-    pub fps: f64,
-    pub video_format: typedefs::VideoFormat,
-    pub color_space: typedefs::ColorSpace,
-    pub color_range: typedefs::ColorRange,
-}
-
 pub fn list_outputs(message_id: &str) -> Value {
     json!({
         "request-type": "ListOutputs",
         "message-id": message_id,
     })
-}
-
-#[derive(Deserialize, Debug, PartialEq)]
-pub struct ListOutputs {
-    pub outputs: Vec<typedefs::Output>,
 }
 
 pub fn get_output_info(message_id: &str, output_name: &str) -> Value {
@@ -175,12 +83,6 @@ pub fn get_output_info(message_id: &str, output_name: &str) -> Value {
         "message-id": message_id,
         "outputName": output_name,
     })
-}
-
-#[derive(Deserialize, Debug, PartialEq)]
-#[serde(rename_all = "camelCase")]
-pub struct GetOutputInfo {
-    pub output_info: typedefs::Output,
 }
 
 pub fn start_output(message_id: &str, output_name: &str) -> Value {
@@ -215,23 +117,11 @@ pub fn get_current_profile(message_id: &str) -> Value {
     })
 }
 
-#[derive(Deserialize, Debug, PartialEq, Eq)]
-#[serde(rename_all = "kebab-case")]
-pub struct Profile {
-    pub profile_name: String,
-}
-
 pub fn list_profiles(message_id: &str) -> Value {
     json!({
         "request-type": "ListProfiles",
         "message-id": message_id,
     })
-}
-
-#[derive(Deserialize, Debug, PartialEq, Eq)]
-#[serde(rename_all = "kebab-case")]
-pub struct ListProfiles {
-    pub profiles: Vec<Profile>,
 }
 
 pub fn start_stop_recording(message_id: &str) -> Value {
@@ -284,12 +174,6 @@ pub fn get_recording_folder(message_id: &str) -> Value {
     })
 }
 
-#[derive(Deserialize, Debug, PartialEq, Eq)]
-#[serde(rename_all = "kebab-case")]
-pub struct GetRecordingFolder {
-    pub rec_folder: String,
-}
-
 pub fn start_stop_replay_buffer(message_id: &str) -> Value {
     json!({
         "request-type": "StartStopReplayBuffer",
@@ -333,23 +217,11 @@ pub fn get_current_scene_collection(message_id: &str) -> Value {
     })
 }
 
-#[derive(Deserialize, Debug, PartialEq, Eq)]
-#[serde(rename_all = "kebab-case")]
-pub struct SceneCollection {
-    pub sc_name: String,
-}
-
 pub fn list_scene_collections(message_id: &str) -> Value {
     json!({
         "request-type": "ListSceneCollections",
         "message-id": message_id,
     })
-}
-
-#[derive(Deserialize, Debug, PartialEq, Eq)]
-#[serde(rename_all = "kebab-case")]
-pub struct ListSceneCollections {
-    pub scene_collections: Vec<SceneCollection>,
 }
 
 pub fn get_scene_item_properties(message_id: &str, scene_name: Option<&str>, item: &str) -> Value {
@@ -369,23 +241,6 @@ pub fn get_scene_item_properties(message_id: &str, scene_name: Option<&str>, ite
     }
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
-#[serde(rename_all = "camelCase")]
-pub struct GetSceneItemProperties {
-    pub name: String,
-    pub position: typedefs::Position,
-    pub rotation: f64,
-    pub scale: typedefs::Scale,
-    pub crop: typedefs::Crop,
-    pub visible: bool,
-    pub locked: bool,
-    pub bounds: typedefs::Bounds,
-    pub source_width: i32,
-    pub source_height: i32,
-    pub width: f64,
-    pub height: f64,
-}
-
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "kebab-case")]
 struct SetSceneItemPropertiesRequest {
@@ -394,33 +249,33 @@ struct SetSceneItemPropertiesRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     scene_name: Option<String>,
     item: String,
-    #[serde(skip_serializing_if = "typedefs::Position::is_none")]
-    position: typedefs::Position,
+    #[serde(skip_serializing_if = "responses::Position::is_none")]
+    position: responses::Position,
     #[serde(skip_serializing_if = "Option::is_none")]
     rotation: Option<f64>,
-    #[serde(skip_serializing_if = "typedefs::Scale::is_none")]
-    scale: typedefs::Scale,
-    #[serde(skip_serializing_if = "typedefs::Crop::is_none")]
-    crop: typedefs::Crop,
+    #[serde(skip_serializing_if = "responses::Scale::is_none")]
+    scale: responses::Scale,
+    #[serde(skip_serializing_if = "responses::Crop::is_none")]
+    crop: responses::Crop,
     #[serde(skip_serializing_if = "Option::is_none")]
     visible: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     locked: Option<bool>,
-    #[serde(skip_serializing_if = "typedefs::Bounds::is_none")]
-    bounds: typedefs::Bounds,
+    #[serde(skip_serializing_if = "responses::Bounds::is_none")]
+    bounds: responses::Bounds,
 }
 
 pub fn set_scene_item_properties(
     message_id: &str,
     scene_name: Option<String>,
     item: String,
-    position: typedefs::Position,
+    position: responses::Position,
     rotation: Option<f64>,
-    scale: typedefs::Scale,
-    crop: typedefs::Crop,
+    scale: responses::Scale,
+    crop: responses::Crop,
     visible: Option<bool>,
     locked: Option<bool>,
-    bounds: typedefs::Bounds,
+    bounds: responses::Bounds,
 ) -> Value {
     let req = SetSceneItemPropertiesRequest {
         request_type: "SetSceneItemProperties".to_string(),
@@ -437,23 +292,6 @@ pub fn set_scene_item_properties(
     };
     let v = serde_json::to_value(&req).unwrap();
     v
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct SetSceneItemProperties {
-    name: String,
-    position: typedefs::Position,
-    rotation: f64,
-    scale: typedefs::Scale,
-    crop: typedefs::Crop,
-    visible: bool,
-    locked: bool,
-    bounds: typedefs::Bounds,
-    source_width: i32,
-    source_height: i32,
-    width: f64,
-    height: f64,
 }
 
 pub fn reset_scene_item(scene_name: Option<String>, item: String) -> Value {

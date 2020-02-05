@@ -1,6 +1,168 @@
-use serde::{Deserialize, Serialize};
+use serde::{de, Deserialize, Deserializer, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
+
+#[derive(Deserialize, Debug, Eq, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub enum Status {
+    Ok,
+    Error,
+}
+
+#[derive(Deserialize, Debug, Eq, PartialEq)]
+#[serde(rename_all = "kebab-case")]
+pub struct Response {
+    pub message_id: String,
+    pub status: Status,
+    pub error: Option<String>,
+}
+
+fn deserialize_comma_separated_string<'de, D>(d: D) -> Result<Vec<String>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    struct V {}
+
+    impl<'de> de::Visitor<'de> for V {
+        type Value = Vec<String>;
+
+        fn expecting(&self, _: &mut std::fmt::Formatter) -> std::fmt::Result {
+            unreachable!()
+        }
+
+        fn visit_str<E>(self, s: &str) -> Result<Self::Value, E>
+        where
+            E: de::Error,
+        {
+            Ok(s.split(',').map(|s| s.to_owned()).collect::<Vec<_>>())
+        }
+    }
+
+    d.deserialize_str(V {})
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
+#[serde(rename_all = "kebab-case")]
+pub struct GetVersion {
+    pub version: f64,
+    pub obs_websocket_version: String,
+    pub obs_studio_version: String,
+    #[serde(deserialize_with = "deserialize_comma_separated_string")]
+    pub available_requests: Vec<String>,
+}
+
+#[derive(Deserialize, Debug, Eq, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct GetAuthRequired {
+    pub auth_required: bool,
+    pub challenge: Option<String>,
+    pub salt: Option<String>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Authenticate {
+    auth: String,
+}
+
+#[derive(Deserialize, Debug, Eq, PartialEq)]
+#[serde(rename_all = "kebab-case")]
+pub struct GetFilenameFormatting {
+    pub filename_formatting: String,
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
+pub struct GetStats {
+    pub stats: ObsStats,
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct GetVideoInfo {
+    pub base_width: i32,
+    pub base_height: i32,
+    pub output_width: i32,
+    pub output_height: i32,
+    pub scale_type: ScaleType,
+    pub fps: f64,
+    pub video_format: VideoFormat,
+    pub color_space: ColorSpace,
+    pub color_range: ColorRange,
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
+pub struct ListOutputs {
+    pub outputs: Vec<Output>,
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct GetOutputInfo {
+    pub output_info: Output,
+}
+
+#[derive(Deserialize, Debug, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
+pub struct Profile {
+    pub profile_name: String,
+}
+
+#[derive(Deserialize, Debug, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
+pub struct ListProfiles {
+    pub profiles: Vec<Profile>,
+}
+
+#[derive(Deserialize, Debug, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
+pub struct GetRecordingFolder {
+    pub rec_folder: String,
+}
+
+#[derive(Deserialize, Debug, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
+pub struct SceneCollection {
+    pub sc_name: String,
+}
+
+#[derive(Deserialize, Debug, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
+pub struct ListSceneCollections {
+    pub scene_collections: Vec<SceneCollection>,
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct GetSceneItemProperties {
+    pub name: String,
+    pub position: Position,
+    pub rotation: f64,
+    pub scale: Scale,
+    pub crop: Crop,
+    pub visible: bool,
+    pub locked: bool,
+    pub bounds: Bounds,
+    pub source_width: i32,
+    pub source_height: i32,
+    pub width: f64,
+    pub height: f64,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct SetSceneItemProperties {
+    name: String,
+    position: Position,
+    rotation: f64,
+    scale: Scale,
+    crop: Crop,
+    visible: bool,
+    locked: bool,
+    bounds: Bounds,
+    source_width: i32,
+    source_height: i32,
+    width: f64,
+    height: f64,
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "lowercase")]

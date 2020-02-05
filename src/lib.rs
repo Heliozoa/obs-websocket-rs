@@ -1,7 +1,7 @@
 mod error;
 mod events;
 mod requests;
-mod typedefs;
+mod responses;
 
 use base64;
 use error::Error;
@@ -46,8 +46,8 @@ impl Obs {
         socket.write_message(Message::Text(json))?;
         let response = socket.read_message()?.to_string();
         debug!("RECV: {}", response);
-        let parsed: requests::Response = serde_json::from_str(&response)?;
-        if let requests::Status::Ok = parsed.status {
+        let parsed: responses::Response = serde_json::from_str(&response)?;
+        if let responses::Status::Ok = parsed.status {
             Ok(serde_json::from_str(&response)?)
         } else {
             let error_msg = parsed.error.unwrap();
@@ -55,16 +55,16 @@ impl Obs {
         }
     }
 
-    pub fn get_version(&mut self) -> Result<requests::GetVersion> {
+    pub fn get_version(&mut self) -> Result<responses::GetVersion> {
         self.get(requests::get_version("0"))
     }
 
-    pub fn get_auth_required(&mut self) -> Result<requests::GetAuthRequired> {
+    pub fn get_auth_required(&mut self) -> Result<responses::GetAuthRequired> {
         self.get(requests::get_auth_required("0"))
     }
 
-    pub fn authenticate(&mut self, password: &str) -> Result<requests::Response> {
-        let auth: requests::GetAuthRequired = self.get(requests::get_auth_required("0"))?;
+    pub fn authenticate(&mut self, password: &str) -> Result<responses::Response> {
+        let auth: responses::GetAuthRequired = self.get(requests::get_auth_required("0"))?;
         if auth.auth_required {
             let challenge = auth.challenge.unwrap();
             let salt = auth.salt.unwrap();
@@ -82,22 +82,22 @@ impl Obs {
         }
     }
 
-    pub fn set_heartbeat(&mut self, enable: bool) -> Result<requests::Response> {
+    pub fn set_heartbeat(&mut self, enable: bool) -> Result<responses::Response> {
         self.get(requests::set_heartbeat("0", enable))
     }
 
     pub fn set_filename_formatting(
         &mut self,
         filename_formatting: &str,
-    ) -> Result<requests::Response> {
+    ) -> Result<responses::Response> {
         self.get(requests::set_filename_formatting("0", filename_formatting))
     }
 
-    pub fn get_filename_formatting(&mut self) -> Result<requests::GetFilenameFormatting> {
+    pub fn get_filename_formatting(&mut self) -> Result<responses::GetFilenameFormatting> {
         self.get(requests::get_filename_formatting("0"))
     }
 
-    pub fn get_stats(&mut self) -> Result<requests::GetStats> {
+    pub fn get_stats(&mut self) -> Result<responses::GetStats> {
         self.get(requests::get_stats("0"))
     }
 
@@ -105,95 +105,95 @@ impl Obs {
         &mut self,
         realm: &str,
         data: Value,
-    ) -> Result<requests::Response> {
+    ) -> Result<responses::Response> {
         self.get(requests::broadcast_custom_message("0", realm, data))
     }
 
-    pub fn get_video_info(&mut self) -> Result<requests::GetVideoInfo> {
+    pub fn get_video_info(&mut self) -> Result<responses::GetVideoInfo> {
         self.get(requests::get_video_info("0"))
     }
 
-    pub fn list_outputs(&mut self) -> Result<requests::ListOutputs> {
+    pub fn list_outputs(&mut self) -> Result<responses::ListOutputs> {
         self.get(requests::list_outputs("0"))
     }
 
-    pub fn get_output_info(&mut self, output_name: &str) -> Result<requests::GetOutputInfo> {
+    pub fn get_output_info(&mut self, output_name: &str) -> Result<responses::GetOutputInfo> {
         self.get(requests::get_output_info("0", output_name))
     }
 
-    pub fn start_output(&mut self, output_name: &str) -> Result<requests::Response> {
+    pub fn start_output(&mut self, output_name: &str) -> Result<responses::Response> {
         self.get(requests::start_output("0", output_name))
     }
 
-    pub fn stop_output(&mut self, output_name: &str, force: bool) -> Result<requests::Response> {
+    pub fn stop_output(&mut self, output_name: &str, force: bool) -> Result<responses::Response> {
         self.get(requests::stop_output("0", output_name, force))
     }
 
-    pub fn set_current_profile(&mut self, profile_name: &str) -> Result<requests::Response> {
+    pub fn set_current_profile(&mut self, profile_name: &str) -> Result<responses::Response> {
         self.get(requests::set_current_profile("0", profile_name))
     }
 
-    pub fn get_current_profile(&mut self) -> Result<requests::Profile> {
+    pub fn get_current_profile(&mut self) -> Result<responses::Profile> {
         self.get(requests::get_current_profile("0"))
     }
 
-    pub fn list_profiles(&mut self) -> Result<requests::ListProfiles> {
+    pub fn list_profiles(&mut self) -> Result<responses::ListProfiles> {
         self.get(requests::list_profiles("0"))
     }
 
-    pub fn toggle_recording(&mut self) -> Result<requests::Response> {
+    pub fn toggle_recording(&mut self) -> Result<responses::Response> {
         self.get(requests::start_stop_recording("0"))
     }
 
-    pub fn start_recording(&mut self) -> Result<requests::Response> {
+    pub fn start_recording(&mut self) -> Result<responses::Response> {
         self.get(requests::start_recording("0"))
     }
 
-    pub fn stop_recording(&mut self) -> Result<requests::Response> {
+    pub fn stop_recording(&mut self) -> Result<responses::Response> {
         self.get(requests::stop_recording("0"))
     }
 
-    pub fn pause_recording(&mut self) -> Result<requests::Response> {
+    pub fn pause_recording(&mut self) -> Result<responses::Response> {
         self.get(requests::pause_recording("0"))
     }
 
-    pub fn resume_recording(&mut self) -> Result<requests::Response> {
+    pub fn resume_recording(&mut self) -> Result<responses::Response> {
         self.get(requests::resume_recording("0"))
     }
 
-    pub fn set_recording_folder(&mut self, rec_folder: &str) -> Result<requests::Response> {
+    pub fn set_recording_folder(&mut self, rec_folder: &str) -> Result<responses::Response> {
         self.get(requests::set_recording_folder("0", rec_folder))
     }
 
-    pub fn get_recording_folder(&mut self) -> Result<requests::GetRecordingFolder> {
+    pub fn get_recording_folder(&mut self) -> Result<responses::GetRecordingFolder> {
         self.get(requests::get_recording_folder("0"))
     }
 
-    pub fn toggle_replay_buffer(&mut self) -> Result<requests::Response> {
+    pub fn toggle_replay_buffer(&mut self) -> Result<responses::Response> {
         self.get(requests::start_stop_replay_buffer("0"))
     }
 
-    pub fn start_replay_buffer(&mut self) -> Result<requests::Response> {
+    pub fn start_replay_buffer(&mut self) -> Result<responses::Response> {
         self.get(requests::start_replay_buffer("0"))
     }
 
-    pub fn stop_replay_buffer(&mut self) -> Result<requests::Response> {
+    pub fn stop_replay_buffer(&mut self) -> Result<responses::Response> {
         self.get(requests::stop_replay_buffer("0"))
     }
 
-    pub fn save_replay_buffer(&mut self) -> Result<requests::Response> {
+    pub fn save_replay_buffer(&mut self) -> Result<responses::Response> {
         self.get(requests::save_replay_buffer("0"))
     }
 
-    pub fn set_current_scene_collection(&mut self, sc_name: &str) -> Result<requests::Response> {
+    pub fn set_current_scene_collection(&mut self, sc_name: &str) -> Result<responses::Response> {
         self.get(requests::set_current_scene_collection("0", sc_name))
     }
 
-    pub fn get_current_scene_collection(&mut self) -> Result<requests::SceneCollection> {
+    pub fn get_current_scene_collection(&mut self) -> Result<responses::SceneCollection> {
         self.get(requests::get_current_scene_collection("0"))
     }
 
-    pub fn list_scene_collections(&mut self) -> Result<requests::ListSceneCollections> {
+    pub fn list_scene_collections(&mut self) -> Result<responses::ListSceneCollections> {
         self.get(requests::list_scene_collections("0"))
     }
 
@@ -201,7 +201,7 @@ impl Obs {
         &mut self,
         scene_name: Option<&str>,
         item: &str,
-    ) -> Result<requests::GetSceneItemProperties> {
+    ) -> Result<responses::GetSceneItemProperties> {
         self.get(requests::get_scene_item_properties("0", scene_name, item))
     }
 
@@ -209,14 +209,14 @@ impl Obs {
         &mut self,
         scene_name: Option<String>,
         item: String,
-        position: typedefs::Position,
+        position: responses::Position,
         rotation: Option<f64>,
-        scale: typedefs::Scale,
-        crop: typedefs::Crop,
+        scale: responses::Scale,
+        crop: responses::Crop,
         visible: Option<bool>,
         locked: Option<bool>,
-        bounds: typedefs::Bounds,
-    ) -> Result<requests::SetSceneItemProperties> {
+        bounds: responses::Bounds,
+    ) -> Result<responses::SetSceneItemProperties> {
         self.get(requests::set_scene_item_properties(
             "0", scene_name, item, position, rotation, scale, crop, visible, locked, bounds,
         ))
@@ -226,15 +226,15 @@ impl Obs {
         &mut self,
         scene_name: Option<String>,
         item: String,
-    ) -> Result<requests::Response> {
+    ) -> Result<responses::Response> {
         self.get(requests::reset_scene_item(scene_name, item))
     }
 
     pub fn delete_scene_item(
         &mut self,
         scene: Option<String>,
-        item: typedefs::Item,
-    ) -> Result<requests::Response> {
+        item: responses::Item,
+    ) -> Result<responses::Response> {
         unimplemented!()
     }
 
@@ -242,64 +242,64 @@ impl Obs {
         &mut self,
         from_scene: Option<String>,
         to_scene: Option<String>,
-        item: typedefs::Item,
-    ) -> Result<requests::Response> {
+        item: responses::Item,
+    ) -> Result<responses::Response> {
         unimplemented!()
     }
 
-    pub fn set_current_scene(&mut self, scene_name: String) -> Result<requests::Response> {
+    pub fn set_current_scene(&mut self, scene_name: String) -> Result<responses::Response> {
         unimplemented!()
     }
 
-    pub fn get_current_scene(&mut self) -> Result<requests::Response> {
+    pub fn get_current_scene(&mut self) -> Result<responses::Response> {
         unimplemented!()
     }
 
-    pub fn get_scene_list(&mut self) -> Result<requests::Response> {
+    pub fn get_scene_list(&mut self) -> Result<responses::Response> {
         unimplemented!()
     }
 
     pub fn reorder_scene_items(
         &mut self,
         scene: Option<String>,
-        items: Vec<typedefs::Item>,
-    ) -> Result<requests::Response> {
+        items: Vec<responses::Item>,
+    ) -> Result<responses::Response> {
         unimplemented!()
     }
 
-    pub fn get_sources_list(&mut self) -> Result<requests::Response> {
+    pub fn get_sources_list(&mut self) -> Result<responses::Response> {
         unimplemented!()
     }
 
-    pub fn get_source_types_list(&mut self) -> Result<requests::Response> {
+    pub fn get_source_types_list(&mut self) -> Result<responses::Response> {
         unimplemented!()
     }
 
-    pub fn get_volume(&mut self, source: String) -> Result<requests::Response> {
+    pub fn get_volume(&mut self, source: String) -> Result<responses::Response> {
         unimplemented!()
     }
 
-    pub fn set_volume(&mut self, source: String, volume: f64) -> Result<requests::Response> {
+    pub fn set_volume(&mut self, source: String, volume: f64) -> Result<responses::Response> {
         unimplemented!()
     }
 
-    pub fn get_mute(&mut self, source: String) -> Result<requests::Response> {
+    pub fn get_mute(&mut self, source: String) -> Result<responses::Response> {
         unimplemented!()
     }
 
-    pub fn set_mute(&mut self, source: String, mute: bool) -> Result<requests::Response> {
+    pub fn set_mute(&mut self, source: String, mute: bool) -> Result<responses::Response> {
         unimplemented!()
     }
 
-    pub fn toggle_mute(&mut self, source: String) -> Result<requests::Response> {
+    pub fn toggle_mute(&mut self, source: String) -> Result<responses::Response> {
         unimplemented!()
     }
 
-    pub fn set_sync_offset(&mut self, source: String, offset: i32) -> Result<requests::Response> {
+    pub fn set_sync_offset(&mut self, source: String, offset: i32) -> Result<responses::Response> {
         unimplemented!()
     }
 
-    pub fn get_sync_offset(&mut self, source: String) -> Result<requests::Response> {
+    pub fn get_sync_offset(&mut self, source: String) -> Result<responses::Response> {
         unimplemented!()
     }
 
@@ -307,7 +307,7 @@ impl Obs {
         &mut self,
         source_name: String,
         source_type: Option<String>,
-    ) -> Result<requests::Response> {
+    ) -> Result<responses::Response> {
         unimplemented!()
     }
 
@@ -316,18 +316,18 @@ impl Obs {
         source_name: String,
         source_type: Option<String>,
         source_settings: Value,
-    ) -> Result<requests::Response> {
+    ) -> Result<responses::Response> {
         unimplemented!()
     }
 
-    pub fn get_text_gdi_plus_properties(&mut self, source: String) -> Result<requests::Response> {
+    pub fn get_text_gdi_plus_properties(&mut self, source: String) -> Result<responses::Response> {
         unimplemented!()
     }
 
     pub fn set_text_gdi_plus_properties(
         &mut self,
         source: String,
-        align: typedefs::Align,
+        align: responses::Align,
         bk_color: Option<i32>,
         bk_opacity: Option<i32>,
         chatlog: Option<bool>,
@@ -338,7 +338,7 @@ impl Obs {
         extents_cy: Option<bool>,
         file: Option<String>,
         read_from_file: Option<bool>,
-        font: typedefs::Font,
+        font: responses::Font,
         gradient: Option<bool>,
         gradient_color: Option<i32>,
         gradient_dir: Option<f64>,
@@ -351,11 +351,14 @@ impl Obs {
         valign: Option<String>,
         vertical: Option<bool>,
         render: Option<bool>,
-    ) -> Result<requests::Response> {
+    ) -> Result<responses::Response> {
         unimplemented!()
     }
 
-    pub fn get_text_freetype_2_properties(&mut self, source: String) -> Result<requests::Response> {
+    pub fn get_text_freetype_2_properties(
+        &mut self,
+        source: String,
+    ) -> Result<responses::Response> {
         unimplemented!()
     }
 
@@ -366,18 +369,18 @@ impl Obs {
         color_2: Option<i32>,
         custom_width: Option<i32>,
         drop_shadow: Option<i32>,
-        font: typedefs::Font,
+        font: responses::Font,
         from_file: Option<bool>,
         log_mode: Option<bool>,
         outline: Option<bool>,
         text: Option<String>,
         text_file: Option<String>,
         word_wrap: Option<bool>,
-    ) -> Result<requests::Response> {
+    ) -> Result<responses::Response> {
         unimplemented!()
     }
 
-    pub fn get_browser_source_properties(&mut self, source: String) -> Result<requests::Response> {
+    pub fn get_browser_source_properties(&mut self, source: String) -> Result<responses::Response> {
         unimplemented!()
     }
 
@@ -393,15 +396,15 @@ impl Obs {
         fps: Option<i32>,
         shutdown: Option<bool>,
         render: Option<bool>,
-    ) -> Result<requests::Response> {
+    ) -> Result<responses::Response> {
         unimplemented!()
     }
 
-    pub fn get_special_sources(&mut self) -> Result<requests::Response> {
+    pub fn get_special_sources(&mut self) -> Result<responses::Response> {
         unimplemented!()
     }
 
-    pub fn get_source_filters(&mut self, source_name: String) -> Result<requests::Response> {
+    pub fn get_source_filters(&mut self, source_name: String) -> Result<responses::Response> {
         unimplemented!()
     }
 
@@ -409,7 +412,7 @@ impl Obs {
         &mut self,
         source_name: String,
         filter_name: String,
-    ) -> Result<requests::Response> {
+    ) -> Result<responses::Response> {
         unimplemented!()
     }
 
@@ -419,7 +422,7 @@ impl Obs {
         filter_name: String,
         filter_type: String,
         filter_settings: Value,
-    ) -> Result<requests::Response> {
+    ) -> Result<responses::Response> {
         unimplemented!()
     }
 
@@ -427,7 +430,7 @@ impl Obs {
         &mut self,
         source_name: String,
         filter_name: String,
-    ) -> Result<requests::Response> {
+    ) -> Result<responses::Response> {
         unimplemented!()
     }
 
@@ -436,7 +439,7 @@ impl Obs {
         source_name: String,
         filter_name: String,
         new_index: i32,
-    ) -> Result<requests::Response> {
+    ) -> Result<responses::Response> {
         unimplemented!()
     }
 
@@ -444,8 +447,8 @@ impl Obs {
         &mut self,
         source_name: String,
         filter_name: String,
-        movement_type: typedefs::MovementType,
-    ) -> Result<requests::Response> {
+        movement_type: responses::MovementType,
+    ) -> Result<responses::Response> {
         unimplemented!()
     }
 
@@ -454,7 +457,7 @@ impl Obs {
         source_name: String,
         filter_name: String,
         filter_settings: Value,
-    ) -> Result<requests::Response> {
+    ) -> Result<responses::Response> {
         unimplemented!()
     }
 
@@ -463,7 +466,7 @@ impl Obs {
         source_name: String,
         filter_name: String,
         filter_enabled: bool,
-    ) -> Result<requests::Response> {
+    ) -> Result<responses::Response> {
         unimplemented!()
     }
 
@@ -474,102 +477,102 @@ impl Obs {
         save_to_file_path: Option<String>,
         width: Option<i32>,
         height: Option<i32>,
-    ) -> Result<requests::Response> {
+    ) -> Result<responses::Response> {
         unimplemented!()
     }
 
-    pub fn get_streaming_status(&mut self) -> Result<requests::Response> {
+    pub fn get_streaming_status(&mut self) -> Result<responses::Response> {
         unimplemented!()
     }
 
-    pub fn toggle_streaming(&mut self) -> Result<requests::Response> {
+    pub fn toggle_streaming(&mut self) -> Result<responses::Response> {
         unimplemented!()
     }
 
-    pub fn start_streaming(&mut self, stream: typedefs::Stream) -> Result<requests::Response> {
+    pub fn start_streaming(&mut self, stream: responses::Stream) -> Result<responses::Response> {
         unimplemented!()
     }
 
-    pub fn stop_streaming(&mut self) -> Result<requests::Response> {
+    pub fn stop_streaming(&mut self) -> Result<responses::Response> {
         unimplemented!()
     }
 
     pub fn set_stream_settings(
         &mut self,
         stream_type: String,
-        settings: typedefs::StreamSettings,
+        settings: responses::StreamSettings,
         save: bool,
-    ) -> Result<requests::Response> {
+    ) -> Result<responses::Response> {
         unimplemented!()
     }
 
-    pub fn get_stream_settings(&mut self) -> Result<requests::Response> {
+    pub fn get_stream_settings(&mut self) -> Result<responses::Response> {
         unimplemented!()
     }
 
-    pub fn save_stream_settings(&mut self) -> Result<requests::Response> {
+    pub fn save_stream_settings(&mut self) -> Result<responses::Response> {
         unimplemented!()
     }
 
-    pub fn send_captions(&mut self, text: String) -> Result<requests::Response> {
+    pub fn send_captions(&mut self, text: String) -> Result<responses::Response> {
         unimplemented!()
     }
 
-    pub fn get_studio_mode_status(&mut self) -> Result<requests::Response> {
+    pub fn get_studio_mode_status(&mut self) -> Result<responses::Response> {
         unimplemented!()
     }
 
     pub fn get_preview_scene(
         &mut self,
         name: String,
-        sources: Vec<typedefs::SceneItem>,
-    ) -> Result<requests::Response> {
+        sources: Vec<responses::SceneItem>,
+    ) -> Result<responses::Response> {
         unimplemented!()
     }
 
-    pub fn set_preview_scene(&mut self, scene_name: String) -> Result<requests::Response> {
+    pub fn set_preview_scene(&mut self, scene_name: String) -> Result<responses::Response> {
         unimplemented!()
     }
 
     pub fn transition_to_program(
         &mut self,
-        with_transition: Option<typedefs::WithTransition>,
-    ) -> Result<requests::Response> {
+        with_transition: Option<responses::WithTransition>,
+    ) -> Result<responses::Response> {
         unimplemented!()
     }
 
-    pub fn enable_studio_mode(&mut self) -> Result<requests::Response> {
+    pub fn enable_studio_mode(&mut self) -> Result<responses::Response> {
         unimplemented!()
     }
 
-    pub fn disable_studio_mode(&mut self) -> Result<requests::Response> {
+    pub fn disable_studio_mode(&mut self) -> Result<responses::Response> {
         unimplemented!()
     }
 
-    pub fn toggle_studio_mode(&mut self) -> Result<requests::Response> {
+    pub fn toggle_studio_mode(&mut self) -> Result<responses::Response> {
         unimplemented!()
     }
 
-    pub fn get_transition_list(&mut self) -> Result<requests::Response> {
+    pub fn get_transition_list(&mut self) -> Result<responses::Response> {
         unimplemented!()
     }
 
-    pub fn get_current_transition(&mut self) -> Result<requests::Response> {
+    pub fn get_current_transition(&mut self) -> Result<responses::Response> {
         unimplemented!()
     }
 
     pub fn set_current_transition(
         &mut self,
         transition_name: String,
-    ) -> Result<requests::Response> {
+    ) -> Result<responses::Response> {
         unimplemented!()
     }
 
-    pub fn set_transition_duration(&mut self, duration: i32) -> Result<requests::Response> {
+    pub fn set_transition_duration(&mut self, duration: i32) -> Result<responses::Response> {
         unimplemented!()
     }
 
-    pub fn get_transition_duration(&mut self) -> Result<requests::Response> {
+    pub fn get_transition_duration(&mut self) -> Result<responses::Response> {
         unimplemented!()
     }
 }
@@ -645,7 +648,7 @@ mod test {
             "obs-studio-version": "24.0.3",
             "available-requests": "Request1,Request2"
         });
-        let expected = requests::GetVersion {
+        let expected = responses::GetVersion {
             version: 1.1,
             obs_websocket_version: "4.7.0".to_string(),
             obs_studio_version: "24.0.3".to_string(),
@@ -668,7 +671,7 @@ mod test {
             "challenge": "ch",
             "salt": "sa",
         });
-        let expected = requests::GetAuthRequired {
+        let expected = responses::GetAuthRequired {
             auth_required: true,
             challenge: Some("ch".to_string()),
             salt: Some("sa".to_string()),
@@ -688,7 +691,7 @@ mod test {
             "message-id": "0",
             "authRequired": false,
         });
-        let expected = requests::GetAuthRequired {
+        let expected = responses::GetAuthRequired {
             auth_required: false,
             challenge: None,
             salt: None,
@@ -723,9 +726,9 @@ mod test {
                 "message-id": "0",
             }),
         ];
-        let expected = requests::Response {
+        let expected = responses::Response {
             message_id: "0".to_string(),
-            status: requests::Status::Ok,
+            status: responses::Status::Ok,
             error: None,
         };
         let method = |obs: &mut Obs| obs.authenticate("todo");
@@ -743,9 +746,9 @@ mod test {
             "status": "ok",
             "message-id": "0",
         });
-        let expected = requests::Response {
+        let expected = responses::Response {
             message_id: "0".to_string(),
-            status: requests::Status::Ok,
+            status: responses::Status::Ok,
             error: None,
         };
         let method = |obs: &mut Obs| obs.set_heartbeat(true);
@@ -763,9 +766,9 @@ mod test {
             "status": "ok",
             "message-id": "0",
         });
-        let expected = requests::Response {
+        let expected = responses::Response {
             message_id: "0".to_string(),
-            status: requests::Status::Ok,
+            status: responses::Status::Ok,
             error: None,
         };
         let method = |obs: &mut Obs| obs.set_filename_formatting("test");
@@ -783,7 +786,7 @@ mod test {
             "message-id": "0",
             "filename-formatting": "test",
         });
-        let expected = requests::GetFilenameFormatting {
+        let expected = responses::GetFilenameFormatting {
             filename_formatting: "test".to_string(),
         };
         let method = |obs: &mut Obs| obs.get_filename_formatting();
@@ -811,8 +814,8 @@ mod test {
                 "free-disk-space": 8.0,
             }
         });
-        let expected = requests::GetStats {
-            stats: typedefs::ObsStats {
+        let expected = responses::GetStats {
+            stats: responses::ObsStats {
                 fps: 0.0,
                 render_total_frames: 1,
                 render_missed_frames: 2,
@@ -842,9 +845,9 @@ mod test {
             "status": "ok",
             "message-id": "0",
         });
-        let expected = requests::Response {
+        let expected = responses::Response {
             message_id: "0".to_string(),
-            status: requests::Status::Ok,
+            status: responses::Status::Ok,
             error: None,
         };
         let method = |obs: &mut Obs| {
@@ -875,16 +878,16 @@ mod test {
             "colorSpace": "VIDEO_CS_601",
             "colorRange": "VIDEO_RANGE_PARTIAL",
         });
-        let expected = requests::GetVideoInfo {
+        let expected = responses::GetVideoInfo {
             base_width: 0,
             base_height: 1,
             output_width: 2,
             output_height: 3,
-            scale_type: typedefs::ScaleType::Bicubic,
+            scale_type: responses::ScaleType::Bicubic,
             fps: 4.0,
-            video_format: typedefs::VideoFormat::NV12,
-            color_space: typedefs::ColorSpace::CS601,
-            color_range: typedefs::ColorRange::Partial,
+            video_format: responses::VideoFormat::NV12,
+            color_space: responses::ColorSpace::CS601,
+            color_range: responses::ColorRange::Partial,
         };
         let method = |obs: &mut Obs| obs.get_video_info();
         request_test(vec![request], vec![response], expected, method);
@@ -923,13 +926,13 @@ mod test {
                 }
             ],
         });
-        let expected = requests::ListOutputs {
-            outputs: vec![typedefs::Output {
+        let expected = responses::ListOutputs {
+            outputs: vec![responses::Output {
                 name: "simple_file_output".to_string(),
                 output_type: "ffmpeg_muxer".to_string(),
                 width: 0,
                 height: 1,
-                flags: typedefs::Flags {
+                flags: responses::Flags {
                     raw_value: 6,
                     audio: true,
                     video: true,
@@ -982,13 +985,13 @@ mod test {
                 "totalBytes": 5,
             },
         });
-        let expected = requests::GetOutputInfo {
-            output_info: typedefs::Output {
+        let expected = responses::GetOutputInfo {
+            output_info: responses::Output {
                 name: "simple_file_output".to_string(),
                 output_type: "ffmpeg_muxer".to_string(),
                 width: 0,
                 height: 1,
-                flags: typedefs::Flags {
+                flags: responses::Flags {
                     raw_value: 6,
                     audio: true,
                     video: true,
@@ -1020,8 +1023,8 @@ mod test {
             "status": "ok",
             "message-id": "0",
         });
-        let expected = requests::Response {
-            status: requests::Status::Ok,
+        let expected = responses::Response {
+            status: responses::Status::Ok,
             message_id: "0".to_string(),
             error: None,
         };
@@ -1041,8 +1044,8 @@ mod test {
             "status": "ok",
             "message-id": "0",
         });
-        let expected = requests::Response {
-            status: requests::Status::Ok,
+        let expected = responses::Response {
+            status: responses::Status::Ok,
             message_id: "0".to_string(),
             error: None,
         };
@@ -1061,8 +1064,8 @@ mod test {
             "status": "ok",
             "message-id": "0",
         });
-        let expected = requests::Response {
-            status: requests::Status::Ok,
+        let expected = responses::Response {
+            status: responses::Status::Ok,
             message_id: "0".to_string(),
             error: None,
         };
@@ -1081,7 +1084,7 @@ mod test {
             "message-id": "0",
             "profile-name": "p",
         });
-        let expected = requests::Profile {
+        let expected = responses::Profile {
             profile_name: "p".to_string(),
         };
         let method = |obs: &mut Obs| obs.get_current_profile();
@@ -1106,12 +1109,12 @@ mod test {
                 }
             ],
         });
-        let expected = requests::ListProfiles {
+        let expected = responses::ListProfiles {
             profiles: vec![
-                requests::Profile {
+                responses::Profile {
                     profile_name: "p1".to_string(),
                 },
-                requests::Profile {
+                responses::Profile {
                     profile_name: "p2".to_string(),
                 },
             ],
@@ -1130,8 +1133,8 @@ mod test {
             "status": "ok",
             "message-id": "0",
         });
-        let expected = requests::Response {
-            status: requests::Status::Ok,
+        let expected = responses::Response {
+            status: responses::Status::Ok,
             message_id: "0".to_string(),
             error: None,
         };
@@ -1149,8 +1152,8 @@ mod test {
             "status": "ok",
             "message-id": "0",
         });
-        let expected = requests::Response {
-            status: requests::Status::Ok,
+        let expected = responses::Response {
+            status: responses::Status::Ok,
             message_id: "0".to_string(),
             error: None,
         };
@@ -1168,8 +1171,8 @@ mod test {
             "status": "ok",
             "message-id": "0",
         });
-        let expected = requests::Response {
-            status: requests::Status::Ok,
+        let expected = responses::Response {
+            status: responses::Status::Ok,
             message_id: "0".to_string(),
             error: None,
         };
@@ -1187,8 +1190,8 @@ mod test {
             "status": "ok",
             "message-id": "0",
         });
-        let expected = requests::Response {
-            status: requests::Status::Ok,
+        let expected = responses::Response {
+            status: responses::Status::Ok,
             message_id: "0".to_string(),
             error: None,
         };
@@ -1206,8 +1209,8 @@ mod test {
             "status": "ok",
             "message-id": "0",
         });
-        let expected = requests::Response {
-            status: requests::Status::Ok,
+        let expected = responses::Response {
+            status: responses::Status::Ok,
             message_id: "0".to_string(),
             error: None,
         };
@@ -1226,8 +1229,8 @@ mod test {
             "status": "ok",
             "message-id": "0",
         });
-        let expected = requests::Response {
-            status: requests::Status::Ok,
+        let expected = responses::Response {
+            status: responses::Status::Ok,
             message_id: "0".to_string(),
             error: None,
         };
@@ -1246,7 +1249,7 @@ mod test {
             "message-id": "0",
             "rec-folder": "path",
         });
-        let expected = requests::GetRecordingFolder {
+        let expected = responses::GetRecordingFolder {
             rec_folder: "path".to_string(),
         };
         let method = |obs: &mut Obs| obs.get_recording_folder();
@@ -1263,8 +1266,8 @@ mod test {
             "status": "ok",
             "message-id": "0",
         });
-        let expected = requests::Response {
-            status: requests::Status::Ok,
+        let expected = responses::Response {
+            status: responses::Status::Ok,
             message_id: "0".to_string(),
             error: None,
         };
@@ -1282,8 +1285,8 @@ mod test {
             "status": "ok",
             "message-id": "0",
         });
-        let expected = requests::Response {
-            status: requests::Status::Ok,
+        let expected = responses::Response {
+            status: responses::Status::Ok,
             message_id: "0".to_string(),
             error: None,
         };
@@ -1301,8 +1304,8 @@ mod test {
             "status": "ok",
             "message-id": "0",
         });
-        let expected = requests::Response {
-            status: requests::Status::Ok,
+        let expected = responses::Response {
+            status: responses::Status::Ok,
             message_id: "0".to_string(),
             error: None,
         };
@@ -1320,8 +1323,8 @@ mod test {
             "status": "ok",
             "message-id": "0",
         });
-        let expected = requests::Response {
-            status: requests::Status::Ok,
+        let expected = responses::Response {
+            status: responses::Status::Ok,
             message_id: "0".to_string(),
             error: None,
         };
@@ -1340,8 +1343,8 @@ mod test {
             "status": "ok",
             "message-id": "0",
         });
-        let expected = requests::Response {
-            status: requests::Status::Ok,
+        let expected = responses::Response {
+            status: responses::Status::Ok,
             message_id: "0".to_string(),
             error: None,
         };
@@ -1360,7 +1363,7 @@ mod test {
             "message-id": "0",
             "sc-name": "scene",
         });
-        let expected = requests::SceneCollection {
+        let expected = responses::SceneCollection {
             sc_name: "scene".to_string(),
         };
         let method = |obs: &mut Obs| obs.get_current_scene_collection();
@@ -1385,12 +1388,12 @@ mod test {
                 }
             ],
         });
-        let expected = requests::ListSceneCollections {
+        let expected = responses::ListSceneCollections {
             scene_collections: vec![
-                requests::SceneCollection {
+                responses::SceneCollection {
                     sc_name: "scene1".to_string(),
                 },
-                requests::SceneCollection {
+                responses::SceneCollection {
                     sc_name: "scene2".to_string(),
                 },
             ],
@@ -1440,19 +1443,19 @@ mod test {
             "width": 15.0,
             "height": 16.0,
         });
-        let expected = requests::GetSceneItemProperties {
+        let expected = responses::GetSceneItemProperties {
             name: "source".to_string(),
-            position: typedefs::Position {
+            position: responses::Position {
                 x: Some(0.0),
                 y: Some(1.0),
                 alignment: Some(2),
             },
             rotation: 3.0,
-            scale: typedefs::Scale {
+            scale: responses::Scale {
                 x: Some(4.0),
                 y: Some(5.0),
             },
-            crop: typedefs::Crop {
+            crop: responses::Crop {
                 top: Some(6),
                 right: Some(7),
                 bottom: Some(8),
@@ -1460,8 +1463,8 @@ mod test {
             },
             visible: true,
             locked: true,
-            bounds: typedefs::Bounds {
-                bounds_type: Some(typedefs::BoundsType::Stretch),
+            bounds: responses::Bounds {
+                bounds_type: Some(responses::BoundsType::Stretch),
                 alignment: Some(10),
                 x: Some(11.0),
                 y: Some(12.0),
