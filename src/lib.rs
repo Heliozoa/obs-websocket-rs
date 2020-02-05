@@ -880,6 +880,10 @@ mod test {
 
     #[test]
     fn get_video_info() {
+        let request = json!({
+            "request-type": "GetVideoInfo",
+            "message-id": "0",
+        });
         let response = json!({
             "status": "ok",
             "message-id": "0",
@@ -892,10 +896,6 @@ mod test {
             "videoFormat": "VIDEO_FORMAT_NV12",
             "colorSpace": "VIDEO_CS_601",
             "colorRange": "VIDEO_RANGE_PARTIAL",
-        });
-        let request = json!({
-            "request-type": "GetVideoInfo",
-            "message-id": "0",
         });
         let (mut obs, _handle) = init(vec![request], vec![response]);
         let res = obs.get_video_info().unwrap();
@@ -912,6 +912,70 @@ mod test {
                 video_format: typedefs::VideoFormat::NV12,
                 color_space: typedefs::ColorSpace::CS601,
                 color_range: typedefs::ColorRange::Partial,
+            }
+        );
+    }
+
+    #[test]
+    fn list_outputs() {
+        let request = json!({
+            "request-type": "ListOutputs",
+            "message-id": "0",
+        });
+        let response = json!({
+            "status": "ok",
+            "message-id": "0",
+            "outputs": [
+                {
+                    "name": "simple_file_output",
+                    "type": "ffmpeg_muxer",
+                    "width": 0,
+                    "height": 1,
+                    "flags": {
+                        "rawValue": 6,
+                        "audio": true,
+                        "video": true,
+                        "encoded": true,
+                        "multiTrack": true,
+                        "service": true,
+                    },
+                    "settings": {},
+                    "active": false,
+                    "reconnecting": false,
+                    "congestion": 2.0,
+                    "totalFrames": 3,
+                    "droppedFrames": 4,
+                    "totalBytes": 5,
+                }
+            ],
+        });
+        let (mut obs, _handle) = init(vec![request], vec![response]);
+        let res = obs.list_outputs().unwrap();
+        obs.close();
+        assert_eq!(
+            res,
+            requests::ListOutputs {
+                outputs: vec![typedefs::Output {
+                    name: "simple_file_output".to_string(),
+                    output_type: "ffmpeg_muxer".to_string(),
+                    width: 0,
+                    height: 1,
+                    flags: typedefs::Flags {
+                        raw_value: 6,
+                        audio: true,
+                        video: true,
+                        encoded: true,
+                        multi_track: true,
+                        service: true,
+                    },
+                    settings: std::collections::HashMap::new(),
+                    active: false,
+                    reconnecting: false,
+                    congestion: 2.0,
+                    total_frames: 3,
+                    dropped_frames: 4,
+                    total_bytes: 5,
+                }]
             }
         );
     }

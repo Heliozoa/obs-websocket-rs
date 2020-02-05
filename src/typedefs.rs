@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "lowercase")]
@@ -156,36 +157,33 @@ pub struct ObsStats {
     pub free_disk_space: f64,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct Flags {
-    raw_value: i32,
-    audio: bool,
-    video: bool,
-    encoded: bool,
-    multi_track: bool,
-    service: bool,
+    pub raw_value: i32,
+    pub audio: bool,
+    pub video: bool,
+    pub encoded: bool,
+    pub multi_track: bool,
+    pub service: bool,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct OutputSettings {}
-
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Output {
-    name: String,
+    pub name: String,
     #[serde(rename = "type")]
-    output_type: String,
-    width: i32,
-    height: i32,
-    flags: Flags,
-    settings: OutputSettings,
-    active: bool,
-    reconnecting: bool,
-    congestion: f64,
-    total_frames: i32,
-    dropped_frames: i32,
-    total_bytes: i32,
+    pub output_type: String,
+    pub width: i32,
+    pub height: i32,
+    pub flags: Flags,
+    pub settings: HashMap<String, String>,
+    pub active: bool,
+    pub reconnecting: bool,
+    pub congestion: f64,
+    pub total_frames: i32,
+    pub dropped_frames: i32,
+    pub total_bytes: i32,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

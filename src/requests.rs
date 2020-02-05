@@ -164,9 +164,9 @@ pub fn list_outputs(message_id: &str) -> Value {
     })
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, PartialEq)]
 pub struct ListOutputs {
-    outputs: Vec<typedefs::Output>,
+    pub outputs: Vec<typedefs::Output>,
 }
 
 pub fn get_output_info(message_id: &str, output_name: &str) -> Value {
