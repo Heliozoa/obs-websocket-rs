@@ -633,18 +633,14 @@ mod test {
             "obs-studio-version": "24.0.3",
             "available-requests": "Request1,Request2"
         });
-        let (mut obs, _handle) = init(vec![request], vec![response]);
-        let res = obs.get_version().unwrap();
-        obs.close();
-        assert_eq!(
-            res,
-            requests::GetVersion {
-                version: 1.1,
-                obs_websocket_version: "4.7.0".to_string(),
-                obs_studio_version: "24.0.3".to_string(),
-                available_requests: vec!["Request1".to_string(), "Request2".to_string()],
-            }
-        );
+        let expected = requests::GetVersion {
+            version: 1.1,
+            obs_websocket_version: "4.7.0".to_string(),
+            obs_studio_version: "24.0.3".to_string(),
+            available_requests: vec!["Request1".to_string(), "Request2".to_string()],
+        };
+        let method = |obs: &mut Obs| obs.get_version();
+        request_test(vec![request], vec![response], expected, method);
     }
 
     #[test]
@@ -660,17 +656,13 @@ mod test {
             "challenge": "ch",
             "salt": "sa",
         });
-        let (mut obs, _handle) = init(vec![request], vec![response]);
-        let res = obs.get_auth_required().unwrap();
-        obs.close();
-        assert_eq!(
-            res,
-            requests::GetAuthRequired {
-                auth_required: true,
-                challenge: Some("ch".to_string()),
-                salt: Some("sa".to_string())
-            }
-        );
+        let expected = requests::GetAuthRequired {
+            auth_required: true,
+            challenge: Some("ch".to_string()),
+            salt: Some("sa".to_string()),
+        };
+        let method = |obs: &mut Obs| obs.get_auth_required();
+        request_test(vec![request], vec![response], expected, method);
     }
 
     #[test]
@@ -684,17 +676,13 @@ mod test {
             "message-id": "0",
             "authRequired": false,
         });
-        let (mut obs, _handle) = init(vec![request], vec![response]);
-        let res = obs.get_auth_required().unwrap();
-        obs.close();
-        assert_eq!(
-            res,
-            requests::GetAuthRequired {
-                auth_required: false,
-                challenge: None,
-                salt: None,
-            }
-        );
+        let expected = requests::GetAuthRequired {
+            auth_required: false,
+            challenge: None,
+            salt: None,
+        };
+        let method = |obs: &mut Obs| obs.get_auth_required();
+        request_test(vec![request], vec![response], expected, method);
     }
 
     #[test]
@@ -723,17 +711,13 @@ mod test {
                 "message-id": "0",
             }),
         ];
-        let (mut obs, _handle) = init(requests, responses);
-        let res = obs.authenticate("todo").unwrap();
-        obs.close();
-        assert_eq!(
-            res,
-            requests::Response {
-                message_id: "0".to_string(),
-                status: requests::Status::Ok,
-                error: None,
-            }
-        );
+        let expected = requests::Response {
+            message_id: "0".to_string(),
+            status: requests::Status::Ok,
+            error: None,
+        };
+        let method = |obs: &mut Obs| obs.authenticate("todo");
+        request_test(requests, responses, expected, method);
     }
 
     #[test]
@@ -747,17 +731,13 @@ mod test {
             "status": "ok",
             "message-id": "0",
         });
-        let (mut obs, _handle) = init(vec![request], vec![response]);
-        let res = obs.set_heartbeat(true).unwrap();
-        obs.close();
-        assert_eq!(
-            res,
-            requests::Response {
-                message_id: "0".to_string(),
-                status: requests::Status::Ok,
-                error: None,
-            }
-        );
+        let expected = requests::Response {
+            message_id: "0".to_string(),
+            status: requests::Status::Ok,
+            error: None,
+        };
+        let method = |obs: &mut Obs| obs.set_heartbeat(true);
+        request_test(vec![request], vec![response], expected, method);
     }
 
     #[test]
@@ -771,17 +751,13 @@ mod test {
             "status": "ok",
             "message-id": "0",
         });
-        let (mut obs, _handle) = init(vec![request], vec![response]);
-        let res = obs.set_filename_formatting("test").unwrap();
-        obs.close();
-        assert_eq!(
-            res,
-            requests::Response {
-                message_id: "0".to_string(),
-                status: requests::Status::Ok,
-                error: None,
-            }
-        );
+        let expected = requests::Response {
+            message_id: "0".to_string(),
+            status: requests::Status::Ok,
+            error: None,
+        };
+        let method = |obs: &mut Obs| obs.set_filename_formatting("test");
+        request_test(vec![request], vec![response], expected, method);
     }
 
     #[test]
@@ -795,15 +771,11 @@ mod test {
             "message-id": "0",
             "filename-formatting": "test",
         });
-        let (mut obs, _handle) = init(vec![request], vec![response]);
-        let res = obs.get_filename_formatting().unwrap();
-        obs.close();
-        assert_eq!(
-            res,
-            requests::GetFilenameFormatting {
-                filename_formatting: "test".to_string(),
-            }
-        );
+        let expected = requests::GetFilenameFormatting {
+            filename_formatting: "test".to_string(),
+        };
+        let method = |obs: &mut Obs| obs.get_filename_formatting();
+        request_test(vec![request], vec![response], expected, method);
     }
 
     #[test]
@@ -827,25 +799,21 @@ mod test {
                 "free-disk-space": 8.0,
             }
         });
-        let (mut obs, _handle) = init(vec![request], vec![response]);
-        let res = obs.get_stats().unwrap();
-        obs.close();
-        assert_eq!(
-            res,
-            requests::GetStats {
-                stats: typedefs::ObsStats {
-                    fps: 0.0,
-                    render_total_frames: 1,
-                    render_missed_frames: 2,
-                    output_total_frames: 3,
-                    output_skipped_frames: 4,
-                    average_frame_time: 5.0,
-                    cpu_usage: 6.0,
-                    memory_usage: 7.0,
-                    free_disk_space: 8.0,
-                }
-            }
-        );
+        let expected = requests::GetStats {
+            stats: typedefs::ObsStats {
+                fps: 0.0,
+                render_total_frames: 1,
+                render_missed_frames: 2,
+                output_total_frames: 3,
+                output_skipped_frames: 4,
+                average_frame_time: 5.0,
+                cpu_usage: 6.0,
+                memory_usage: 7.0,
+                free_disk_space: 8.0,
+            },
+        };
+        let method = |obs: &mut Obs| obs.get_stats();
+        request_test(vec![request], vec![response], expected, method);
     }
 
     #[test]
@@ -862,20 +830,18 @@ mod test {
             "status": "ok",
             "message-id": "0",
         });
-        let (mut obs, _handle) = init(vec![request], vec![response]);
-        let data = json!({
-            "custom": "fields",
-        });
-        let res = obs.broadcast_custom_message("test", data).unwrap();
-        obs.close();
-        assert_eq!(
-            res,
-            requests::Response {
-                message_id: "0".to_string(),
-                status: requests::Status::Ok,
-                error: None,
-            }
-        );
+        let expected = requests::Response {
+            message_id: "0".to_string(),
+            status: requests::Status::Ok,
+            error: None,
+        };
+        let method = |obs: &mut Obs| {
+            let data = json!({
+                "custom": "fields",
+            });
+            obs.broadcast_custom_message("test", data);
+        };
+        request_test(vec![request], vec![response], expected, method);
     }
 
     #[test]
@@ -897,23 +863,19 @@ mod test {
             "colorSpace": "VIDEO_CS_601",
             "colorRange": "VIDEO_RANGE_PARTIAL",
         });
-        let (mut obs, _handle) = init(vec![request], vec![response]);
-        let res = obs.get_video_info().unwrap();
-        obs.close();
-        assert_eq!(
-            res,
-            requests::GetVideoInfo {
-                base_width: 0,
-                base_height: 1,
-                output_width: 2,
-                output_height: 3,
-                scale_type: typedefs::ScaleType::Bicubic,
-                fps: 4.0,
-                video_format: typedefs::VideoFormat::NV12,
-                color_space: typedefs::ColorSpace::CS601,
-                color_range: typedefs::ColorRange::Partial,
-            }
-        );
+        let expected = requests::GetVideoInfo {
+            base_width: 0,
+            base_height: 1,
+            output_width: 2,
+            output_height: 3,
+            scale_type: typedefs::ScaleType::Bicubic,
+            fps: 4.0,
+            video_format: typedefs::VideoFormat::NV12,
+            color_space: typedefs::ColorSpace::CS601,
+            color_range: typedefs::ColorRange::Partial,
+        };
+        let method = |obs: &mut Obs| obs.get_video_info();
+        request_test(vec![request], vec![response], expected, method);
     }
 
     #[test]
@@ -949,35 +911,31 @@ mod test {
                 }
             ],
         });
-        let (mut obs, _handle) = init(vec![request], vec![response]);
-        let res = obs.list_outputs().unwrap();
-        obs.close();
-        assert_eq!(
-            res,
-            requests::ListOutputs {
-                outputs: vec![typedefs::Output {
-                    name: "simple_file_output".to_string(),
-                    output_type: "ffmpeg_muxer".to_string(),
-                    width: 0,
-                    height: 1,
-                    flags: typedefs::Flags {
-                        raw_value: 6,
-                        audio: true,
-                        video: true,
-                        encoded: true,
-                        multi_track: true,
-                        service: true,
-                    },
-                    settings: std::collections::HashMap::new(),
-                    active: false,
-                    reconnecting: false,
-                    congestion: 2.0,
-                    total_frames: 3,
-                    dropped_frames: 4,
-                    total_bytes: 5,
-                }]
-            }
-        );
+        let expected = requests::ListOutputs {
+            outputs: vec![typedefs::Output {
+                name: "simple_file_output".to_string(),
+                output_type: "ffmpeg_muxer".to_string(),
+                width: 0,
+                height: 1,
+                flags: typedefs::Flags {
+                    raw_value: 6,
+                    audio: true,
+                    video: true,
+                    encoded: true,
+                    multi_track: true,
+                    service: true,
+                },
+                settings: std::collections::HashMap::new(),
+                active: false,
+                reconnecting: false,
+                congestion: 2.0,
+                total_frames: 3,
+                dropped_frames: 4,
+                total_bytes: 5,
+            }],
+        };
+        let method = |obs: &mut Obs| obs.list_outputs();
+        request_test(vec![request], vec![response], expected, method);
     }
 
     #[test]
@@ -1012,35 +970,31 @@ mod test {
                 "totalBytes": 5,
             },
         });
-        let (mut obs, _handle) = init(vec![request], vec![response]);
-        let res = obs.get_output_info("output1").unwrap();
-        obs.close();
-        assert_eq!(
-            res,
-            requests::GetOutputInfo {
-                output_info: typedefs::Output {
-                    name: "simple_file_output".to_string(),
-                    output_type: "ffmpeg_muxer".to_string(),
-                    width: 0,
-                    height: 1,
-                    flags: typedefs::Flags {
-                        raw_value: 6,
-                        audio: true,
-                        video: true,
-                        encoded: true,
-                        multi_track: true,
-                        service: true,
-                    },
-                    settings: std::collections::HashMap::new(),
-                    active: false,
-                    reconnecting: false,
-                    congestion: 2.0,
-                    total_frames: 3,
-                    dropped_frames: 4,
-                    total_bytes: 5,
-                }
-            }
-        );
+        let expected = requests::GetOutputInfo {
+            output_info: typedefs::Output {
+                name: "simple_file_output".to_string(),
+                output_type: "ffmpeg_muxer".to_string(),
+                width: 0,
+                height: 1,
+                flags: typedefs::Flags {
+                    raw_value: 6,
+                    audio: true,
+                    video: true,
+                    encoded: true,
+                    multi_track: true,
+                    service: true,
+                },
+                settings: std::collections::HashMap::new(),
+                active: false,
+                reconnecting: false,
+                congestion: 2.0,
+                total_frames: 3,
+                dropped_frames: 4,
+                total_bytes: 5,
+            },
+        };
+        let method = |obs: &mut Obs| obs.get_output_info("output1");
+        request_test(vec![request], vec![response], expected, method);
     }
 
     #[test]
@@ -1054,17 +1008,13 @@ mod test {
             "status": "ok",
             "message-id": "0",
         });
-        let (mut obs, _handle) = init(vec![request], vec![response]);
-        let res = obs.start_output("output1").unwrap();
-        obs.close();
-        assert_eq!(
-            res,
-            requests::Response {
-                status: requests::Status::Ok,
-                message_id: "0".to_string(),
-                error: None,
-            }
-        );
+        let expected = requests::Response {
+            status: requests::Status::Ok,
+            message_id: "0".to_string(),
+            error: None,
+        };
+        let method = |obs: &mut Obs| obs.start_output("output1");
+        request_test(vec![request], vec![response], expected, method);
     }
 
     #[test]
@@ -1079,17 +1029,13 @@ mod test {
             "status": "ok",
             "message-id": "0",
         });
-        let (mut obs, _handle) = init(vec![request], vec![response]);
-        let res = obs.stop_output("output1", false).unwrap();
-        obs.close();
-        assert_eq!(
-            res,
-            requests::Response {
-                status: requests::Status::Ok,
-                message_id: "0".to_string(),
-                error: None,
-            }
-        );
+        let expected = requests::Response {
+            status: requests::Status::Ok,
+            message_id: "0".to_string(),
+            error: None,
+        };
+        let method = |obs: &mut Obs| obs.stop_output("output1", false);
+        request_test(vec![request], vec![response], expected, method);
     }
 
     #[test]
@@ -1103,17 +1049,13 @@ mod test {
             "status": "ok",
             "message-id": "0",
         });
-        let (mut obs, _handle) = init(vec![request], vec![response]);
-        let res = obs.set_current_profile("p").unwrap();
-        obs.close();
-        assert_eq!(
-            res,
-            requests::Response {
-                status: requests::Status::Ok,
-                message_id: "0".to_string(),
-                error: None,
-            }
-        );
+        let expected = requests::Response {
+            status: requests::Status::Ok,
+            message_id: "0".to_string(),
+            error: None,
+        };
+        let method = |obs: &mut Obs| obs.set_current_profile("p");
+        request_test(vec![request], vec![response], expected, method);
     }
 
     #[test]
@@ -1127,15 +1069,11 @@ mod test {
             "message-id": "0",
             "profile-name": "p",
         });
-        let (mut obs, _handle) = init(vec![request], vec![response]);
-        let res = obs.get_current_profile().unwrap();
-        obs.close();
-        assert_eq!(
-            res,
-            requests::Profile {
-                profile_name: "p".to_string(),
-            }
-        );
+        let expected = requests::Profile {
+            profile_name: "p".to_string(),
+        };
+        let method = |obs: &mut Obs| obs.get_current_profile();
+        request_test(vec![request], vec![response], expected, method);
     }
 
     #[test]
@@ -1156,22 +1094,18 @@ mod test {
                 }
             ],
         });
-        let (mut obs, _handle) = init(vec![request], vec![response]);
-        let res = obs.list_profiles().unwrap();
-        obs.close();
-        assert_eq!(
-            res,
-            requests::ListProfiles {
-                profiles: vec![
-                    requests::Profile {
-                        profile_name: "p1".to_string()
-                    },
-                    requests::Profile {
-                        profile_name: "p2".to_string()
-                    },
-                ]
-            }
-        );
+        let expected = requests::ListProfiles {
+            profiles: vec![
+                requests::Profile {
+                    profile_name: "p1".to_string(),
+                },
+                requests::Profile {
+                    profile_name: "p2".to_string(),
+                },
+            ],
+        };
+        let method = |obs: &mut Obs| obs.list_profiles();
+        request_test(vec![request], vec![response], expected, method);
     }
 
     #[test]
@@ -1184,17 +1118,13 @@ mod test {
             "status": "ok",
             "message-id": "0",
         });
-        let (mut obs, _handle) = init(vec![request], vec![response]);
-        let res = obs.toggle_recording().unwrap();
-        obs.close();
-        assert_eq!(
-            res,
-            requests::Response {
-                status: requests::Status::Ok,
-                message_id: "0".to_string(),
-                error: None,
-            }
-        );
+        let expected = requests::Response {
+            status: requests::Status::Ok,
+            message_id: "0".to_string(),
+            error: None,
+        };
+        let method = |obs: &mut Obs| obs.toggle_recording();
+        request_test(vec![request], vec![response], expected, method);
     }
 
     #[test]
@@ -1207,17 +1137,13 @@ mod test {
             "status": "ok",
             "message-id": "0",
         });
-        let (mut obs, _handle) = init(vec![request], vec![response]);
-        let res = obs.start_recording().unwrap();
-        obs.close();
-        assert_eq!(
-            res,
-            requests::Response {
-                status: requests::Status::Ok,
-                message_id: "0".to_string(),
-                error: None,
-            }
-        );
+        let expected = requests::Response {
+            status: requests::Status::Ok,
+            message_id: "0".to_string(),
+            error: None,
+        };
+        let method = |obs: &mut Obs| obs.start_recording();
+        request_test(vec![request], vec![response], expected, method);
     }
 
     #[test]
@@ -1230,17 +1156,13 @@ mod test {
             "status": "ok",
             "message-id": "0",
         });
-        let (mut obs, _handle) = init(vec![request], vec![response]);
-        let res = obs.stop_recording().unwrap();
-        obs.close();
-        assert_eq!(
-            res,
-            requests::Response {
-                status: requests::Status::Ok,
-                message_id: "0".to_string(),
-                error: None,
-            }
-        );
+        let expected = requests::Response {
+            status: requests::Status::Ok,
+            message_id: "0".to_string(),
+            error: None,
+        };
+        let method = |obs: &mut Obs| obs.stop_recording();
+        request_test(vec![request], vec![response], expected, method);
     }
 
     #[test]
@@ -1253,17 +1175,13 @@ mod test {
             "status": "ok",
             "message-id": "0",
         });
-        let (mut obs, _handle) = init(vec![request], vec![response]);
-        let res = obs.pause_recording().unwrap();
-        obs.close();
-        assert_eq!(
-            res,
-            requests::Response {
-                status: requests::Status::Ok,
-                message_id: "0".to_string(),
-                error: None,
-            }
-        );
+        let expected = requests::Response {
+            status: requests::Status::Ok,
+            message_id: "0".to_string(),
+            error: None,
+        };
+        let method = |obs: &mut Obs| obs.pause_recording();
+        request_test(vec![request], vec![response], expected, method);
     }
 
     #[test]
@@ -1276,17 +1194,13 @@ mod test {
             "status": "ok",
             "message-id": "0",
         });
-        let (mut obs, _handle) = init(vec![request], vec![response]);
-        let res = obs.resume_recording().unwrap();
-        obs.close();
-        assert_eq!(
-            res,
-            requests::Response {
-                status: requests::Status::Ok,
-                message_id: "0".to_string(),
-                error: None,
-            }
-        );
+        let expected = requests::Response {
+            status: requests::Status::Ok,
+            message_id: "0".to_string(),
+            error: None,
+        };
+        let method = |obs: &mut Obs| obs.resume_recording();
+        request_test(vec![request], vec![response], expected, method);
     }
 
     #[test]
@@ -1300,17 +1214,13 @@ mod test {
             "status": "ok",
             "message-id": "0",
         });
-        let (mut obs, _handle) = init(vec![request], vec![response]);
-        let res = obs.set_recording_folder("path").unwrap();
-        obs.close();
-        assert_eq!(
-            res,
-            requests::Response {
-                status: requests::Status::Ok,
-                message_id: "0".to_string(),
-                error: None,
-            }
-        );
+        let expected = requests::Response {
+            status: requests::Status::Ok,
+            message_id: "0".to_string(),
+            error: None,
+        };
+        let method = |obs: &mut Obs| obs.set_recording_folder("path");
+        request_test(vec![request], vec![response], expected, method);
     }
 
     #[test]
@@ -1324,14 +1234,21 @@ mod test {
             "message-id": "0",
             "rec-folder": "path",
         });
-        let (mut obs, _handle) = init(vec![request], vec![response]);
-        let res = obs.get_recording_folder().unwrap();
+        let expected = requests::GetRecordingFolder {
+            rec_folder: "path".to_string(),
+        };
+        let method = |obs: &mut Obs| obs.get_recording_folder();
+        request_test(vec![request], vec![response], expected, method);
+    }
+
+    fn request_test<T, U>(requests: Vec<Value>, responses: Vec<Value>, expected: T, method: U)
+    where
+        T: PartialEq + std::fmt::Debug,
+        U: FnOnce(&mut Obs) -> Result<T>,
+    {
+        let (mut obs, _handle) = init(requests, responses);
+        let res = method(&mut obs).unwrap();
         obs.close();
-        assert_eq!(
-            res,
-            requests::GetRecordingFolder {
-                rec_folder: "path".to_string(),
-            }
-        );
+        assert_eq!(res, expected);
     }
 }
