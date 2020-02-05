@@ -143,18 +143,18 @@ pub fn get_video_info(message_id: &str) -> Value {
     })
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct GetVideoInfo {
-    base_width: i32,
-    base_height: i32,
-    output_width: i32,
-    output_height: i32,
-    scale_type: String,
-    fps: f64,
-    video_format: String,
-    color_space: String,
-    color_range: String,
+    pub base_width: i32,
+    pub base_height: i32,
+    pub output_width: i32,
+    pub output_height: i32,
+    pub scale_type: typedefs::ScaleType,
+    pub fps: f64,
+    pub video_format: typedefs::VideoFormat,
+    pub color_space: typedefs::ColorSpace,
+    pub color_range: typedefs::ColorRange,
 }
 
 pub fn list_outputs(message_id: &str) -> Value {

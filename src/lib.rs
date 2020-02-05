@@ -847,4 +847,72 @@ mod test {
             }
         );
     }
+
+    #[test]
+    fn broadcast_custom_message() {
+        let request = json!({
+            "request-type": "BroadcastCustomMessage",
+            "message-id": "0",
+            "realm": "test",
+            "data": {
+                "custom": "fields",
+            },
+        });
+        let response = json!({
+            "status": "ok",
+            "message-id": "0",
+        });
+        let (mut obs, _handle) = init(vec![request], vec![response]);
+        let data = json!({
+            "custom": "fields",
+        });
+        let res = obs.broadcast_custom_message("test", data).unwrap();
+        obs.close();
+        assert_eq!(
+            res,
+            requests::Response {
+                message_id: "0".to_string(),
+                status: requests::Status::Ok,
+                error: None,
+            }
+        );
+    }
+
+    #[test]
+    fn get_video_info() {
+        let response = json!({
+            "status": "ok",
+            "message-id": "0",
+            "baseWidth": 0,
+            "baseHeight": 1,
+            "outputWidth": 2,
+            "outputHeight": 3,
+            "scaleType": "VIDEO_SCALE_BICUBIC",
+            "fps": 4.0,
+            "videoFormat": "VIDEO_FORMAT_NV12",
+            "colorSpace": "VIDEO_CS_601",
+            "colorRange": "VIDEO_RANGE_PARTIAL",
+        });
+        let request = json!({
+            "request-type": "GetVideoInfo",
+            "message-id": "0",
+        });
+        let (mut obs, _handle) = init(vec![request], vec![response]);
+        let res = obs.get_video_info().unwrap();
+        obs.close();
+        assert_eq!(
+            res,
+            requests::GetVideoInfo {
+                base_width: 0,
+                base_height: 1,
+                output_width: 2,
+                output_height: 3,
+                scale_type: typedefs::ScaleType::Bicubic,
+                fps: 4.0,
+                video_format: typedefs::VideoFormat::NV12,
+                color_space: typedefs::ColorSpace::CS601,
+                color_range: typedefs::ColorRange::Partial,
+            }
+        );
+    }
 }

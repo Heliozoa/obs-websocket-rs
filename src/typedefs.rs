@@ -249,6 +249,46 @@ pub struct WithTransition {
     duration: Option<i32>,
 }
 
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+pub enum ScaleType {
+    #[serde(rename = "VIDEO_SCALE_BILINEAR")]
+    Bilinear,
+    #[serde(rename = "VIDEO_SCALE_DEFAULT")]
+    Default,
+    #[serde(rename = "VIDEO_SCALE_FAST_BILINEAR")]
+    FastBilinear,
+    #[serde(rename = "VIDEO_SCALE_BICUBIC")]
+    Bicubic,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+pub enum VideoFormat {
+    #[serde(rename = "VIDEO_FORMAT_NV12")]
+    NV12,
+    #[serde(rename = "VIDEO_FORMAT_I420")]
+    I420,
+    #[serde(rename = "VIDEO_FORMAT_I444")]
+    I444,
+    #[serde(rename = "VIDEO_FORMAT_RGBA")]
+    RGB,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+pub enum ColorSpace {
+    #[serde(rename = "VIDEO_CS_709")]
+    CS709,
+    #[serde(rename = "VIDEO_CS_601")]
+    CS601,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+pub enum ColorRange {
+    #[serde(rename = "VIDEO_RANGE_PARTIAL")]
+    Partial,
+    #[serde(rename = "VIDEO_RANGE_FULL")]
+    Full,
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
