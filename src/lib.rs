@@ -5,59 +5,155 @@ mod responses;
 
 use base64;
 use error::Error;
-use log::{debug, info};
+use futures::{
+    channel::{
+        mpsc::{channel, Receiver, Sender},
+        oneshot::{channel as oneshot_channel, Sender as OneshotSender},
+    },
+    executor, future,
+    stream::{select, StreamExt},
+    task::{Context, Poll},
+    Stream,
+};
+use log::info;
 use serde::de::DeserializeOwned;
 use serde_json::Value;
 use sha2::{Digest, Sha256};
-use tungstenite::{client::AutoStream, connect, protocol::WebSocket, Message};
-use url::Url;
+use std::{
+    io::ErrorKind as IoError,
+    net::TcpStream,
+    pin::Pin,
+    thread::{self, JoinHandle},
+};
+use tungstenite::{
+    client, protocol::Role, Error as WebSocketError, Message as WebSocketMessage, WebSocket,
+};
 
 type Result<T> = std::result::Result<T, Error>;
 
+#[derive(Debug)]
+enum Message {
+    Outgoing(Value, OneshotSender<String>),
+    Incoming(WebSocketMessage),
+}
+
+struct WebSocketStream(WebSocket<TcpStream>);
+
+impl Stream for WebSocketStream {
+    type Item = Message;
+
+    fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+        let message = Pin::into_inner(self).0.read_message();
+        match message {
+            Ok(message) => Poll::Ready(Some(Message::Incoming(message))),
+            Err(error) => match error {
+                WebSocketError::Io(error) => match error.kind() {
+                    IoError::WouldBlock => {
+                        cx.waker().wake_by_ref();
+                        Poll::Pending
+                    }
+                    _ => Poll::Ready(None), // todo
+                },
+                _ => Poll::Ready(None), // todo
+            },
+        }
+    }
+}
+
 pub struct Obs {
-    socket: Option<WebSocket<AutoStream>>,
+    socket_handle: Option<WebSocket<TcpStream>>,
+    thread_handle: Option<JoinHandle<()>>,
+    thread_sender: Option<Sender<Message>>,
 }
 
 impl Obs {
     pub fn new() -> Self {
-        Obs { socket: None }
+        Obs {
+            socket_handle: None,
+            thread_handle: None,
+            thread_sender: None,
+        }
     }
 
-    pub fn connect(&mut self, port: u16) -> Result<()> {
-        let address = format!("ws://localhost:{}", port.to_string());
-        debug!("connecting to {}", address);
-        let (socket, _response) = connect(Url::parse(&address)?)?;
-        debug!("connected");
-        self.socket = Some(socket);
-        Ok(())
+    fn init_sockets(port: u16) -> (WebSocketStream, WebSocket<TcpStream>, WebSocket<TcpStream>) {
+        let addr = format!("localhost:{}", port);
+        let ws_addr = format!("ws://{}", addr);
+        let recv_stream = TcpStream::connect(addr).unwrap();
+        let send_stream = recv_stream.try_clone().unwrap();
+        let close_stream = recv_stream.try_clone().unwrap();
+        let (recv_socket, _res) = client(ws_addr, recv_stream).unwrap();
+        close_stream.set_nonblocking(true).unwrap();
+
+        let recv_socket_iter = WebSocketStream(recv_socket);
+        let send_socket = WebSocket::from_raw_socket(send_stream, Role::Client, None);
+        let close_socket = WebSocket::from_raw_socket(close_stream, Role::Client, None);
+        (recv_socket_iter, send_socket, close_socket)
+    }
+
+    fn start_handler(
+        mut send_socket: WebSocket<TcpStream>,
+        outgoing_receiver: Receiver<Message>,
+        websocket_stream: WebSocketStream,
+    ) -> JoinHandle<()> {
+        let handle = thread::spawn(move || {
+            let streams = select(outgoing_receiver, websocket_stream);
+            let mut pending_sender = None;
+            let fut = streams.for_each(|message| {
+                match message {
+                    Message::Outgoing(json, sender) => {
+                        send_socket
+                            .write_message(WebSocketMessage::text(json.to_string()))
+                            .unwrap();
+                        pending_sender = Some(sender);
+                    }
+                    Message::Incoming(message) => match message {
+                        WebSocketMessage::Close(_) => {
+                            info!("closed websocket");
+                        }
+                        WebSocketMessage::Text(text) => {
+                            if let Some(sender) = pending_sender.take() {
+                                sender.send(text).unwrap();
+                            }
+                        }
+                        _ => {}
+                    },
+                }
+                future::ready(())
+            });
+            executor::block_on(fut);
+            info!("receivers closed");
+        });
+        handle
+    }
+
+    pub fn connect(&mut self, port: u16) {
+        let (thread_sender, thread_receiver) = channel(2048);
+        let (websocket_stream, send_socket, close_socket) = Obs::init_sockets(port);
+        let handle = Obs::start_handler(send_socket, thread_receiver, websocket_stream);
+
+        self.socket_handle = Some(close_socket);
+        self.thread_handle = Some(handle);
+        self.thread_sender = Some(thread_sender);
     }
 
     pub fn close(self) {
-        self.socket.unwrap().close(None).unwrap();
+        self.thread_sender.unwrap().close_channel();
+        self.socket_handle.unwrap().close(None).unwrap();
+        self.thread_handle.unwrap().join().unwrap();
     }
 
     fn get<T: DeserializeOwned>(&mut self, json: Value) -> Result<T> {
-        if let None = self.socket {
-            return Err(Error::Custom("not connected".to_string()));
-        }
-        let socket = self.socket.as_mut().unwrap();
-        let json = json.to_string();
-        debug!("SENT: {}", json);
-        socket.write_message(Message::Text(json))?;
-        loop {
-            let response = socket.read_message()?.to_string();
-            debug!("RECV: {}", response);
-            let parsed: responses::Message = serde_json::from_str(&response)?;
-            if parsed.message_id.is_some() {
-                let parsed: responses::Response = serde_json::from_str(&response)?;
-                if let responses::Status::Ok = parsed.status {
-                    return Ok(serde_json::from_str(&response)?);
-                } else {
-                    let error_msg = parsed.error.unwrap();
-                    return Err(Error::ObsError(error_msg));
-                }
-            }
-        }
+        let (os1, or1) = oneshot_channel();
+        let message = Message::Outgoing(json, os1);
+        self.thread_sender
+            .as_mut()
+            .unwrap()
+            .try_send(message)
+            .unwrap();
+        info!("blocking");
+        let res = executor::block_on(or1).unwrap();
+        info!("done");
+        Ok(serde_json::from_str(&res)?)
     }
 
     pub fn get_version(&mut self) -> Result<responses::GetVersion> {
@@ -71,6 +167,7 @@ impl Obs {
     pub fn authenticate(&mut self, password: &str) -> Result<responses::Response> {
         let auth: responses::GetAuthRequired = self.get(requests::get_auth_required("0"))?;
         if auth.auth_required {
+            info!("auth required");
             let challenge = auth.challenge.unwrap();
             let salt = auth.salt.unwrap();
 
@@ -81,6 +178,7 @@ impl Obs {
             let auth_response_string = format!("{}{}", secret, challenge);
             let auth_response_hash = Sha256::digest(auth_response_string.as_bytes());
             let auth_response = base64::encode(&auth_response_hash);
+            info!("authing");
             Ok(self.get(requests::authenticate("0", &auth_response))?)
         } else {
             Err(Error::ObsError("no auth required".to_string()))
@@ -613,43 +711,38 @@ impl Obs {
 mod test {
     use super::*;
     use serde_json::json;
-    use std::net::TcpListener;
-    use std::thread::{spawn, JoinHandle};
+    use std::{
+        net::TcpListener,
+        thread::{spawn, JoinHandle},
+    };
     use tungstenite::server::accept;
 
     fn init_without_server(port: u16) -> Obs {
-        let _ = env_logger::builder().is_test(true).try_init();
         let mut obs = Obs::new();
-        obs.connect(port).unwrap();
+        obs.connect(port);
         obs
     }
 
-    fn init(requests: Vec<Value>, responses: Vec<Value>) -> (Obs, JoinHandle<()>) {
+    fn init(responses: Vec<Value>) -> (Obs, JoinHandle<Vec<Value>>) {
         let server = TcpListener::bind("localhost:0").unwrap();
         let port = server.local_addr().unwrap().port();
-        debug!("mock server started at {}", port);
+        info!("mock server started at {}", port);
         let handle = spawn(move || {
-            let mut requests = requests.iter().cycle();
-            let mut responses = responses.iter().cycle();
-            for stream in server.incoming() {
-                debug!("incoming connection");
-                let mut websocket =
-                    accept(stream.expect("stream error")).expect("failed to accept");
-                loop {
-                    let msg = websocket.read_message().expect("failed to read msg");
-                    if let Message::Close(_) = msg {
-                        return;
-                    }
-                    let parsed = serde_json::from_str::<Value>(&msg.to_string())
-                        .expect("failed to deserialize");
-                    assert_eq!(&parsed, requests.next().expect("missing requests"));
-                    websocket
-                        .write_message(Message::Text(
-                            responses.next().expect("missing responses").to_string(),
-                        ))
-                        .expect("failed to write");
-                }
+            let mut actual_requests = vec![];
+            let (stream, _) = server.accept().unwrap();
+            info!("incoming connection");
+            let mut websocket = accept(stream).expect("failed to accept");
+            for response in responses {
+                let message = websocket.read_message().expect("failed to read message");
+                info!("read message");
+                let parsed = serde_json::from_str::<Value>(&message.to_string())
+                    .expect("failed to deserialize");
+                actual_requests.push(parsed);
+                websocket
+                    .write_message(WebSocketMessage::Text(response.to_string()))
+                    .expect("failed to write");
             }
+            actual_requests
         });
         let obs = init_without_server(port);
         (obs, handle)
@@ -660,10 +753,21 @@ mod test {
         T: PartialEq + std::fmt::Debug,
         U: Fn(&mut Obs) -> Result<T>,
     {
-        let (mut obs, _handle) = init(requests, responses);
+        let _ = env_logger::builder().is_test(true).try_init();
+        let (mut obs, handle) = init(responses);
         let res = method(&mut obs).unwrap();
+        let actual_requests = handle.join().unwrap();
         obs.close();
-        assert_eq!(res, expected);
+        for (request, actual_request) in requests.into_iter().zip(actual_requests) {
+            assert_eq!(
+                request, actual_request,
+                "request (left) did not match expected (right)"
+            );
+        }
+        assert_eq!(
+            res, expected,
+            "result (left) did not match expected (right)"
+        );
     }
 
     #[test]
@@ -1505,15 +1609,5 @@ mod test {
         };
         let method = |obs: &mut Obs| obs.get_scene_item_properties(Some("scene"), "source");
         request_test(vec![request], vec![response], expected, method);
-    }
-
-    #[test]
-    fn asd() {
-        let mut obs = init_without_server(4444);
-        obs.set_scene_item_properties(
-            None, "asd", None, None, None, None, None, None, None, None, None, None, None, None,
-            None, None, None, None,
-        )
-        .unwrap();
     }
 }

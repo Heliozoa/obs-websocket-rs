@@ -1,6 +1,8 @@
 use serde_json::error::Error as JsonError;
-use tungstenite::error::Error as TungsteniteError;
-use tungstenite::handshake::{HandshakeError, HandshakeRole};
+use tungstenite::{
+    error::Error as TungsteniteError,
+    handshake::{HandshakeError, HandshakeRole},
+};
 use url::ParseError;
 
 #[derive(Debug)]
