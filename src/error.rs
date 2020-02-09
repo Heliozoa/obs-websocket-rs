@@ -1,4 +1,5 @@
 use serde_json::error::Error as JsonError;
+use std::io::Error as IoError;
 use tungstenite::{
     error::Error as TungsteniteError,
     handshake::{HandshakeError, HandshakeRole},
@@ -14,6 +15,7 @@ pub enum Error {
     Tungstenite(TungsteniteError),
     Json(JsonError),
     Parse(ParseError),
+    Io(IoError),
 }
 
 impl From<TungsteniteError> for Error {
@@ -40,5 +42,11 @@ impl<T: HandshakeRole> From<HandshakeError<T>> for Error {
             HandshakeError::Failure(err) => Error::HandshakeFailed(err),
             HandshakeError::Interrupted(_) => Error::HandshakeInterrupted,
         }
+    }
+}
+
+impl From<IoError> for Error {
+    fn from(err: IoError) -> Error {
+        Error::Io(err)
     }
 }

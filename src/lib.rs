@@ -75,19 +75,21 @@ impl Obs {
         }
     }
 
-    fn init_sockets(port: u16) -> (WebSocketStream, WebSocket<TcpStream>, WebSocket<TcpStream>) {
+    fn init_sockets(
+        port: u16,
+    ) -> Result<(WebSocketStream, WebSocket<TcpStream>, WebSocket<TcpStream>)> {
         let addr = format!("localhost:{}", port);
         let ws_addr = format!("ws://{}", addr);
-        let recv_stream = TcpStream::connect(addr).unwrap();
-        let send_stream = recv_stream.try_clone().unwrap();
-        let close_stream = recv_stream.try_clone().unwrap();
-        let (recv_socket, _res) = client(ws_addr, recv_stream).unwrap();
-        close_stream.set_nonblocking(true).unwrap();
+        let recv_stream = TcpStream::connect(addr)?;
+        let send_stream = recv_stream.try_clone()?;
+        let close_stream = recv_stream.try_clone()?;
+        let (recv_socket, _res) = client(ws_addr, recv_stream)?;
+        close_stream.set_nonblocking(true)?;
 
         let recv_socket_iter = WebSocketStream(recv_socket);
         let send_socket = WebSocket::from_raw_socket(send_stream, Role::Client, None);
         let close_socket = WebSocket::from_raw_socket(close_stream, Role::Client, None);
-        (recv_socket_iter, send_socket, close_socket)
+        Ok((recv_socket_iter, send_socket, close_socket))
     }
 
     fn start_handler(
@@ -103,7 +105,7 @@ impl Obs {
                     Message::Outgoing(json, sender) => {
                         send_socket
                             .write_message(WebSocketMessage::text(json.to_string()))
-                            .unwrap();
+                            .expect("failed to write message");
                         pending_sender = Some(sender);
                     }
                     Message::Incoming(message) => match message {
@@ -112,7 +114,7 @@ impl Obs {
                         }
                         WebSocketMessage::Text(text) => {
                             if let Some(sender) = pending_sender.take() {
-                                sender.send(text).unwrap();
+                                sender.send(text).expect("failed to send");
                             }
                         }
                         _ => {}
@@ -126,14 +128,15 @@ impl Obs {
         handle
     }
 
-    pub fn connect(&mut self, port: u16) {
+    pub fn connect(&mut self, port: u16) -> Result<()> {
         let (thread_sender, thread_receiver) = channel(2048);
-        let (websocket_stream, send_socket, close_socket) = Obs::init_sockets(port);
+        let (websocket_stream, send_socket, close_socket) = Obs::init_sockets(port)?;
         let handle = Obs::start_handler(send_socket, thread_receiver, websocket_stream);
 
         self.socket_handle = Some(close_socket);
         self.thread_handle = Some(handle);
         self.thread_sender = Some(thread_sender);
+        Ok(())
     }
 
     pub fn close(self) {
@@ -147,12 +150,10 @@ impl Obs {
         let message = Message::Outgoing(json, os1);
         self.thread_sender
             .as_mut()
-            .unwrap()
+            .expect("no thread sender")
             .try_send(message)
-            .unwrap();
-        info!("blocking");
-        let res = executor::block_on(or1).unwrap();
-        info!("done");
+            .expect("failed to send");
+        let res = executor::block_on(or1).expect("failed to receive");
         Ok(serde_json::from_str(&res)?)
     }
 
