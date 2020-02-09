@@ -720,7 +720,7 @@ mod test {
 
     fn init_without_server(port: u16) -> Obs {
         let mut obs = Obs::new();
-        obs.connect(port);
+        obs.connect(port).unwrap();
         obs
     }
 
