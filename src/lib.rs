@@ -1611,4 +1611,70 @@ mod test {
         let method = |obs: &mut Obs| obs.get_scene_item_properties(Some("scene"), "source");
         request_test(vec![request], vec![response], expected, method);
     }
+
+    #[test]
+    fn set_scene_item_properties() {
+        let request = json!({
+            "request-type": "SetSceneItemProperties",
+            "message-id": "0",
+            "scene-name": "scene",
+            "item": "test",
+            "position": {
+                "x": 1.0,
+                "y": 2.0,
+                "alignment": 3,
+            },
+            "rotation": 4.0,
+            "scale": {
+                "x": 5.0,
+                "y": 6.0,
+            },
+            "crop": {
+                "top": 7,
+                "right": 8,
+                "bottom": 9,
+                "left": 10,
+            },
+            "visible": true,
+            "locked": true,
+            "bounds": {
+                "type": "OBS_BOUNDS_STRETCH",
+                "alignment": 11,
+                "x": 12.0,
+                "y": 13.0,
+            },
+        });
+        let response = json!({
+            "message-id": "0",
+            "status": "ok",
+        });
+        let expected = responses::Response {
+            message_id: "0".to_string(),
+            status: responses::Status::Ok,
+            error: None,
+        };
+        let method = |obs: &mut Obs| {
+            obs.set_scene_item_properties(
+                Some("scene"),
+                "test",
+                Some(1.0),
+                Some(2.0),
+                Some(3),
+                Some(4.0),
+                Some(5.0),
+                Some(6.0),
+                Some(7),
+                Some(8),
+                Some(9),
+                Some(10),
+                Some(true),
+                Some(true),
+                Some(requests::BoundsType::Stretch),
+                Some(11),
+                Some(12.0),
+                Some(13.0),
+            )
+        };
+        request_test(vec![request], vec![response], expected, method);
+    }
 }

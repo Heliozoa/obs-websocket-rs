@@ -162,23 +162,6 @@ pub struct GetSceneItemProperties {
 }
 
 #[derive(Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct SetSceneItemProperties {
-    name: String,
-    position: Position,
-    rotation: f64,
-    scale: Scale,
-    crop: Crop,
-    visible: bool,
-    locked: bool,
-    bounds: Bounds,
-    source_width: i32,
-    source_height: i32,
-    width: f64,
-    height: f64,
-}
-
-#[derive(Deserialize, Debug)]
 #[serde(rename_all = "lowercase")]
 pub enum SceneItemType {
     Input,
