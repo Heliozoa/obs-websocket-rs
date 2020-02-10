@@ -1,6 +1,13 @@
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
+#[derive(Serialize, Debug)]
+#[serde(rename_all = "kebab-case")]
+pub struct Request<'a> {
+    request_type: &'a str,
+    message_id: &'a str,
+}
+
 pub fn get_version(message_id: &str) -> Value {
     json!({
         "request-type": "GetVersion",
@@ -431,6 +438,28 @@ pub struct WithTransition {
     duration: Option<i32>,
 }
 
-pub fn reset_scene_item(scene_name: Option<String>, item: String) -> Value {
-    json!({"scene-name": scene_name, "item": item})
+pub fn reset_scene_item(message_id: &str, scene_name: Option<&str>, item: &str) -> Value {
+    json!({
+        "request-type": "ResetSceneItem",
+        "message-id": message_id,
+        "scene-name": scene_name,
+        "item": item,
+    })
+}
+
+pub fn delete_scene_item(
+    message_id: &str,
+    scene_name: Option<&str>,
+    item_name: &str,
+    item_id: i32,
+) -> Value {
+    json!({
+        "request-type": "DeleteSceneItem",
+        "message-id": message_id,
+        "scene": scene_name,
+        "item": {
+            "name": item_name,
+            "id": item_id,
+        },
+    })
 }

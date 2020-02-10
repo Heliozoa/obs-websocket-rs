@@ -3,6 +3,9 @@ mod events;
 mod requests;
 mod responses;
 
+#[macro_use]
+extern crate typed_builder;
+
 use base64;
 use error::Error;
 use futures::{
@@ -113,8 +116,14 @@ impl Obs {
                             info!("closed websocket");
                         }
                         WebSocketMessage::Text(text) => {
-                            if let Some(sender) = pending_sender.take() {
-                                sender.send(text).expect("failed to send");
+                            let parsed = serde_json::from_str::<responses::Message>(&text).unwrap();
+                            if let Some(message_id) = parsed.message_id {
+                                // response
+                                if let Some(sender) = pending_sender.take() {
+                                    sender.send(text).expect("failed to send");
+                                }
+                            } else if let Some(update_type) = parsed.update_type {
+                                // event
                             }
                         }
                         _ => {}
@@ -355,18 +364,21 @@ impl Obs {
 
     pub fn reset_scene_item(
         &mut self,
-        scene_name: Option<String>,
-        item: String,
+        scene_name: Option<&str>,
+        item: &str,
     ) -> Result<responses::Response> {
-        self.get(requests::reset_scene_item(scene_name, item))
+        self.get(requests::reset_scene_item("0", scene_name, item))
     }
 
     pub fn delete_scene_item(
         &mut self,
-        scene: Option<String>,
-        item: responses::Item,
+        scene_name: Option<&str>,
+        item_name: &str,
+        item_id: i32,
     ) -> Result<responses::Response> {
-        unimplemented!()
+        self.get(requests::delete_scene_item(
+            "0", scene_name, item_name, item_id,
+        ))
     }
 
     pub fn duplicate_scene_item(
@@ -1675,6 +1687,51 @@ mod test {
                 Some(13.0),
             )
         };
+        request_test(vec![request], vec![response], expected, method);
+    }
+
+    #[test]
+    fn reset_scene_item() {
+        let request = json!({
+            "request-type": "ResetSceneItem",
+            "message-id": "0",
+            "scene-name": "scene",
+            "item": "test",
+        });
+        let response = json!({
+            "message-id": "0",
+            "status": "ok",
+        });
+        let expected = responses::Response {
+            message_id: "0".to_string(),
+            status: responses::Status::Ok,
+            error: None,
+        };
+        let method = |obs: &mut Obs| obs.reset_scene_item(Some("scene"), "test");
+        request_test(vec![request], vec![response], expected, method);
+    }
+
+    #[test]
+    fn delete_scene_item() {
+        let request = json!({
+            "request-type": "DeleteSceneItem",
+            "message-id": "0",
+            "scene": "scene",
+            "item": {
+                "name": "test",
+                "id": 1,
+            },
+        });
+        let response = json!({
+            "message-id": "0",
+            "status": "ok",
+        });
+        let expected = responses::Response {
+            message_id: "0".to_string(),
+            status: responses::Status::Ok,
+            error: None,
+        };
+        let method = |obs: &mut Obs| obs.delete_scene_item(Some("scene"), "test", 1);
         request_test(vec![request], vec![response], expected, method);
     }
 }
