@@ -73,11 +73,6 @@ pub struct GetAuthRequired {
     pub salt: Option<String>,
 }
 
-#[derive(Deserialize, Debug)]
-pub struct Authenticate {
-    auth: String,
-}
-
 #[derive(Deserialize, Debug, Eq, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub struct GetFilenameFormatting {
@@ -120,6 +115,8 @@ pub struct Profile {
     pub profile_name: String,
 }
 
+pub type GetCurrentProfile = Profile;
+
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 pub struct ListProfiles {
@@ -137,6 +134,8 @@ pub struct GetRecordingFolder {
 pub struct SceneCollection {
     pub sc_name: String,
 }
+
+pub type GetCurrentSceneCollection = SceneCollection;
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
@@ -306,7 +305,7 @@ pub struct Scene {
     sources: Vec<SceneItem>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 pub struct Item {
     name: String,
     id: i32,
@@ -409,4 +408,10 @@ pub enum ColorRange {
     Partial,
     #[serde(rename = "VIDEO_RANGE_FULL")]
     Full,
+}
+
+#[derive(Deserialize, Debug, PartialEq, Eq)]
+pub struct DuplicateSceneItem {
+    pub scene: String,
+    pub item: Item,
 }

@@ -19,7 +19,6 @@ use futures::{
     Stream,
 };
 use log::info;
-use serde::de::DeserializeOwned;
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::{
@@ -154,9 +153,14 @@ impl Obs {
         self.thread_handle.unwrap().join().unwrap();
     }
 
-    fn get<T: DeserializeOwned>(&mut self, json: Value) -> Result<T> {
+    fn request<T>(&mut self, req: T) -> Result<T::Output>
+    where
+        T: requests::ToRequest,
+    {
+        let val = req.to_request();
+        println!("{:?}", val);
         let (os1, or1) = oneshot_channel();
-        let message = Message::Outgoing(json, os1);
+        let message = Message::Outgoing(val, os1);
         self.thread_sender
             .as_mut()
             .expect("no thread sender")
@@ -166,16 +170,8 @@ impl Obs {
         Ok(serde_json::from_str(&res)?)
     }
 
-    pub fn get_version(&mut self) -> Result<responses::GetVersion> {
-        self.get(requests::get_version("0"))
-    }
-
-    pub fn get_auth_required(&mut self) -> Result<responses::GetAuthRequired> {
-        self.get(requests::get_auth_required("0"))
-    }
-
     pub fn authenticate(&mut self, password: &str) -> Result<responses::Response> {
-        let auth: responses::GetAuthRequired = self.get(requests::get_auth_required("0"))?;
+        let auth = self.request(requests::GetAuthRequired::builder().build())?;
         if auth.auth_required {
             info!("auth required");
             let challenge = auth.challenge.unwrap();
@@ -189,534 +185,13 @@ impl Obs {
             let auth_response_hash = Sha256::digest(auth_response_string.as_bytes());
             let auth_response = base64::encode(&auth_response_hash);
             info!("authing");
-            Ok(self.get(requests::authenticate("0", &auth_response))?)
+            let req = requests::Authenticate::builder()
+                .auth(&auth_response)
+                .build();
+            Ok(self.request(req)?)
         } else {
             Err(Error::ObsError("no auth required".to_string()))
         }
-    }
-
-    pub fn set_heartbeat(&mut self, enable: bool) -> Result<responses::Response> {
-        self.get(requests::set_heartbeat("0", enable))
-    }
-
-    pub fn set_filename_formatting(
-        &mut self,
-        filename_formatting: &str,
-    ) -> Result<responses::Response> {
-        self.get(requests::set_filename_formatting("0", filename_formatting))
-    }
-
-    pub fn get_filename_formatting(&mut self) -> Result<responses::GetFilenameFormatting> {
-        self.get(requests::get_filename_formatting("0"))
-    }
-
-    pub fn get_stats(&mut self) -> Result<responses::GetStats> {
-        self.get(requests::get_stats("0"))
-    }
-
-    pub fn broadcast_custom_message(
-        &mut self,
-        realm: &str,
-        data: Value,
-    ) -> Result<responses::Response> {
-        self.get(requests::broadcast_custom_message("0", realm, data))
-    }
-
-    pub fn get_video_info(&mut self) -> Result<responses::GetVideoInfo> {
-        self.get(requests::get_video_info("0"))
-    }
-
-    pub fn list_outputs(&mut self) -> Result<responses::ListOutputs> {
-        self.get(requests::list_outputs("0"))
-    }
-
-    pub fn get_output_info(&mut self, output_name: &str) -> Result<responses::GetOutputInfo> {
-        self.get(requests::get_output_info("0", output_name))
-    }
-
-    pub fn start_output(&mut self, output_name: &str) -> Result<responses::Response> {
-        self.get(requests::start_output("0", output_name))
-    }
-
-    pub fn stop_output(&mut self, output_name: &str, force: bool) -> Result<responses::Response> {
-        self.get(requests::stop_output("0", output_name, force))
-    }
-
-    pub fn set_current_profile(&mut self, profile_name: &str) -> Result<responses::Response> {
-        self.get(requests::set_current_profile("0", profile_name))
-    }
-
-    pub fn get_current_profile(&mut self) -> Result<responses::Profile> {
-        self.get(requests::get_current_profile("0"))
-    }
-
-    pub fn list_profiles(&mut self) -> Result<responses::ListProfiles> {
-        self.get(requests::list_profiles("0"))
-    }
-
-    pub fn toggle_recording(&mut self) -> Result<responses::Response> {
-        self.get(requests::start_stop_recording("0"))
-    }
-
-    pub fn start_recording(&mut self) -> Result<responses::Response> {
-        self.get(requests::start_recording("0"))
-    }
-
-    pub fn stop_recording(&mut self) -> Result<responses::Response> {
-        self.get(requests::stop_recording("0"))
-    }
-
-    pub fn pause_recording(&mut self) -> Result<responses::Response> {
-        self.get(requests::pause_recording("0"))
-    }
-
-    pub fn resume_recording(&mut self) -> Result<responses::Response> {
-        self.get(requests::resume_recording("0"))
-    }
-
-    pub fn set_recording_folder(&mut self, rec_folder: &str) -> Result<responses::Response> {
-        self.get(requests::set_recording_folder("0", rec_folder))
-    }
-
-    pub fn get_recording_folder(&mut self) -> Result<responses::GetRecordingFolder> {
-        self.get(requests::get_recording_folder("0"))
-    }
-
-    pub fn toggle_replay_buffer(&mut self) -> Result<responses::Response> {
-        self.get(requests::start_stop_replay_buffer("0"))
-    }
-
-    pub fn start_replay_buffer(&mut self) -> Result<responses::Response> {
-        self.get(requests::start_replay_buffer("0"))
-    }
-
-    pub fn stop_replay_buffer(&mut self) -> Result<responses::Response> {
-        self.get(requests::stop_replay_buffer("0"))
-    }
-
-    pub fn save_replay_buffer(&mut self) -> Result<responses::Response> {
-        self.get(requests::save_replay_buffer("0"))
-    }
-
-    pub fn set_current_scene_collection(&mut self, sc_name: &str) -> Result<responses::Response> {
-        self.get(requests::set_current_scene_collection("0", sc_name))
-    }
-
-    pub fn get_current_scene_collection(&mut self) -> Result<responses::SceneCollection> {
-        self.get(requests::get_current_scene_collection("0"))
-    }
-
-    pub fn list_scene_collections(&mut self) -> Result<responses::ListSceneCollections> {
-        self.get(requests::list_scene_collections("0"))
-    }
-
-    pub fn get_scene_item_properties(
-        &mut self,
-        scene_name: Option<&str>,
-        item: &str,
-    ) -> Result<responses::GetSceneItemProperties> {
-        self.get(requests::get_scene_item_properties("0", scene_name, item))
-    }
-
-    pub fn set_scene_item_properties(
-        &mut self,
-        scene_name: Option<&str>,
-        item: &str,
-        position_x: Option<f64>,
-        position_y: Option<f64>,
-        position_alignment: Option<i32>,
-        rotation: Option<f64>,
-        scale_x: Option<f64>,
-        scale_y: Option<f64>,
-        crop_top: Option<i32>,
-        crop_right: Option<i32>,
-        crop_bottom: Option<i32>,
-        crop_left: Option<i32>,
-        visible: Option<bool>,
-        locked: Option<bool>,
-        bounds_type: Option<requests::BoundsType>,
-        bounds_alignment: Option<i32>,
-        bounds_x: Option<f64>,
-        bounds_y: Option<f64>,
-    ) -> Result<responses::Response> {
-        self.get(requests::set_scene_item_properties(
-            "0",
-            scene_name,
-            item,
-            position_x,
-            position_y,
-            position_alignment,
-            rotation,
-            scale_x,
-            scale_y,
-            crop_top,
-            crop_right,
-            crop_bottom,
-            crop_left,
-            visible,
-            locked,
-            bounds_type,
-            bounds_alignment,
-            bounds_x,
-            bounds_y,
-        ))
-    }
-
-    pub fn reset_scene_item(
-        &mut self,
-        scene_name: Option<&str>,
-        item: &str,
-    ) -> Result<responses::Response> {
-        self.get(requests::reset_scene_item("0", scene_name, item))
-    }
-
-    pub fn delete_scene_item(
-        &mut self,
-        scene_name: Option<&str>,
-        item_name: &str,
-        item_id: i32,
-    ) -> Result<responses::Response> {
-        self.get(requests::delete_scene_item(
-            "0", scene_name, item_name, item_id,
-        ))
-    }
-
-    pub fn duplicate_scene_item(
-        &mut self,
-        from_scene: Option<String>,
-        to_scene: Option<String>,
-        item: responses::Item,
-    ) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn set_current_scene(&mut self, scene_name: String) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn get_current_scene(&mut self) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn get_scene_list(&mut self) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn reorder_scene_items(
-        &mut self,
-        scene: Option<String>,
-        items: Vec<responses::Item>,
-    ) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn get_sources_list(&mut self) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn get_source_types_list(&mut self) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn get_volume(&mut self, source: String) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn set_volume(&mut self, source: String, volume: f64) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn get_mute(&mut self, source: String) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn set_mute(&mut self, source: String, mute: bool) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn toggle_mute(&mut self, source: String) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn set_sync_offset(&mut self, source: String, offset: i32) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn get_sync_offset(&mut self, source: String) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn get_source_settings(
-        &mut self,
-        source_name: String,
-        source_type: Option<String>,
-    ) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn set_source_settings(
-        &mut self,
-        source_name: String,
-        source_type: Option<String>,
-        source_settings: Value,
-    ) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn get_text_gdi_plus_properties(&mut self, source: String) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn set_text_gdi_plus_properties(
-        &mut self,
-        source: String,
-        align: responses::Align,
-        bk_color: Option<i32>,
-        bk_opacity: Option<i32>,
-        chatlog: Option<bool>,
-        chatlog_lines: Option<i32>,
-        color: Option<i32>,
-        extents: Option<bool>,
-        extents_cx: Option<bool>,
-        extents_cy: Option<bool>,
-        file: Option<String>,
-        read_from_file: Option<bool>,
-        font: responses::Font,
-        gradient: Option<bool>,
-        gradient_color: Option<i32>,
-        gradient_dir: Option<f64>,
-        gradient_opacity: Option<i32>,
-        outline: Option<bool>,
-        outline_color: Option<i32>,
-        outline_size: Option<i32>,
-        outline_opacity: Option<i32>,
-        text: Option<String>,
-        valign: Option<String>,
-        vertical: Option<bool>,
-        render: Option<bool>,
-    ) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn get_text_freetype_2_properties(
-        &mut self,
-        source: String,
-    ) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn set_text_freetype_2_properties(
-        &mut self,
-        source: String,
-        color_1: Option<i32>,
-        color_2: Option<i32>,
-        custom_width: Option<i32>,
-        drop_shadow: Option<i32>,
-        font: responses::Font,
-        from_file: Option<bool>,
-        log_mode: Option<bool>,
-        outline: Option<bool>,
-        text: Option<String>,
-        text_file: Option<String>,
-        word_wrap: Option<bool>,
-    ) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn get_browser_source_properties(&mut self, source: String) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn set_browser_source_properties(
-        &mut self,
-        source: String,
-        is_local_file: Option<bool>,
-        local_file: Option<String>,
-        url: Option<String>,
-        css: Option<String>,
-        width: Option<i32>,
-        height: Option<i32>,
-        fps: Option<i32>,
-        shutdown: Option<bool>,
-        render: Option<bool>,
-    ) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn get_special_sources(&mut self) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn get_source_filters(&mut self, source_name: String) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn get_source_filter_info(
-        &mut self,
-        source_name: String,
-        filter_name: String,
-    ) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn add_filter_to_source(
-        &mut self,
-        source_name: String,
-        filter_name: String,
-        filter_type: String,
-        filter_settings: Value,
-    ) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn remove_filter_from_source(
-        &mut self,
-        source_name: String,
-        filter_name: String,
-    ) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn reorder_source_filter(
-        &mut self,
-        source_name: String,
-        filter_name: String,
-        new_index: i32,
-    ) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn move_source_filter(
-        &mut self,
-        source_name: String,
-        filter_name: String,
-        movement_type: responses::MovementType,
-    ) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn set_source_filter_settings(
-        &mut self,
-        source_name: String,
-        filter_name: String,
-        filter_settings: Value,
-    ) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn set_source_filter_visibility(
-        &mut self,
-        source_name: String,
-        filter_name: String,
-        filter_enabled: bool,
-    ) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn take_source_screenshot(
-        &mut self,
-        source_name: String,
-        embed_picture_format: Option<String>,
-        save_to_file_path: Option<String>,
-        width: Option<i32>,
-        height: Option<i32>,
-    ) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn get_streaming_status(&mut self) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn toggle_streaming(&mut self) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn start_streaming(&mut self, stream: requests::Stream) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn stop_streaming(&mut self) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn set_stream_settings(
-        &mut self,
-        stream_type: String,
-        settings: requests::StreamSettings,
-        save: bool,
-    ) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn get_stream_settings(&mut self) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn save_stream_settings(&mut self) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn send_captions(&mut self, text: String) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn get_studio_mode_status(&mut self) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn get_preview_scene(
-        &mut self,
-        name: String,
-        sources: Vec<responses::SceneItem>,
-    ) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn set_preview_scene(&mut self, scene_name: String) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn transition_to_program(
-        &mut self,
-        with_transition: Option<requests::WithTransition>,
-    ) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn enable_studio_mode(&mut self) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn disable_studio_mode(&mut self) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn toggle_studio_mode(&mut self) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn get_transition_list(&mut self) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn get_current_transition(&mut self) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn set_current_transition(
-        &mut self,
-        transition_name: String,
-    ) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn set_transition_duration(&mut self, duration: i32) -> Result<responses::Response> {
-        unimplemented!()
-    }
-
-    pub fn get_transition_duration(&mut self) -> Result<responses::Response> {
-        unimplemented!()
     }
 }
 
@@ -761,14 +236,14 @@ mod test {
         (obs, handle)
     }
 
-    fn request_test<T, U>(requests: Vec<Value>, responses: Vec<Value>, expected: T, method: U)
+    fn request_test<T>(requests: Vec<Value>, responses: Vec<Value>, request: T, expected: T::Output)
     where
-        T: PartialEq + std::fmt::Debug,
-        U: Fn(&mut Obs) -> Result<T>,
+        T: requests::ToRequest + PartialEq + std::fmt::Debug,
+        T::Output: PartialEq + std::fmt::Debug,
     {
         let _ = env_logger::builder().is_test(true).try_init();
         let (mut obs, handle) = init(responses);
-        let res = method(&mut obs).unwrap();
+        let res = obs.request(request).unwrap();
         let actual_requests = handle.join().unwrap();
         obs.close();
         for (request, actual_request) in requests.into_iter().zip(actual_requests) {
@@ -787,66 +262,66 @@ mod test {
     fn get_version() {
         let request = json!({
             "request-type": "GetVersion",
-            "message-id": "0",
+            "message-id": "",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "0",
+            "message-id": "",
             "version": 1.1,
             "obs-websocket-version": "4.7.0",
             "obs-studio-version": "24.0.3",
             "available-requests": "Request1,Request2"
         });
+        let req = requests::GetVersion::default();
         let expected = responses::GetVersion {
             version: 1.1,
             obs_websocket_version: "4.7.0".to_string(),
             obs_studio_version: "24.0.3".to_string(),
             available_requests: vec!["Request1".to_string(), "Request2".to_string()],
         };
-        let method = |obs: &mut Obs| obs.get_version();
-        request_test(vec![request], vec![response], expected, method);
+        request_test(vec![request], vec![response], req, expected);
     }
 
     #[test]
     fn get_auth_required_true() {
         let request = json!({
             "request-type": "GetAuthRequired",
-            "message-id": "0",
+            "message-id": "",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "0",
+            "message-id": "",
             "authRequired": true,
             "challenge": "ch",
             "salt": "sa",
         });
+        let req = requests::GetAuthRequired::default();
         let expected = responses::GetAuthRequired {
             auth_required: true,
             challenge: Some("ch".to_string()),
             salt: Some("sa".to_string()),
         };
-        let method = |obs: &mut Obs| obs.get_auth_required();
-        request_test(vec![request], vec![response], expected, method);
+        request_test(vec![request], vec![response], req, expected);
     }
 
     #[test]
     fn get_auth_required_false() {
         let request = json!({
             "request-type": "GetAuthRequired",
-            "message-id": "0",
+            "message-id": "",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "0",
+            "message-id": "",
             "authRequired": false,
         });
+        let req = requests::GetAuthRequired::default();
         let expected = responses::GetAuthRequired {
             auth_required: false,
             challenge: None,
             salt: None,
         };
-        let method = |obs: &mut Obs| obs.get_auth_required();
-        request_test(vec![request], vec![response], expected, method);
+        request_test(vec![request], vec![response], req, expected);
     }
 
     #[test]
@@ -854,103 +329,105 @@ mod test {
         let requests = vec![
             json!({
                 "request-type": "GetAuthRequired",
-                "message-id": "0",
+                "message-id": "",
             }),
             json!({
                 "request-type": "Authenticate",
-                "message-id": "0",
+                "message-id": "",
                 "auth": "Z69J+b7C5Zj7jIXlqVp/xjp36sFSmpJpxZ41GN/UTu4=",
             }),
         ];
         let responses = vec![
             json!({
                 "status": "ok",
-                "message-id": "0",
+                "message-id": "",
                 "authRequired": true,
                 "challenge": "123",
                 "salt": "456",
             }),
             json!({
                 "status": "ok",
-                "message-id": "0",
+                "message-id": "",
             }),
         ];
         let expected = responses::Response {
-            message_id: "0".to_string(),
+            message_id: "".to_string(),
             status: responses::Status::Ok,
             error: None,
         };
-        let method = |obs: &mut Obs| obs.authenticate("todo");
-        request_test(requests, responses, expected, method);
+        //request_test(requests, responses, expected, method);
+        // TODO
     }
 
     #[test]
     fn set_heartbeat() {
         let request = json!({
             "request-type": "SetHeartbeat",
-            "message-id": "0",
+            "message-id": "",
             "enable": true,
         });
         let response = json!({
             "status": "ok",
-            "message-id": "0",
+            "message-id": "",
         });
+        let req = requests::SetHeartbeat::builder().enable(true).build();
         let expected = responses::Response {
-            message_id: "0".to_string(),
+            message_id: "".to_string(),
             status: responses::Status::Ok,
             error: None,
         };
-        let method = |obs: &mut Obs| obs.set_heartbeat(true);
-        request_test(vec![request], vec![response], expected, method);
+        request_test(vec![request], vec![response], req, expected);
     }
 
     #[test]
     fn set_filename_formatting() {
         let request = json!({
             "request-type": "SetFilenameFormatting",
-            "message-id": "0",
+            "message-id": "",
             "filename-formatting": "test",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "0",
+            "message-id": "",
         });
+        let req = requests::SetFilenameFormatting::builder()
+            .filename_formatting("test")
+            .build();
         let expected = responses::Response {
-            message_id: "0".to_string(),
+            message_id: "".to_string(),
             status: responses::Status::Ok,
             error: None,
         };
-        let method = |obs: &mut Obs| obs.set_filename_formatting("test");
-        request_test(vec![request], vec![response], expected, method);
+        request_test(vec![request], vec![response], req, expected);
     }
 
     #[test]
     fn get_filename_formatting() {
         let request = json!({
             "request-type": "GetFilenameFormatting",
-            "message-id": "0",
+            "message-id": "",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "0",
+            "message-id": "",
             "filename-formatting": "test",
         });
+        let req = requests::GetFilenameFormatting::default();
         let expected = responses::GetFilenameFormatting {
             filename_formatting: "test".to_string(),
         };
-        let method = |obs: &mut Obs| obs.get_filename_formatting();
-        request_test(vec![request], vec![response], expected, method);
+        request_test(vec![request], vec![response], req, expected);
     }
 
     #[test]
     fn get_stats() {
         let request = json!({
             "request-type": "GetStats",
-            "message-id": "0",
+            "message-id": "",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "0",
+            "message-id": "",
             "stats": {
                 "fps": 0.0,
                 "render-total-frames": 1,
@@ -963,6 +440,7 @@ mod test {
                 "free-disk-space": 8.0,
             }
         });
+        let req = requests::GetStats::default();
         let expected = responses::GetStats {
             stats: responses::ObsStats {
                 fps: 0.0,
@@ -976,15 +454,14 @@ mod test {
                 free_disk_space: 8.0,
             },
         };
-        let method = |obs: &mut Obs| obs.get_stats();
-        request_test(vec![request], vec![response], expected, method);
+        request_test(vec![request], vec![response], req, expected);
     }
 
     #[test]
     fn broadcast_custom_message() {
         let request = json!({
             "request-type": "BroadcastCustomMessage",
-            "message-id": "0",
+            "message-id": "",
             "realm": "test",
             "data": {
                 "custom": "fields",
@@ -992,31 +469,32 @@ mod test {
         });
         let response = json!({
             "status": "ok",
-            "message-id": "0",
+            "message-id": "",
         });
+        let data = json!({
+            "custom": "fields",
+        });
+        let req = requests::BroadcastCustomMessage::builder()
+            .realm("test")
+            .data(data)
+            .build();
         let expected = responses::Response {
-            message_id: "0".to_string(),
+            message_id: "".to_string(),
             status: responses::Status::Ok,
             error: None,
         };
-        let method = |obs: &mut Obs| {
-            let data = json!({
-                "custom": "fields",
-            });
-            obs.broadcast_custom_message("test", data)
-        };
-        request_test(vec![request], vec![response], expected, method);
+        request_test(vec![request], vec![response], req, expected);
     }
 
     #[test]
     fn get_video_info() {
         let request = json!({
             "request-type": "GetVideoInfo",
-            "message-id": "0",
+            "message-id": "",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "0",
+            "message-id": "",
             "baseWidth": 0,
             "baseHeight": 1,
             "outputWidth": 2,
@@ -1027,6 +505,7 @@ mod test {
             "colorSpace": "VIDEO_CS_601",
             "colorRange": "VIDEO_RANGE_PARTIAL",
         });
+        let req = requests::GetVideoInfo::default();
         let expected = responses::GetVideoInfo {
             base_width: 0,
             base_height: 1,
@@ -1038,19 +517,18 @@ mod test {
             color_space: responses::ColorSpace::CS601,
             color_range: responses::ColorRange::Partial,
         };
-        let method = |obs: &mut Obs| obs.get_video_info();
-        request_test(vec![request], vec![response], expected, method);
+        request_test(vec![request], vec![response], req, expected);
     }
 
     #[test]
     fn list_outputs() {
         let request = json!({
             "request-type": "ListOutputs",
-            "message-id": "0",
+            "message-id": "",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "0",
+            "message-id": "",
             "outputs": [
                 {
                     "name": "simple_file_output",
@@ -1075,6 +553,7 @@ mod test {
                 }
             ],
         });
+        let req = requests::ListOutputs::default();
         let expected = responses::ListOutputs {
             outputs: vec![responses::Output {
                 name: "simple_file_output".to_string(),
@@ -1098,20 +577,19 @@ mod test {
                 total_bytes: 5,
             }],
         };
-        let method = |obs: &mut Obs| obs.list_outputs();
-        request_test(vec![request], vec![response], expected, method);
+        request_test(vec![request], vec![response], req, expected);
     }
 
     #[test]
     fn get_output_info() {
         let request = json!({
             "request-type": "GetOutputInfo",
-            "message-id": "0",
+            "message-id": "",
             "outputName": "output1",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "0",
+            "message-id": "",
             "outputInfo": {
                 "name": "simple_file_output",
                 "type": "ffmpeg_muxer",
@@ -1134,6 +612,9 @@ mod test {
                 "totalBytes": 5,
             },
         });
+        let req = requests::GetOutputInfo::builder()
+            .output_name("output1")
+            .build();
         let expected = responses::GetOutputInfo {
             output_info: responses::Output {
                 name: "simple_file_output".to_string(),
@@ -1157,98 +638,104 @@ mod test {
                 total_bytes: 5,
             },
         };
-        let method = |obs: &mut Obs| obs.get_output_info("output1");
-        request_test(vec![request], vec![response], expected, method);
+        request_test(vec![request], vec![response], req, expected);
     }
 
     #[test]
     fn start_output() {
         let request = json!({
             "request-type": "StartOutput",
-            "message-id": "0",
+            "message-id": "",
             "outputName": "output1",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "0",
+            "message-id": "",
         });
+        let req = requests::StartOutput::builder()
+            .output_name("output1")
+            .build();
         let expected = responses::Response {
             status: responses::Status::Ok,
-            message_id: "0".to_string(),
+            message_id: "".to_string(),
             error: None,
         };
-        let method = |obs: &mut Obs| obs.start_output("output1");
-        request_test(vec![request], vec![response], expected, method);
+        request_test(vec![request], vec![response], req, expected);
     }
 
     #[test]
     fn stop_output() {
         let request = json!({
             "request-type": "StopOutput",
-            "message-id": "0",
+            "message-id": "",
             "outputName": "output1",
             "force": false,
         });
         let response = json!({
             "status": "ok",
-            "message-id": "0",
+            "message-id": "",
         });
+        let req = requests::StopOutput::builder()
+            .output_name("output1")
+            .force(false)
+            .build();
         let expected = responses::Response {
             status: responses::Status::Ok,
-            message_id: "0".to_string(),
+            message_id: "".to_string(),
             error: None,
         };
-        let method = |obs: &mut Obs| obs.stop_output("output1", false);
-        request_test(vec![request], vec![response], expected, method);
+        request_test(vec![request], vec![response], req, expected);
     }
 
     #[test]
     fn set_current_profile() {
         let request = json!({
             "request-type": "SetCurrentProfile",
-            "message-id": "0",
+            "message-id": "",
             "profile-name": "p",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "0",
+            "message-id": "",
         });
+        let req = requests::SetCurrentProfile::builder()
+            .profile_name("p")
+            .build();
         let expected = responses::Response {
             status: responses::Status::Ok,
-            message_id: "0".to_string(),
+            message_id: "".to_string(),
             error: None,
         };
-        let method = |obs: &mut Obs| obs.set_current_profile("p");
-        request_test(vec![request], vec![response], expected, method);
+        request_test(vec![request], vec![response], req, expected);
     }
 
     #[test]
     fn get_current_profile() {
         let request = json!({
             "request-type": "GetCurrentProfile",
-            "message-id": "0",
+            "message-id": "",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "0",
+            "message-id": "",
             "profile-name": "p",
         });
+        let req = requests::GetCurrentProfile::default();
         let expected = responses::Profile {
             profile_name: "p".to_string(),
         };
-        let method = |obs: &mut Obs| obs.get_current_profile();
-        request_test(vec![request], vec![response], expected, method);
+        request_test(vec![request], vec![response], req, expected);
     }
 
     #[test]
     fn list_profiles() {
         let request = json!({
             "request-type": "ListProfiles",
-            "message-id": "0",
+            "message-id": "",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "0",
+            "message-id": "",
             "profiles": [
                 {
                     "profile-name": "p1",
@@ -1258,6 +745,7 @@ mod test {
                 }
             ],
         });
+        let req = requests::ListProfiles::default();
         let expected = responses::ListProfiles {
             profiles: vec![
                 responses::Profile {
@@ -1268,266 +756,269 @@ mod test {
                 },
             ],
         };
-        let method = |obs: &mut Obs| obs.list_profiles();
-        request_test(vec![request], vec![response], expected, method);
+        request_test(vec![request], vec![response], req, expected);
     }
 
     #[test]
     fn toggle_recording() {
         let request = json!({
             "request-type": "StartStopRecording",
-            "message-id": "0",
+            "message-id": "",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "0",
+            "message-id": "",
         });
+        let req = requests::StartStopRecording::default();
         let expected = responses::Response {
             status: responses::Status::Ok,
-            message_id: "0".to_string(),
+            message_id: "".to_string(),
             error: None,
         };
-        let method = |obs: &mut Obs| obs.toggle_recording();
-        request_test(vec![request], vec![response], expected, method);
+        request_test(vec![request], vec![response], req, expected);
     }
 
     #[test]
     fn start_recording() {
         let request = json!({
             "request-type": "StartRecording",
-            "message-id": "0",
+            "message-id": "",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "0",
+            "message-id": "",
         });
+        let req = requests::StartRecording::default();
         let expected = responses::Response {
             status: responses::Status::Ok,
-            message_id: "0".to_string(),
+            message_id: "".to_string(),
             error: None,
         };
-        let method = |obs: &mut Obs| obs.start_recording();
-        request_test(vec![request], vec![response], expected, method);
+        request_test(vec![request], vec![response], req, expected);
     }
 
     #[test]
     fn stop_recording() {
         let request = json!({
             "request-type": "StopRecording",
-            "message-id": "0",
+            "message-id": "",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "0",
+            "message-id": "",
         });
+        let req = requests::StopRecording::default();
         let expected = responses::Response {
             status: responses::Status::Ok,
-            message_id: "0".to_string(),
+            message_id: "".to_string(),
             error: None,
         };
-        let method = |obs: &mut Obs| obs.stop_recording();
-        request_test(vec![request], vec![response], expected, method);
+        request_test(vec![request], vec![response], req, expected);
     }
 
     #[test]
     fn pause_recording() {
         let request = json!({
             "request-type": "PauseRecording",
-            "message-id": "0",
+            "message-id": "",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "0",
+            "message-id": "",
         });
+        let req = requests::PauseRecording::default();
         let expected = responses::Response {
             status: responses::Status::Ok,
-            message_id: "0".to_string(),
+            message_id: "".to_string(),
             error: None,
         };
-        let method = |obs: &mut Obs| obs.pause_recording();
-        request_test(vec![request], vec![response], expected, method);
+        request_test(vec![request], vec![response], req, expected);
     }
 
     #[test]
     fn resume_recording() {
         let request = json!({
             "request-type": "ResumeRecording",
-            "message-id": "0",
+            "message-id": "",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "0",
+            "message-id": "",
         });
+        let req = requests::ResumeRecording::default();
         let expected = responses::Response {
             status: responses::Status::Ok,
-            message_id: "0".to_string(),
+            message_id: "".to_string(),
             error: None,
         };
-        let method = |obs: &mut Obs| obs.resume_recording();
-        request_test(vec![request], vec![response], expected, method);
+        request_test(vec![request], vec![response], req, expected);
     }
 
     #[test]
     fn set_recording_folder() {
         let request = json!({
             "request-type": "SetRecordingFolder",
-            "message-id": "0",
+            "message-id": "",
             "rec-folder": "path",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "0",
+            "message-id": "",
         });
+        let req = requests::SetRecordingFolder::builder()
+            .rec_folder("path")
+            .build();
         let expected = responses::Response {
             status: responses::Status::Ok,
-            message_id: "0".to_string(),
+            message_id: "".to_string(),
             error: None,
         };
-        let method = |obs: &mut Obs| obs.set_recording_folder("path");
-        request_test(vec![request], vec![response], expected, method);
+        request_test(vec![request], vec![response], req, expected);
     }
 
     #[test]
     fn get_recording_folder() {
         let request = json!({
             "request-type": "GetRecordingFolder",
-            "message-id": "0",
+            "message-id": "",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "0",
+            "message-id": "",
             "rec-folder": "path",
         });
+        let req = requests::GetRecordingFolder::default();
         let expected = responses::GetRecordingFolder {
             rec_folder: "path".to_string(),
         };
-        let method = |obs: &mut Obs| obs.get_recording_folder();
-        request_test(vec![request], vec![response], expected, method);
+        request_test(vec![request], vec![response], req, expected);
     }
 
     #[test]
     fn toggle_replay_buffer() {
         let request = json!({
             "request-type": "StartStopReplayBuffer",
-            "message-id": "0",
+            "message-id": "",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "0",
+            "message-id": "",
         });
+        let req = requests::StartStopReplayBuffer::default();
         let expected = responses::Response {
             status: responses::Status::Ok,
-            message_id: "0".to_string(),
+            message_id: "".to_string(),
             error: None,
         };
-        let method = |obs: &mut Obs| obs.toggle_replay_buffer();
-        request_test(vec![request], vec![response], expected, method);
+        request_test(vec![request], vec![response], req, expected);
     }
 
     #[test]
     fn start_replay_buffer() {
         let request = json!({
             "request-type": "StartReplayBuffer",
-            "message-id": "0",
+            "message-id": "",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "0",
+            "message-id": "",
         });
+        let req = requests::StartReplayBuffer::default();
         let expected = responses::Response {
             status: responses::Status::Ok,
-            message_id: "0".to_string(),
+            message_id: "".to_string(),
             error: None,
         };
-        let method = |obs: &mut Obs| obs.start_replay_buffer();
-        request_test(vec![request], vec![response], expected, method);
+        request_test(vec![request], vec![response], req, expected);
     }
 
     #[test]
     fn stop_replay_buffer() {
         let request = json!({
             "request-type": "StopReplayBuffer",
-            "message-id": "0",
+            "message-id": "",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "0",
+            "message-id": "",
         });
+        let req = requests::StopReplayBuffer::default();
         let expected = responses::Response {
             status: responses::Status::Ok,
-            message_id: "0".to_string(),
+            message_id: "".to_string(),
             error: None,
         };
-        let method = |obs: &mut Obs| obs.stop_replay_buffer();
-        request_test(vec![request], vec![response], expected, method);
+        request_test(vec![request], vec![response], req, expected);
     }
 
     #[test]
     fn save_replay_buffer() {
         let request = json!({
             "request-type": "SaveReplayBuffer",
-            "message-id": "0",
+            "message-id": "",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "0",
+            "message-id": "",
         });
+        let req = requests::SaveReplayBuffer::default();
         let expected = responses::Response {
             status: responses::Status::Ok,
-            message_id: "0".to_string(),
+            message_id: "".to_string(),
             error: None,
         };
-        let method = |obs: &mut Obs| obs.save_replay_buffer();
-        request_test(vec![request], vec![response], expected, method);
+        request_test(vec![request], vec![response], req, expected);
     }
 
     #[test]
     fn set_current_scene_collection() {
         let request = json!({
             "request-type": "SetCurrentSceneCollection",
-            "message-id": "0",
+            "message-id": "",
             "sc-name": "scene",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "0",
+            "message-id": "",
         });
+        let req = requests::SetCurrentSceneCollection::builder()
+            .sc_name("scene")
+            .build();
         let expected = responses::Response {
             status: responses::Status::Ok,
-            message_id: "0".to_string(),
+            message_id: "".to_string(),
             error: None,
         };
-        let method = |obs: &mut Obs| obs.set_current_scene_collection("scene");
-        request_test(vec![request], vec![response], expected, method);
+        request_test(vec![request], vec![response], req, expected);
     }
 
     #[test]
     fn get_current_scene_collection() {
         let request = json!({
             "request-type": "GetCurrentSceneCollection",
-            "message-id": "0",
+            "message-id": "",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "0",
+            "message-id": "",
             "sc-name": "scene",
         });
-        let expected = responses::SceneCollection {
+        let req = requests::GetCurrentSceneCollection::default();
+        let expected = responses::GetCurrentSceneCollection {
             sc_name: "scene".to_string(),
         };
-        let method = |obs: &mut Obs| obs.get_current_scene_collection();
-        request_test(vec![request], vec![response], expected, method);
+        request_test(vec![request], vec![response], req, expected);
     }
 
     #[test]
     fn list_scene_collections() {
         let request = json!({
             "request-type": "ListSceneCollections",
-            "message-id": "0",
+            "message-id": "",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "0",
+            "message-id": "",
             "scene-collections": [
                 {
                     "sc-name": "scene1",
@@ -1537,6 +1028,7 @@ mod test {
                 }
             ],
         });
+        let req = requests::ListSceneCollections::default();
         let expected = responses::ListSceneCollections {
             scene_collections: vec![
                 responses::SceneCollection {
@@ -1547,21 +1039,20 @@ mod test {
                 },
             ],
         };
-        let method = |obs: &mut Obs| obs.list_scene_collections();
-        request_test(vec![request], vec![response], expected, method);
+        request_test(vec![request], vec![response], req, expected);
     }
 
     #[test]
     fn get_scene_item_properties() {
         let request = json!({
             "request-type": "GetSceneItemProperties",
-            "message-id": "0",
+            "message-id": "",
             "scene-name": "scene",
             "item": "source"
         });
         let response = json!({
             "status": "ok",
-            "message-id": "0",
+            "message-id": "",
             "name": "source",
             "position": {
                 "x": 0,
@@ -1592,6 +1083,10 @@ mod test {
             "width": 15.0,
             "height": 16.0,
         });
+        let req = requests::GetSceneItemProperties::builder()
+            .scene_name("scene")
+            .item("source")
+            .build();
         let expected = responses::GetSceneItemProperties {
             name: "source".to_string(),
             position: responses::Position {
@@ -1620,15 +1115,14 @@ mod test {
             width: 15.0,
             height: 16.0,
         };
-        let method = |obs: &mut Obs| obs.get_scene_item_properties(Some("scene"), "source");
-        request_test(vec![request], vec![response], expected, method);
+        request_test(vec![request], vec![response], req, expected);
     }
 
     #[test]
     fn set_scene_item_properties() {
         let request = json!({
             "request-type": "SetSceneItemProperties",
-            "message-id": "0",
+            "message-id": "",
             "scene-name": "scene",
             "item": "test",
             "position": {
@@ -1657,81 +1151,86 @@ mod test {
             },
         });
         let response = json!({
-            "message-id": "0",
+            "message-id": "",
             "status": "ok",
         });
+        let req = requests::SetSceneItemProperties::builder()
+            .scene_name("scene")
+            .item("test")
+            .position_x(1.0)
+            .position_y(2.0)
+            .position_alignment(3)
+            .rotation(4.0)
+            .scale_x(5.0)
+            .scale_y(6.0)
+            .crop_top(7)
+            .crop_right(8)
+            .crop_bottom(9)
+            .crop_left(10)
+            .visible(true)
+            .locked(true)
+            .bounds_type(requests::BoundsType::Stretch)
+            .bounds_alignment(11)
+            .bounds_x(12.0)
+            .bounds_y(13.0)
+            .build();
         let expected = responses::Response {
-            message_id: "0".to_string(),
+            message_id: "".to_string(),
             status: responses::Status::Ok,
             error: None,
         };
-        let method = |obs: &mut Obs| {
-            obs.set_scene_item_properties(
-                Some("scene"),
-                "test",
-                Some(1.0),
-                Some(2.0),
-                Some(3),
-                Some(4.0),
-                Some(5.0),
-                Some(6.0),
-                Some(7),
-                Some(8),
-                Some(9),
-                Some(10),
-                Some(true),
-                Some(true),
-                Some(requests::BoundsType::Stretch),
-                Some(11),
-                Some(12.0),
-                Some(13.0),
-            )
-        };
-        request_test(vec![request], vec![response], expected, method);
+        request_test(vec![request], vec![response], req, expected);
     }
 
     #[test]
     fn reset_scene_item() {
         let request = json!({
             "request-type": "ResetSceneItem",
-            "message-id": "0",
+            "message-id": "",
             "scene-name": "scene",
             "item": "test",
         });
         let response = json!({
-            "message-id": "0",
+            "message-id": "",
             "status": "ok",
         });
+        let req = requests::ResetSceneItem::builder()
+            .scene_name("scene")
+            .item("test")
+            .build();
         let expected = responses::Response {
-            message_id: "0".to_string(),
+            message_id: "".to_string(),
             status: responses::Status::Ok,
             error: None,
         };
-        let method = |obs: &mut Obs| obs.reset_scene_item(Some("scene"), "test");
-        request_test(vec![request], vec![response], expected, method);
+        request_test(vec![request], vec![response], req, expected);
     }
 
     #[test]
     fn delete_scene_item() {
         let request = json!({
             "request-type": "DeleteSceneItem",
-            "message-id": "0",
+            "message-id": "",
             "scene": "scene",
             "item": {
                 "name": "test",
                 "id": 1,
             },
         });
+        let req = requests::DeleteSceneItem::builder()
+            .scene("scene")
+            .item_name("test")
+            .item_id(1)
+            .build();
         let response = json!({
-            "message-id": "0",
+            "message-id": "",
             "status": "ok",
         });
         let expected = responses::Response {
-            message_id: "0".to_string(),
+            message_id: "".to_string(),
             status: responses::Status::Ok,
             error: None,
         };
-        let method = |obs: &mut Obs| obs.delete_scene_item(Some("scene"), "test", 1);
-        request_test(vec![request], vec![response], expected, method);
+        request_test(vec![request], vec![response], req, expected);
     }
 }
