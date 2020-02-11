@@ -19,6 +19,7 @@ use futures::{
     Stream,
 };
 use log::info;
+use requests::*;
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::{
@@ -155,7 +156,7 @@ impl Obs {
 
     fn request<T>(&mut self, req: T) -> Result<T::Output>
     where
-        T: requests::ToRequest,
+        T: ToRequest,
     {
         let val = req.to_request();
         println!("{:?}", val);
@@ -171,7 +172,7 @@ impl Obs {
     }
 
     pub fn authenticate(&mut self, password: &str) -> Result<responses::Response> {
-        let auth = self.request(requests::GetAuthRequired::builder().build())?;
+        let auth = self.request(GetAuthRequired::builder().build())?;
         if auth.auth_required {
             info!("auth required");
             let challenge = auth.challenge.unwrap();
@@ -185,9 +186,7 @@ impl Obs {
             let auth_response_hash = Sha256::digest(auth_response_string.as_bytes());
             let auth_response = base64::encode(&auth_response_hash);
             info!("authing");
-            let req = requests::Authenticate::builder()
-                .auth(&auth_response)
-                .build();
+            let req = Authenticate::builder().auth(&auth_response).build();
             Ok(self.request(req)?)
         } else {
             Err(Error::ObsError("no auth required".to_string()))
@@ -238,7 +237,7 @@ mod test {
 
     fn request_test<T>(requests: Vec<Value>, responses: Vec<Value>, request: T, expected: T::Output)
     where
-        T: requests::ToRequest + PartialEq + std::fmt::Debug,
+        T: ToRequest + PartialEq + std::fmt::Debug,
         T::Output: PartialEq + std::fmt::Debug,
     {
         let _ = env_logger::builder().is_test(true).try_init();
@@ -272,7 +271,7 @@ mod test {
             "obs-studio-version": "24.0.3",
             "available-requests": "Request1,Request2"
         });
-        let req = requests::GetVersion::default();
+        let req = GetVersion::default();
         let expected = responses::GetVersion {
             version: 1.1,
             obs_websocket_version: "4.7.0".to_string(),
@@ -295,7 +294,7 @@ mod test {
             "challenge": "ch",
             "salt": "sa",
         });
-        let req = requests::GetAuthRequired::default();
+        let req = GetAuthRequired::default();
         let expected = responses::GetAuthRequired {
             auth_required: true,
             challenge: Some("ch".to_string()),
@@ -315,7 +314,7 @@ mod test {
             "message-id": "",
             "authRequired": false,
         });
-        let req = requests::GetAuthRequired::default();
+        let req = GetAuthRequired::default();
         let expected = responses::GetAuthRequired {
             auth_required: false,
             challenge: None,
@@ -370,7 +369,7 @@ mod test {
             "status": "ok",
             "message-id": "",
         });
-        let req = requests::SetHeartbeat::builder().enable(true).build();
+        let req = SetHeartbeat::builder().enable(true).build();
         let expected = responses::Response {
             message_id: "".to_string(),
             status: responses::Status::Ok,
@@ -390,7 +389,7 @@ mod test {
             "status": "ok",
             "message-id": "",
         });
-        let req = requests::SetFilenameFormatting::builder()
+        let req = SetFilenameFormatting::builder()
             .filename_formatting("test")
             .build();
         let expected = responses::Response {
@@ -412,7 +411,7 @@ mod test {
             "message-id": "",
             "filename-formatting": "test",
         });
-        let req = requests::GetFilenameFormatting::default();
+        let req = GetFilenameFormatting::default();
         let expected = responses::GetFilenameFormatting {
             filename_formatting: "test".to_string(),
         };
@@ -440,7 +439,7 @@ mod test {
                 "free-disk-space": 8.0,
             }
         });
-        let req = requests::GetStats::default();
+        let req = GetStats::default();
         let expected = responses::GetStats {
             stats: responses::ObsStats {
                 fps: 0.0,
@@ -474,7 +473,7 @@ mod test {
         let data = json!({
             "custom": "fields",
         });
-        let req = requests::BroadcastCustomMessage::builder()
+        let req = BroadcastCustomMessage::builder()
             .realm("test")
             .data(data)
             .build();
@@ -505,7 +504,7 @@ mod test {
             "colorSpace": "VIDEO_CS_601",
             "colorRange": "VIDEO_RANGE_PARTIAL",
         });
-        let req = requests::GetVideoInfo::default();
+        let req = GetVideoInfo::default();
         let expected = responses::GetVideoInfo {
             base_width: 0,
             base_height: 1,
@@ -553,7 +552,7 @@ mod test {
                 }
             ],
         });
-        let req = requests::ListOutputs::default();
+        let req = ListOutputs::default();
         let expected = responses::ListOutputs {
             outputs: vec![responses::Output {
                 name: "simple_file_output".to_string(),
@@ -612,9 +611,7 @@ mod test {
                 "totalBytes": 5,
             },
         });
-        let req = requests::GetOutputInfo::builder()
-            .output_name("output1")
-            .build();
+        let req = GetOutputInfo::builder().output_name("output1").build();
         let expected = responses::GetOutputInfo {
             output_info: responses::Output {
                 name: "simple_file_output".to_string(),
@@ -652,9 +649,7 @@ mod test {
             "status": "ok",
             "message-id": "",
         });
-        let req = requests::StartOutput::builder()
-            .output_name("output1")
-            .build();
+        let req = StartOutput::builder().output_name("output1").build();
         let expected = responses::Response {
             status: responses::Status::Ok,
             message_id: "".to_string(),
@@ -675,7 +670,7 @@ mod test {
             "status": "ok",
             "message-id": "",
         });
-        let req = requests::StopOutput::builder()
+        let req = StopOutput::builder()
             .output_name("output1")
             .force(false)
             .build();
@@ -698,9 +693,7 @@ mod test {
             "status": "ok",
             "message-id": "",
         });
-        let req = requests::SetCurrentProfile::builder()
-            .profile_name("p")
-            .build();
+        let req = SetCurrentProfile::builder().profile_name("p").build();
         let expected = responses::Response {
             status: responses::Status::Ok,
             message_id: "".to_string(),
@@ -720,7 +713,7 @@ mod test {
             "message-id": "",
             "profile-name": "p",
         });
-        let req = requests::GetCurrentProfile::default();
+        let req = GetCurrentProfile::default();
         let expected = responses::Profile {
             profile_name: "p".to_string(),
         };
@@ -745,7 +738,7 @@ mod test {
                 }
             ],
         });
-        let req = requests::ListProfiles::default();
+        let req = ListProfiles::default();
         let expected = responses::ListProfiles {
             profiles: vec![
                 responses::Profile {
@@ -769,7 +762,7 @@ mod test {
             "status": "ok",
             "message-id": "",
         });
-        let req = requests::StartStopRecording::default();
+        let req = StartStopRecording::default();
         let expected = responses::Response {
             status: responses::Status::Ok,
             message_id: "".to_string(),
@@ -788,7 +781,7 @@ mod test {
             "status": "ok",
             "message-id": "",
         });
-        let req = requests::StartRecording::default();
+        let req = StartRecording::default();
         let expected = responses::Response {
             status: responses::Status::Ok,
             message_id: "".to_string(),
@@ -807,7 +800,7 @@ mod test {
             "status": "ok",
             "message-id": "",
         });
-        let req = requests::StopRecording::default();
+        let req = StopRecording::default();
         let expected = responses::Response {
             status: responses::Status::Ok,
             message_id: "".to_string(),
@@ -826,7 +819,7 @@ mod test {
             "status": "ok",
             "message-id": "",
         });
-        let req = requests::PauseRecording::default();
+        let req = PauseRecording::default();
         let expected = responses::Response {
             status: responses::Status::Ok,
             message_id: "".to_string(),
@@ -845,7 +838,7 @@ mod test {
             "status": "ok",
             "message-id": "",
         });
-        let req = requests::ResumeRecording::default();
+        let req = ResumeRecording::default();
         let expected = responses::Response {
             status: responses::Status::Ok,
             message_id: "".to_string(),
@@ -865,9 +858,7 @@ mod test {
             "status": "ok",
             "message-id": "",
         });
-        let req = requests::SetRecordingFolder::builder()
-            .rec_folder("path")
-            .build();
+        let req = SetRecordingFolder::builder().rec_folder("path").build();
         let expected = responses::Response {
             status: responses::Status::Ok,
             message_id: "".to_string(),
@@ -887,7 +878,7 @@ mod test {
             "message-id": "",
             "rec-folder": "path",
         });
-        let req = requests::GetRecordingFolder::default();
+        let req = GetRecordingFolder::default();
         let expected = responses::GetRecordingFolder {
             rec_folder: "path".to_string(),
         };
@@ -904,7 +895,7 @@ mod test {
             "status": "ok",
             "message-id": "",
         });
-        let req = requests::StartStopReplayBuffer::default();
+        let req = StartStopReplayBuffer::default();
         let expected = responses::Response {
             status: responses::Status::Ok,
             message_id: "".to_string(),
@@ -923,7 +914,7 @@ mod test {
             "status": "ok",
             "message-id": "",
         });
-        let req = requests::StartReplayBuffer::default();
+        let req = StartReplayBuffer::default();
         let expected = responses::Response {
             status: responses::Status::Ok,
             message_id: "".to_string(),
@@ -942,7 +933,7 @@ mod test {
             "status": "ok",
             "message-id": "",
         });
-        let req = requests::StopReplayBuffer::default();
+        let req = StopReplayBuffer::default();
         let expected = responses::Response {
             status: responses::Status::Ok,
             message_id: "".to_string(),
@@ -961,7 +952,7 @@ mod test {
             "status": "ok",
             "message-id": "",
         });
-        let req = requests::SaveReplayBuffer::default();
+        let req = SaveReplayBuffer::default();
         let expected = responses::Response {
             status: responses::Status::Ok,
             message_id: "".to_string(),
@@ -981,7 +972,7 @@ mod test {
             "status": "ok",
             "message-id": "",
         });
-        let req = requests::SetCurrentSceneCollection::builder()
+        let req = SetCurrentSceneCollection::builder()
             .sc_name("scene")
             .build();
         let expected = responses::Response {
@@ -1003,7 +994,7 @@ mod test {
             "message-id": "",
             "sc-name": "scene",
         });
-        let req = requests::GetCurrentSceneCollection::default();
+        let req = GetCurrentSceneCollection::default();
         let expected = responses::GetCurrentSceneCollection {
             sc_name: "scene".to_string(),
         };
@@ -1028,7 +1019,7 @@ mod test {
                 }
             ],
         });
-        let req = requests::ListSceneCollections::default();
+        let req = ListSceneCollections::default();
         let expected = responses::ListSceneCollections {
             scene_collections: vec![
                 responses::SceneCollection {
@@ -1083,7 +1074,7 @@ mod test {
             "width": 15.0,
             "height": 16.0,
         });
-        let req = requests::GetSceneItemProperties::builder()
+        let req = GetSceneItemProperties::builder()
             .scene_name("scene")
             .item("source")
             .build();
@@ -1154,7 +1145,7 @@ mod test {
             "message-id": "",
             "status": "ok",
         });
-        let req = requests::SetSceneItemProperties::builder()
+        let req = SetSceneItemProperties::builder()
             .scene_name("scene")
             .item("test")
             .position_x(1.0)
@@ -1169,7 +1160,7 @@ mod test {
             .crop_left(10)
             .visible(true)
             .locked(true)
-            .bounds_type(requests::BoundsType::Stretch)
+            .bounds_type(BoundsType::Stretch)
             .bounds_alignment(11)
             .bounds_x(12.0)
             .bounds_y(13.0)
@@ -1194,7 +1185,7 @@ mod test {
             "message-id": "",
             "status": "ok",
         });
-        let req = requests::ResetSceneItem::builder()
+        let req = ResetSceneItem::builder()
             .scene_name("scene")
             .item("test")
             .build();
@@ -1217,7 +1208,7 @@ mod test {
                 "id": 1,
             },
         });
-        let req = requests::DeleteSceneItem::builder()
+        let req = DeleteSceneItem::builder()
             .scene("scene")
             .item_name("test")
             .item_id(1)
