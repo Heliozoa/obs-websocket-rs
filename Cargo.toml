@@ -3,6 +3,10 @@ name = "obs-websocket"
 version = "0.1.0"
 authors = ["Heliozoa <dm89132@gmail.com>"]
 edition = "2018"
+description = "API for controlling OBS (Open Broadcaster Software) through obs-websocket"
+repository = "https://github.com/Heliozoa/obs-websocket-rs"
+keywords = ["api-bindings", "web-programming::websocket"]
+categories = ["obs", "websocket"]
 
 [dependencies]
 tungstenite = "0.10"
