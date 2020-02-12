@@ -1,5 +1,4 @@
 mod error;
-mod events;
 mod requests;
 mod responses;
 
@@ -108,6 +107,7 @@ impl Obs {
         outgoing_receiver: Receiver<Message>,
         websocket_stream: WebSocketStream,
     ) -> JoinHandle<()> {
+        info!("started handler");
         let handle = thread::spawn(move || {
             let streams = select(outgoing_receiver, websocket_stream);
             let mut pending_sender = None;
@@ -127,13 +127,12 @@ impl Obs {
                         WebSocketMessage::Text(text) => {
                             debug!("received text {:?}", text);
                             let parsed = serde_json::from_str::<ResponseOrEvent>(&text).unwrap();
-                            if let Some(message_id) = parsed.message_id {
-                                // response
+                            if let Some(_message_id) = parsed.message_id {
                                 if let Some(sender) = pending_sender.take() {
                                     sender.send(text).expect("failed to send");
                                 }
                             } else if let Some(update_type) = parsed.update_type {
-                                // event
+                                info!("received event {}", update_type);
                             }
                         }
                         _ => {}
