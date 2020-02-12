@@ -8,6 +8,10 @@ description = "API for controlling OBS (Open Broadcaster Software) through obs-w
 repository = "https://github.com/Heliozoa/obs-websocket-rs"
 keywords = ["api-bindings", "web-programming::websocket"]
 categories = ["obs", "websocket"]
+exclude = [
+    ".gitignore",
+    "rustfmt.toml",
+]
 
 [dependencies]
 tungstenite = "0.10"
