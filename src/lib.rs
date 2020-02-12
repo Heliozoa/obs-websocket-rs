@@ -84,11 +84,15 @@ impl Stream for WebSocketStream {
     }
 }
 
+struct ConnectionData {
+    socket_handle: WebSocket<TcpStream>,
+    thread_handle: JoinHandle<()>,
+    thread_sender: Sender<Message>,
+}
+
 #[derive(Default)]
 pub struct Obs {
-    socket_handle: Option<WebSocket<TcpStream>>,
-    thread_handle: Option<JoinHandle<()>>,
-    thread_sender: Option<Sender<Message>>,
+    connection_data: Option<ConnectionData>,
 }
 
 impl Obs {
@@ -103,7 +107,7 @@ impl Obs {
         let addr = format!("{}:{}", address, port);
         let ws_addr = format!("ws://{}", addr);
         debug!("connecting to {}", addr);
-        let mut recv_stream = TcpStream::connect_timeout(
+        let recv_stream = TcpStream::connect_timeout(
             &addr
                 .to_socket_addrs()
                 .expect("failed to parse address")
@@ -201,78 +205,77 @@ impl Obs {
         let (websocket_stream, send_socket, close_socket) = Obs::init_sockets(address, port)?;
         let handle = Obs::start_handler(send_socket, thread_receiver, websocket_stream);
 
-        self.socket_handle = Some(close_socket);
-        self.thread_handle = Some(handle);
-        self.thread_sender = Some(thread_sender);
+        self.connection_data = Some(ConnectionData {
+            socket_handle: close_socket,
+            thread_handle: handle,
+            thread_sender: thread_sender,
+        });
         Ok(())
     }
 
     pub fn close(self) {
-        debug!("closing");
-        self.thread_sender
-            .expect("no thread sender")
-            .close_channel();
-        self.socket_handle
-            .expect("no socket handle")
-            .close(None)
-            .expect("failed to close socket handle");
-        self.thread_handle
-            .expect("no thread handle")
-            .join()
-            .expect("failed to join thread handle");
+        if let Some(ConnectionData {
+            mut thread_sender,
+            mut socket_handle,
+            thread_handle,
+        }) = self.connection_data
+        {
+            info!("closing connection");
+            thread_sender.close_channel();
+            socket_handle
+                .close(None)
+                .expect("failed to close socket handle");
+            thread_handle.join().expect("failed to join thread handle");
+        } else {
+            info!("not connected");
+        }
     }
 
     fn request<T>(&mut self, req: T) -> Result<T::Output>
     where
         T: ToRequest + std::fmt::Debug,
     {
-        debug!("requesting {:#?}", req);
-        let val = req.to_request();
-        trace!("converted request to json {}", val);
-        let (os1, or1) = oneshot_channel();
-        let message = Message::Outgoing(val, os1);
-        trace!("sending");
-        if self
-            .thread_sender
-            .as_mut()
-            .expect("no thread sender")
-            .try_send(message)
-            .is_err()
+        if let Some(ConnectionData {
+            thread_sender,
+            socket_handle,
+            thread_handle: _,
+        }) = &mut self.connection_data
         {
-            self.thread_sender
-                .as_mut()
-                .expect("should have thread sender")
-                .close_channel();
-            self.socket_handle
-                .as_mut()
-                .expect("should ahve socket handle")
-                .close(None)
-                .expect("failed to close socket");
-            self.thread_sender = None;
-            self.socket_handle = None;
-            self.thread_handle = None;
-            return Err(Error::Custom("connection interrupted".to_string()));
-        }
-        trace!("sent");
-        let res = executor::block_on(or1);
-        match res {
-            Ok(res) => match res {
-                Ok(res) => {
-                    debug!("received response {}", res);
-                    Ok(serde_json::from_str(&res)?)
-                }
-                Err(res) => {
-                    error!("received error {:#?}", res);
-                    Err(Error::ObsError(
-                        res.error
-                            .expect("error from sender should have error message"),
-                    ))
-                }
-            },
-            Err(e) => {
-                info!("channel to handler closed: {}", e);
-                Err(Error::Custom("channel to handler closed".to_string()))
+            debug!("requesting {:#?}", req);
+            let val = req.to_request();
+            trace!("converted request to json {}", val);
+            let (os1, or1) = oneshot_channel();
+            let message = Message::Outgoing(val, os1);
+            trace!("sending");
+            if thread_sender.try_send(message).is_err() {
+                thread_sender.close_channel();
+                socket_handle.close(None).expect("failed to close socket");
+                self.connection_data = None;
+                return Err(Error::Custom("connection interrupted".to_string()));
             }
+            trace!("sent");
+            let res = executor::block_on(or1);
+            match res {
+                Ok(res) => match res {
+                    Ok(res) => {
+                        debug!("received response {}", res);
+                        Ok(serde_json::from_str(&res)?)
+                    }
+                    Err(res) => {
+                        error!("received error {:#?}", res);
+                        Err(Error::ObsError(
+                            res.error
+                                .expect("error from sender should have error message"),
+                        ))
+                    }
+                },
+                Err(e) => {
+                    info!("channel to handler closed: {}", e);
+                    Err(Error::Custom("channel to handler closed".to_string()))
+                }
+            }
+        } else {
+            Err(Error::Custom("not connected".to_string()))
         }
     }
 
