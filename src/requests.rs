@@ -892,6 +892,7 @@ impl ToRequest for SetVolume<'_> {
     fn to_request(&self) -> Value {
         json!({
             "request-type": "SetVolume",
+            "message-id": self.message_id,
             "source": self.source,
             "volume": self.volume,
         })
