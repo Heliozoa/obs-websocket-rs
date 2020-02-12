@@ -49,7 +49,7 @@ pub struct Authenticate<'a> {
 }
 
 impl ToRequest for Authenticate<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -770,7 +770,7 @@ pub struct GetCurrentScene<'a> {
 }
 
 impl ToRequest for GetCurrentScene<'_> {
-    type Output = responses::Response;
+    type Output = responses::GetCurrentScene;
 
     fn to_request(&self) -> Value {
         json!({

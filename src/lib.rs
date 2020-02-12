@@ -180,7 +180,7 @@ impl Obs {
         Ok(serde_json::from_str(&res)?)
     }
 
-    pub fn authenticate(&mut self, password: &str) -> Result<responses::Response> {
+    pub fn authenticate(&mut self, password: &str) -> Result<responses::Empty> {
         let auth = self.request(GetAuthRequired::builder().build())?;
         if auth.auth_required {
             info!("auth required");
