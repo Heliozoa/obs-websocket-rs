@@ -1,4 +1,5 @@
 pub mod error;
+mod events;
 pub mod requests;
 pub mod responses;
 
@@ -33,17 +34,19 @@ use tungstenite::{
 };
 
 type Result<T> = std::result::Result<T, Error>;
+type StdResult<T, E> = std::result::Result<T, E>;
 
-#[derive(Deserialize, Debug, Eq, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
-pub struct ResponseOrEvent {
-    pub message_id: Option<String>,
-    pub update_type: Option<String>,
+#[serde(untagged)]
+enum ResponseOrEvent {
+    Response(responses::Response),
+    Event(events::Event),
 }
 
 #[derive(Debug)]
 enum Message {
-    Outgoing(Value, OneshotSender<String>),
+    Outgoing(Value, OneshotSender<StdResult<String, responses::Response>>),
     Incoming(WebSocketMessage),
 }
 
@@ -125,17 +128,29 @@ impl Obs {
                             info!("websocket connection closed");
                         }
                         WebSocketMessage::Text(text) => {
-                            debug!("received text {:?}", text);
+                            debug!("received text {}", text);
                             let parsed = serde_json::from_str::<ResponseOrEvent>(&text).unwrap();
-                            if let Some(_message_id) = parsed.message_id {
-                                trace!("received response");
-                                if let Some(sender) = pending_sender.take() {
-                                    sender.send(text).expect("failed to send");
-                                } else {
-                                    warn!("unexpected response");
+                            match parsed {
+                                ResponseOrEvent::Response(response) => {
+                                    trace!("received response {:#?}", response);
+                                    if let Some(error) = &response.error {
+                                        error!("error: {}", error);
+                                        if let Some(sender) = pending_sender.take() {
+                                            sender.send(Err(response)).expect("failed to send");
+                                        } else {
+                                            warn!("unexpected response");
+                                        }
+                                    } else {
+                                        if let Some(sender) = pending_sender.take() {
+                                            sender.send(Ok(text)).expect("failed to send");
+                                        } else {
+                                            warn!("unexpected response");
+                                        }
+                                    }
                                 }
-                            } else if let Some(update_type) = parsed.update_type {
-                                info!("received event {}", update_type);
+                                ResponseOrEvent::Event(event) => {
+                                    info!("received event {:#?}", event);
+                                }
                             }
                         }
                         _ => {
@@ -186,8 +201,19 @@ impl Obs {
             .expect("failed to send");
         trace!("sent");
         let res = executor::block_on(or1).expect("failed to receive");
-        debug!("received response {}", res);
-        Ok(serde_json::from_str(&res)?)
+        match res {
+            Ok(res) => {
+                debug!("received response {}", res);
+                Ok(serde_json::from_str(&res)?)
+            }
+            Err(res) => {
+                debug!("received error {:#?}", res);
+                Err(Error::ObsError(
+                    res.error
+                        .expect("error from sender should have error message"),
+                ))
+            }
+        }
     }
 
     pub fn authenticate(&mut self, password: &str) -> Result<responses::Empty> {
