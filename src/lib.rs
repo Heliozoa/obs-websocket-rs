@@ -18,7 +18,7 @@ use futures::{
     task::{Context, Poll},
     Stream,
 };
-use log::info;
+use log::{debug, info};
 use requests::*;
 use serde_json::Value;
 use sha2::{Digest, Sha256};
@@ -109,6 +109,7 @@ impl Obs {
                         send_socket
                             .write_message(WebSocketMessage::text(json.to_string()))
                             .expect("failed to write message");
+                        debug!("sent text {:?}", json);
                         pending_sender = Some(sender);
                     }
                     Message::Incoming(message) => match message {
@@ -116,6 +117,7 @@ impl Obs {
                             info!("closed websocket");
                         }
                         WebSocketMessage::Text(text) => {
+                            debug!("received text {:?}", text);
                             let parsed = serde_json::from_str::<responses::Message>(&text).unwrap();
                             if let Some(message_id) = parsed.message_id {
                                 // response
@@ -159,7 +161,6 @@ impl Obs {
         T: ToRequest,
     {
         let val = req.to_request();
-        println!("{:?}", val);
         let (os1, or1) = oneshot_channel();
         let message = Message::Outgoing(val, os1);
         self.thread_sender
