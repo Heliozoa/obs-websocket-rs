@@ -110,7 +110,7 @@ impl Obs {
         websocket_stream: WebSocketStream,
     ) -> JoinHandle<()> {
         debug!("starting handler");
-        thread::spawn(move || {
+        thread::Builder::new().name("handler".to_string()).spawn(move || {
             let streams = select(outgoing_receiver, websocket_stream);
             let mut pending_sender = None;
             let fut = streams.for_each(|message| {
@@ -164,7 +164,7 @@ impl Obs {
             });
             executor::block_on(fut);
             info!("receivers closed");
-        })
+        }).expect("failed to create thread")
     }
 
     pub fn connect(&mut self, address: &str, port: u16) -> Result<()> {
