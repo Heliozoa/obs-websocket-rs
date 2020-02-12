@@ -128,7 +128,7 @@ impl Obs {
                             debug!("received text {:?}", text);
                             let parsed = serde_json::from_str::<ResponseOrEvent>(&text).unwrap();
                             if let Some(_message_id) = parsed.message_id {
-                                trace!("received response")
+                                trace!("received response");
                                 if let Some(sender) = pending_sender.take() {
                                     sender.send(text).expect("failed to send");
                                 } else {
