@@ -157,122 +157,122 @@ pub struct GetSceneList {
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 pub struct GetSourcesList {
-    sources: Vec<Source>,
+    pub sources: Vec<Source>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct GetSourceTypesList {
-    sources: Vec<SourceTypes>,
+    pub sources: Vec<SourceTypes>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct GetVolume {
-    name: String,
-    volume: f64,
-    muted: bool,
+    pub name: String,
+    pub volume: f64,
+    pub muted: bool,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct GetMute {
-    name: String,
-    muted: bool,
+    pub name: String,
+    pub muted: bool,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct GetSyncOffset {
-    name: String,
-    offset: i32,
+    pub name: String,
+    pub offset: i32,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct GetSourceSettings {
-    source_name: String,
-    source_type: String,
-    source_settings: HashMap<String, Value>,
+    pub source_name: String,
+    pub source_type: String,
+    pub source_settings: HashMap<String, Value>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct SetSourceSettings {
-    source_name: String,
-    source_type: String,
-    source_settings: HashMap<String, Value>,
+    pub source_name: String,
+    pub source_type: String,
+    pub source_settings: HashMap<String, Value>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct GetTextGDIPlusProperties {
-    source: String,
-    align: Align,
+    pub source: String,
+    pub align: Align,
     #[serde(rename = "bk-color")]
-    bk_color: i32,
+    pub bk_color: i32,
     #[serde(rename = "bk-opacity")]
-    bk_opacity: i32,
-    chatlog: bool,
-    chatlog_lines: i32,
-    color: i32,
-    extents: bool,
-    extents_cx: i32,
-    extents_cy: i32,
-    file: String,
-    read_from_file: bool,
-    font: Font,
-    gradient: bool,
-    gradient_color: i32,
-    gradient_dir: f64,
-    gradient_opacity: i32,
-    outline: bool,
-    outline_color: i32,
-    outline_size: i32,
-    outline_opacity: i32,
-    text: String,
-    valign: VerticalAlign,
-    vertical: bool,
+    pub bk_opacity: i32,
+    pub chatlog: bool,
+    pub chatlog_lines: i32,
+    pub color: i32,
+    pub extents: bool,
+    pub extents_cx: i32,
+    pub extents_cy: i32,
+    pub file: String,
+    pub read_from_file: bool,
+    pub font: Font,
+    pub gradient: bool,
+    pub gradient_color: i32,
+    pub gradient_dir: f64,
+    pub gradient_opacity: i32,
+    pub outline: bool,
+    pub outline_color: i32,
+    pub outline_size: i32,
+    pub outline_opacity: i32,
+    pub text: String,
+    pub valign: VerticalAlign,
+    pub vertical: bool,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct GetTextFreetype2Properties {
-    source: String,
-    color1: i32,
-    color2: i32,
-    custom_width: i32,
-    drop_shadow: bool,
-    font: Font,
-    from_file: bool,
-    log_mode: bool,
-    outline: bool,
-    text: String,
-    text_file: String,
-    word_wrap: bool,
+    pub source: String,
+    pub color1: i32,
+    pub color2: i32,
+    pub custom_width: i32,
+    pub drop_shadow: bool,
+    pub font: Font,
+    pub from_file: bool,
+    pub log_mode: bool,
+    pub outline: bool,
+    pub text: String,
+    pub text_file: String,
+    pub word_wrap: bool,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct GetBrowserSourceProperties {
-    source: String,
-    is_local_file: bool,
-    local_file: String,
-    url: String,
-    css: String,
-    width: i32,
-    height: i32,
-    fps: i32,
-    shutdown: bool,
+    pub source: String,
+    pub is_local_file: bool,
+    pub local_file: String,
+    pub url: String,
+    pub css: String,
+    pub width: i32,
+    pub height: i32,
+    pub fps: i32,
+    pub shutdown: bool,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub struct GetSpecialSources {
-    desktop_1: Option<String>,
-    desktop_2: Option<String>,
-    mic_1: Option<String>,
-    mic_2: Option<String>,
-    mic_3: Option<String>,
+    pub desktop_1: Option<String>,
+    pub desktop_2: Option<String>,
+    pub mic_1: Option<String>,
+    pub mic_2: Option<String>,
+    pub mic_3: Option<String>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub struct GetSourceFilters {
-    filters: Vec<Filter>,
+    pub filters: Vec<Filter>,
 }
 
 pub type GetSourceFilterInfo = Filter;
@@ -280,55 +280,55 @@ pub type GetSourceFilterInfo = Filter;
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TakeSourceScreenshot {
-    source_name: String,
-    img: String,
-    image_file: String,
+    pub source_name: String,
+    pub img: String,
+    pub image_file: String,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub struct GetStreamingStatus {
-    streaming: bool,
-    recording: bool,
-    stream_timecode: Option<String>,
-    rec_timecode: Option<String>,
+    pub streaming: bool,
+    pub recording: bool,
+    pub stream_timecode: Option<String>,
+    pub rec_timecode: Option<String>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub struct GetStreamSettings {
-    stream_type: StreamType,
-    settings: StreamSettings,
+    pub stream_type: StreamType,
+    pub settings: StreamSettings,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub struct GetStudioModeStatus {
-    studio_mode: bool,
+    pub studio_mode: bool,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct GetPreviewScene {
-    name: String,
-    sources: Vec<SceneItem>,
+    pub name: String,
+    pub sources: Vec<SceneItem>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub struct GetTransitionList {
-    current_transition: String,
-    transitions: Vec<Transition>,
+    pub current_transition: String,
+    pub transitions: Vec<Transition>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct GetCurrentTransition {
-    name: String,
-    duration: Option<i32>,
+    pub name: String,
+    pub duration: Option<i32>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct GetTransitionDuration {
-    duration: i32,
+    pub duration: i32,
 }
 
 // #### non-response typedefs ####
@@ -512,8 +512,8 @@ pub struct Bounds {
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 pub struct Item {
-    name: String,
-    id: i32,
+    pub name: String,
+    pub id: i32,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
@@ -529,27 +529,27 @@ pub enum SceneItemType {
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct SceneItem {
-    cy: i32,
-    cx: i32,
-    name: String,
-    id: i32,
-    render: bool,
-    locked: bool,
-    source_cx: i32,
-    source_cy: i32,
+    pub cy: i32,
+    pub cx: i32,
+    pub name: String,
+    pub id: i32,
+    pub render: bool,
+    pub locked: bool,
+    pub source_cx: i32,
+    pub source_cy: i32,
     #[serde(rename = "type")]
-    scene_item_type: SceneItemType,
-    volume: i32,
-    x: i32,
-    y: i32,
-    parent_group_name: Option<String>,
-    group_children: Option<Vec<SceneItem>>,
+    pub scene_item_type: SceneItemType,
+    pub volume: i32,
+    pub x: i32,
+    pub y: i32,
+    pub parent_group_name: Option<String>,
+    pub group_children: Option<Vec<SceneItem>>,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 pub struct Scene {
-    name: String,
-    sources: Vec<SceneItem>,
+    pub name: String,
+    pub sources: Vec<SceneItem>,
 }
 
 pub type SourceType = SceneItemType;
@@ -557,10 +557,10 @@ pub type SourceType = SceneItemType;
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct Source {
-    name: String,
-    type_id: String,
+    pub name: String,
+    pub type_id: String,
     #[serde(rename = "type")]
-    source_type: SourceType,
+    pub source_type: SourceType,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
@@ -575,24 +575,24 @@ pub enum SourceTypesType {
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct Caps {
-    is_async: bool,
-    has_video: bool,
-    has_audio: bool,
-    can_interact: bool,
-    is_composite: bool,
-    do_not_duplicate: bool,
-    do_not_self_monitor: bool,
+    pub is_async: bool,
+    pub has_video: bool,
+    pub has_audio: bool,
+    pub can_interact: bool,
+    pub is_composite: bool,
+    pub do_not_duplicate: bool,
+    pub do_not_self_monitor: bool,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct SourceTypes {
-    type_id: String,
-    display_name: String,
+    pub type_id: String,
+    pub display_name: String,
     #[serde(rename = "type")]
-    source_type: SourceTypesType,
-    default_settings: HashMap<String, Value>,
-    caps: Caps,
+    pub source_type: SourceTypesType,
+    pub default_settings: HashMap<String, Value>,
+    pub caps: Caps,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
@@ -605,10 +605,10 @@ pub enum Align {
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 pub struct Font {
-    face: String,
-    flags: i32,
-    size: i32,
-    style: String,
+    pub face: String,
+    pub flags: i32,
+    pub size: i32,
+    pub style: String,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
@@ -621,11 +621,11 @@ pub enum VerticalAlign {
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct Filter {
-    enabled: bool,
+    pub enabled: bool,
     #[serde(rename = "type")]
-    filter_type: String,
-    name: String,
-    settings: HashMap<String, Value>,
+    pub filter_type: String,
+    pub name: String,
+    pub settings: HashMap<String, Value>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
@@ -640,14 +640,14 @@ pub enum StreamType {
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub struct StreamSettings {
-    server: String,
-    key: String,
-    use_auth: bool,
-    username: String,
-    password: String,
+    pub server: String,
+    pub key: String,
+    pub use_auth: bool,
+    pub username: String,
+    pub password: String,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct Transition {
-    name: String,
+    pub name: String,
 }
