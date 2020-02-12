@@ -70,6 +70,7 @@ impl Stream for WebSocketStream {
     }
 }
 
+#[derive(Default)]
 pub struct Obs {
     socket_handle: Option<WebSocket<TcpStream>>,
     thread_handle: Option<JoinHandle<()>>,
@@ -78,11 +79,7 @@ pub struct Obs {
 
 impl Obs {
     pub fn new() -> Self {
-        Obs {
-            socket_handle: None,
-            thread_handle: None,
-            thread_sender: None,
-        }
+        Obs::default()
     }
 
     fn init_sockets(
@@ -108,7 +105,7 @@ impl Obs {
         websocket_stream: WebSocketStream,
     ) -> JoinHandle<()> {
         info!("started handler");
-        let handle = thread::spawn(move || {
+        thread::spawn(move || {
             let streams = select(outgoing_receiver, websocket_stream);
             let mut pending_sender = None;
             let fut = streams.for_each(|message| {
@@ -142,8 +139,7 @@ impl Obs {
             });
             executor::block_on(fut);
             info!("receivers closed");
-        });
-        handle
+        })
     }
 
     pub fn connect(&mut self, port: u16) -> Result<()> {
