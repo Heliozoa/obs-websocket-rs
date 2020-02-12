@@ -682,7 +682,6 @@ impl ToRequest for ResetSceneItem<'_> {
     }
 }
 
-// TODO: improve API; item_name or item_id required
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct DeleteSceneItem<'a> {
     #[builder(default)]
@@ -690,22 +689,28 @@ pub struct DeleteSceneItem<'a> {
     #[builder(default, setter(strip_option))]
     scene: Option<&'a str>,
     #[builder(default, setter(strip_option))]
-    item_name: Option<&'a str>,
-    #[builder(default, setter(strip_option))]
-    item_id: Option<i32>,
+    item_id: Option<ItemId<'a>>,
 }
 
 impl ToRequest for DeleteSceneItem<'_> {
     type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
+        let item_id = self.item_id.as_ref().and_then(|item_id| match item_id {
+            ItemId::Id(id) => Some(id),
+            _ => None,
+        });
+        let item_name = self.item_id.as_ref().and_then(|item_name| match item_name {
+            ItemId::Name(name) => Some(name),
+            _ => None,
+        });
         json!({
             "request-type": "DeleteSceneItem",
             "message-id": self.message_id,
             "scene": self.scene,
             "item": {
-                "name": self.item_name,
-                "id": self.item_id,
+                "id": item_id,
+                "name": item_name,
             },
         })
     }
@@ -805,7 +810,7 @@ pub struct ReorderSceneItems<'a> {
     #[builder(default, setter(strip_option))]
     scene: Option<&'a str>,
     #[builder(default, setter(strip_option))]
-    items: Option<Vec<NameOrId<'a>>>,
+    items: Option<Vec<ItemId<'a>>>,
 }
 
 impl ToRequest for ReorderSceneItems<'_> {
@@ -818,10 +823,10 @@ impl ToRequest for ReorderSceneItems<'_> {
             .unwrap_or(&vec![])
             .iter()
             .map(|item| match item {
-                NameOrId::Name(name) => json!({
+                ItemId::Name(name) => json!({
                     "name": name,
                 }),
-                NameOrId::Id(id) => json!({
+                ItemId::Id(id) => json!({
                     "id": id,
                 }),
             })
@@ -1986,7 +1991,7 @@ impl ToRequest for GetTransitionDuration<'_> {
 
 // #### other typedefs ####
 #[derive(Debug, PartialEq, Eq)]
-pub enum SceneId<'a> {
+pub enum ItemId<'a> {
     Name(&'a str),
     Id(i32),
 }

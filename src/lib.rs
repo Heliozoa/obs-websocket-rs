@@ -782,7 +782,7 @@ mod test {
         });
         let req = ReorderSceneItems::builder()
             .scene("s")
-            .items(vec![SceneId::Name("n"), SceneId::Id(1)])
+            .items(vec![ItemId::Name("n"), ItemId::Id(1)])
             .build();
         let expected = responses::Empty {
             response_data: response_data(),
