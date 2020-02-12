@@ -167,15 +167,21 @@ impl Obs {
     where
         T: ToRequest,
     {
+        info!("1");
         let val = req.to_request();
+        info!("2");
         let (os1, or1) = oneshot_channel();
+        info!("3");
         let message = Message::Outgoing(val, os1);
+        info!("4");
         self.thread_sender
             .as_mut()
             .expect("no thread sender")
             .try_send(message)
             .expect("failed to send");
+        info!("5");
         let res = executor::block_on(or1).expect("failed to receive");
+        info!("6");
         Ok(serde_json::from_str(&res)?)
     }
 
@@ -211,6 +217,14 @@ mod test {
         thread::{spawn, JoinHandle},
     };
     use tungstenite::server::accept;
+
+    fn response_data() -> responses::Response {
+        responses::Response {
+            message_id: "".to_string(),
+            status: responses::Status::Ok,
+            error: None,
+        }
+    }
 
     fn init_without_server(port: u16) -> Obs {
         let mut obs = Obs::new();
@@ -357,10 +371,8 @@ mod test {
                 "message-id": "",
             }),
         ];
-        let expected = responses::Response {
-            message_id: "".to_string(),
-            status: responses::Status::Ok,
-            error: None,
+        let expected = responses::Empty {
+            response_data: response_data(),
         };
         //request_test(requests, responses, expected, method);
         // TODO
@@ -378,10 +390,8 @@ mod test {
             "message-id": "",
         });
         let req = SetHeartbeat::builder().enable(true).build();
-        let expected = responses::Response {
-            message_id: "".to_string(),
-            status: responses::Status::Ok,
-            error: None,
+        let expected = responses::Empty {
+            response_data: response_data(),
         };
         request_test(vec![request], vec![response], req, expected);
     }
@@ -400,10 +410,8 @@ mod test {
         let req = SetFilenameFormatting::builder()
             .filename_formatting("test")
             .build();
-        let expected = responses::Response {
-            message_id: "".to_string(),
-            status: responses::Status::Ok,
-            error: None,
+        let expected = responses::Empty {
+            response_data: response_data(),
         };
         request_test(vec![request], vec![response], req, expected);
     }
@@ -485,10 +493,8 @@ mod test {
             .realm("test")
             .data(data)
             .build();
-        let expected = responses::Response {
-            message_id: "".to_string(),
-            status: responses::Status::Ok,
-            error: None,
+        let expected = responses::Empty {
+            response_data: response_data(),
         };
         request_test(vec![request], vec![response], req, expected);
     }
@@ -658,10 +664,8 @@ mod test {
             "message-id": "",
         });
         let req = StartOutput::builder().output_name("output1").build();
-        let expected = responses::Response {
-            status: responses::Status::Ok,
-            message_id: "".to_string(),
-            error: None,
+        let expected = responses::Empty {
+            response_data: response_data(),
         };
         request_test(vec![request], vec![response], req, expected);
     }
@@ -682,10 +686,8 @@ mod test {
             .output_name("output1")
             .force(false)
             .build();
-        let expected = responses::Response {
-            status: responses::Status::Ok,
-            message_id: "".to_string(),
-            error: None,
+        let expected = responses::Empty {
+            response_data: response_data(),
         };
         request_test(vec![request], vec![response], req, expected);
     }
@@ -702,10 +704,8 @@ mod test {
             "message-id": "",
         });
         let req = SetCurrentProfile::builder().profile_name("p").build();
-        let expected = responses::Response {
-            status: responses::Status::Ok,
-            message_id: "".to_string(),
-            error: None,
+        let expected = responses::Empty {
+            response_data: response_data(),
         };
         request_test(vec![request], vec![response], req, expected);
     }
@@ -771,10 +771,8 @@ mod test {
             "message-id": "",
         });
         let req = StartStopRecording::default();
-        let expected = responses::Response {
-            status: responses::Status::Ok,
-            message_id: "".to_string(),
-            error: None,
+        let expected = responses::Empty {
+            response_data: response_data(),
         };
         request_test(vec![request], vec![response], req, expected);
     }
@@ -790,10 +788,8 @@ mod test {
             "message-id": "",
         });
         let req = StartRecording::default();
-        let expected = responses::Response {
-            status: responses::Status::Ok,
-            message_id: "".to_string(),
-            error: None,
+        let expected = responses::Empty {
+            response_data: response_data(),
         };
         request_test(vec![request], vec![response], req, expected);
     }
@@ -809,10 +805,8 @@ mod test {
             "message-id": "",
         });
         let req = StopRecording::default();
-        let expected = responses::Response {
-            status: responses::Status::Ok,
-            message_id: "".to_string(),
-            error: None,
+        let expected = responses::Empty {
+            response_data: response_data(),
         };
         request_test(vec![request], vec![response], req, expected);
     }
@@ -828,10 +822,8 @@ mod test {
             "message-id": "",
         });
         let req = PauseRecording::default();
-        let expected = responses::Response {
-            status: responses::Status::Ok,
-            message_id: "".to_string(),
-            error: None,
+        let expected = responses::Empty {
+            response_data: response_data(),
         };
         request_test(vec![request], vec![response], req, expected);
     }
@@ -847,10 +839,8 @@ mod test {
             "message-id": "",
         });
         let req = ResumeRecording::default();
-        let expected = responses::Response {
-            status: responses::Status::Ok,
-            message_id: "".to_string(),
-            error: None,
+        let expected = responses::Empty {
+            response_data: response_data(),
         };
         request_test(vec![request], vec![response], req, expected);
     }
@@ -867,10 +857,8 @@ mod test {
             "message-id": "",
         });
         let req = SetRecordingFolder::builder().rec_folder("path").build();
-        let expected = responses::Response {
-            status: responses::Status::Ok,
-            message_id: "".to_string(),
-            error: None,
+        let expected = responses::Empty {
+            response_data: response_data(),
         };
         request_test(vec![request], vec![response], req, expected);
     }
@@ -904,10 +892,8 @@ mod test {
             "message-id": "",
         });
         let req = StartStopReplayBuffer::default();
-        let expected = responses::Response {
-            status: responses::Status::Ok,
-            message_id: "".to_string(),
-            error: None,
+        let expected = responses::Empty {
+            response_data: response_data(),
         };
         request_test(vec![request], vec![response], req, expected);
     }
@@ -923,10 +909,8 @@ mod test {
             "message-id": "",
         });
         let req = StartReplayBuffer::default();
-        let expected = responses::Response {
-            status: responses::Status::Ok,
-            message_id: "".to_string(),
-            error: None,
+        let expected = responses::Empty {
+            response_data: response_data(),
         };
         request_test(vec![request], vec![response], req, expected);
     }
@@ -942,10 +926,8 @@ mod test {
             "message-id": "",
         });
         let req = StopReplayBuffer::default();
-        let expected = responses::Response {
-            status: responses::Status::Ok,
-            message_id: "".to_string(),
-            error: None,
+        let expected = responses::Empty {
+            response_data: response_data(),
         };
         request_test(vec![request], vec![response], req, expected);
     }
@@ -961,10 +943,8 @@ mod test {
             "message-id": "",
         });
         let req = SaveReplayBuffer::default();
-        let expected = responses::Response {
-            status: responses::Status::Ok,
-            message_id: "".to_string(),
-            error: None,
+        let expected = responses::Empty {
+            response_data: response_data(),
         };
         request_test(vec![request], vec![response], req, expected);
     }
@@ -983,10 +963,8 @@ mod test {
         let req = SetCurrentSceneCollection::builder()
             .sc_name("scene")
             .build();
-        let expected = responses::Response {
-            status: responses::Status::Ok,
-            message_id: "".to_string(),
-            error: None,
+        let expected = responses::Empty {
+            response_data: response_data(),
         };
         request_test(vec![request], vec![response], req, expected);
     }
@@ -1173,10 +1151,8 @@ mod test {
             .bounds_x(12.0)
             .bounds_y(13.0)
             .build();
-        let expected = responses::Response {
-            message_id: "".to_string(),
-            status: responses::Status::Ok,
-            error: None,
+        let expected = responses::Empty {
+            response_data: response_data(),
         };
         request_test(vec![request], vec![response], req, expected);
     }
@@ -1197,10 +1173,8 @@ mod test {
             .scene_name("scene")
             .item("test")
             .build();
-        let expected = responses::Response {
-            message_id: "".to_string(),
-            status: responses::Status::Ok,
-            error: None,
+        let expected = responses::Empty {
+            response_data: response_data(),
         };
         request_test(vec![request], vec![response], req, expected);
     }
@@ -1225,10 +1199,8 @@ mod test {
             "message-id": "",
             "status": "ok",
         });
-        let expected = responses::Response {
-            message_id: "".to_string(),
-            status: responses::Status::Ok,
-            error: None,
+        let expected = responses::Empty {
+            response_data: response_data(),
         };
         request_test(vec![request], vec![response], req, expected);
     }

@@ -68,7 +68,7 @@ pub struct SetHeartbeat<'a> {
 }
 
 impl ToRequest for SetHeartbeat<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -87,7 +87,7 @@ pub struct SetFilenameFormatting<'a> {
 }
 
 impl ToRequest for SetFilenameFormatting<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -141,7 +141,7 @@ pub struct BroadcastCustomMessage<'a> {
 }
 
 impl ToRequest for BroadcastCustomMessage<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -214,7 +214,7 @@ pub struct StartOutput<'a> {
 }
 
 impl ToRequest for StartOutput<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -235,7 +235,7 @@ pub struct StopOutput<'a> {
 }
 
 impl ToRequest for StopOutput<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -255,7 +255,7 @@ pub struct SetCurrentProfile<'a> {
 }
 
 impl ToRequest for SetCurrentProfile<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -307,7 +307,7 @@ pub struct StartStopRecording<'a> {
 }
 
 impl ToRequest for StartStopRecording<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -324,7 +324,7 @@ pub struct StartRecording<'a> {
 }
 
 impl ToRequest for StartRecording<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -341,7 +341,7 @@ pub struct StopRecording<'a> {
 }
 
 impl ToRequest for StopRecording<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -358,7 +358,7 @@ pub struct PauseRecording<'a> {
 }
 
 impl ToRequest for PauseRecording<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -375,7 +375,7 @@ pub struct ResumeRecording<'a> {
 }
 
 impl ToRequest for ResumeRecording<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -393,7 +393,7 @@ pub struct SetRecordingFolder<'a> {
 }
 
 impl ToRequest for SetRecordingFolder<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -428,7 +428,7 @@ pub struct StartStopReplayBuffer<'a> {
 }
 
 impl ToRequest for StartStopReplayBuffer<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -445,7 +445,7 @@ pub struct StartReplayBuffer<'a> {
 }
 
 impl ToRequest for StartReplayBuffer<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -462,7 +462,7 @@ pub struct StopReplayBuffer<'a> {
 }
 
 impl ToRequest for StopReplayBuffer<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -479,7 +479,7 @@ pub struct SaveReplayBuffer<'a> {
 }
 
 impl ToRequest for SaveReplayBuffer<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -497,7 +497,7 @@ pub struct SetCurrentSceneCollection<'a> {
 }
 
 impl ToRequest for SetCurrentSceneCollection<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -624,7 +624,7 @@ pub struct SetSceneItemProperties<'a> {
 }
 
 impl ToRequest for SetSceneItemProperties<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -670,7 +670,7 @@ pub struct ResetSceneItem<'a> {
 }
 
 impl ToRequest for ResetSceneItem<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -696,7 +696,7 @@ pub struct DeleteSceneItem<'a> {
 }
 
 impl ToRequest for DeleteSceneItem<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -752,7 +752,7 @@ pub struct SetCurrentScene<'a> {
 }
 
 impl ToRequest for SetCurrentScene<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -811,7 +811,7 @@ pub struct ReorderSceneItems<'a> {
 }
 
 impl ToRequest for ReorderSceneItems<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         let items = vec![0];
@@ -886,7 +886,7 @@ pub struct SetVolume<'a> {
 }
 
 impl ToRequest for SetVolume<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -925,7 +925,7 @@ pub struct SetMute<'a> {
 }
 
 impl ToRequest for SetMute<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -945,7 +945,7 @@ pub struct ToggleMute<'a> {
 }
 
 impl ToRequest for ToggleMute<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -965,7 +965,7 @@ pub struct SetSyncOffset<'a> {
 }
 
 impl ToRequest for SetSyncOffset<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -1130,7 +1130,7 @@ pub struct SetTextGDIPlusProperties<'a> {
 }
 
 impl ToRequest for SetTextGDIPlusProperties<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -1225,7 +1225,7 @@ pub struct SetTextFreetype2Properties<'a> {
 }
 
 impl ToRequest for SetTextFreetype2Properties<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -1297,7 +1297,7 @@ pub struct SetBrowserSourceProperties<'a> {
 }
 
 impl ToRequest for SetBrowserSourceProperties<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -1386,7 +1386,7 @@ pub struct AddFilterToSource<'a> {
 }
 
 impl ToRequest for AddFilterToSource<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -1409,7 +1409,7 @@ pub struct RemoveFilterFromSource<'a> {
 }
 
 impl ToRequest for RemoveFilterFromSource<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -1431,7 +1431,7 @@ pub struct ReorderSourceFilter<'a> {
 }
 
 impl ToRequest for ReorderSourceFilter<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -1462,7 +1462,7 @@ pub struct MoveSourceFilter<'a> {
 }
 
 impl ToRequest for MoveSourceFilter<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -1486,7 +1486,7 @@ pub struct SetSourceFilterSettings<'a> {
 }
 
 impl ToRequest for SetSourceFilterSettings<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -1509,7 +1509,7 @@ pub struct SetSourceFilterVisibility<'a> {
 }
 
 impl ToRequest for SetSourceFilterVisibility<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -1592,7 +1592,7 @@ pub struct StartStopStreaming<'a> {
 }
 
 impl ToRequest for StartStopStreaming<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -1624,7 +1624,7 @@ pub struct StartStreaming<'a> {
 }
 
 impl ToRequest for StartStreaming<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -1652,7 +1652,7 @@ pub struct StopStreaming<'a> {
 }
 
 impl ToRequest for StopStreaming<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -1682,7 +1682,7 @@ pub struct SetStreamSettings<'a> {
 }
 
 impl ToRequest for SetStreamSettings<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -1725,7 +1725,7 @@ pub struct SaveStreamSettings<'a> {
 }
 
 impl ToRequest for SaveStreamSettings<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -1743,7 +1743,7 @@ pub struct SendCaptions<'a> {
 }
 
 impl ToRequest for SendCaptions<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -1796,7 +1796,7 @@ pub struct SetPreviewScene<'a> {
 }
 
 impl ToRequest for SetPreviewScene<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -1816,7 +1816,7 @@ pub struct TransitionToProgram<'a> {
 }
 
 impl ToRequest for TransitionToProgram<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -1837,7 +1837,7 @@ pub struct EnableStudioMode<'a> {
 }
 
 impl ToRequest for EnableStudioMode<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -1854,7 +1854,7 @@ pub struct DisableStudioMode<'a> {
 }
 
 impl ToRequest for DisableStudioMode<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -1871,7 +1871,7 @@ pub struct ToggleStudioMode<'a> {
 }
 
 impl ToRequest for ToggleStudioMode<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -1923,7 +1923,7 @@ pub struct SetCurrentTransition<'a> {
 }
 
 impl ToRequest for SetCurrentTransition<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({
@@ -1942,7 +1942,7 @@ pub struct SetTransitionDuration<'a> {
 }
 
 impl ToRequest for SetTransitionDuration<'_> {
-    type Output = responses::Response;
+    type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
         json!({

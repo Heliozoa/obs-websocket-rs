@@ -18,7 +18,10 @@ pub struct Response {
 }
 
 #[derive(Deserialize, Debug, Eq, PartialEq)]
-pub struct Empty;
+pub struct Empty {
+    #[serde(flatten)]
+    pub response_data: Response,
+}
 
 fn deserialize_comma_separated_string<'de, D>(d: D) -> Result<Vec<String>, D::Error>
 where
