@@ -1003,7 +1003,8 @@ pub struct GetSourceSettings<'a> {
     #[builder(default)]
     message_id: &'a str,
     source_name: &'a str,
-    source_type: &'a str,
+    #[builder(default, setter(strip_option))]
+    source_type: Option<&'a str>,
 }
 
 impl ToRequest for GetSourceSettings<'_> {
@@ -1025,7 +1026,8 @@ pub struct SetSourceSettings<'a> {
     #[builder(default)]
     message_id: &'a str,
     source_name: &'a str,
-    source_type: &'a str,
+    #[builder(default, setter(strip_option))]
+    source_type: Option<&'a str>,
     source_settings: Value,
 }
 
