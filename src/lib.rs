@@ -865,11 +865,11 @@ mod test {
         let mut obs = Obs::new();
         thread::spawn(move || {
             use std::panic;
-            panic::set_hook(Box::new(|_| {}));
 
             let (stream, _) = server.accept().expect("accept");
             accept(stream).expect("failed to accept");
             info!("crashing mock obs");
+            panic::set_hook(Box::new(|_| {}));
             panic!();
         });
         obs.connect("localhost", port).expect("connect");
