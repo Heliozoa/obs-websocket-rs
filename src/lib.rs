@@ -302,6 +302,7 @@ mod test {
         });
         let req = GetVersion::default();
         let expected = responses::GetVersion {
+            response_data: response_data(),
             version: 1.1,
             obs_websocket_version: "4.7.0".to_string(),
             obs_studio_version: "24.0.3".to_string(),
@@ -325,6 +326,7 @@ mod test {
         });
         let req = GetAuthRequired::default();
         let expected = responses::GetAuthRequired {
+            response_data: response_data(),
             auth_required: true,
             challenge: Some("ch".to_string()),
             salt: Some("sa".to_string()),
@@ -345,6 +347,7 @@ mod test {
         });
         let req = GetAuthRequired::default();
         let expected = responses::GetAuthRequired {
+            response_data: response_data(),
             auth_required: false,
             challenge: None,
             salt: None,
@@ -421,6 +424,7 @@ mod test {
         });
         let req = GetStats::default();
         let expected = responses::GetStats {
+            response_data: response_data(),
             stats: responses::ObsStats {
                 fps: 0.0,
                 render_total_frames: 1,
@@ -457,6 +461,7 @@ mod test {
         });
         let req = GetVideoInfo::default();
         let expected = responses::GetVideoInfo {
+            response_data: response_data(),
             base_width: 0,
             base_height: 1,
             output_width: 2,
@@ -505,6 +510,7 @@ mod test {
         });
         let req = ListOutputs::default();
         let expected = responses::ListOutputs {
+            response_data: response_data(),
             outputs: vec![responses::Output {
                 name: "simple_file_output".to_string(),
                 output_type: "ffmpeg_muxer".to_string(),
@@ -564,6 +570,7 @@ mod test {
         });
         let req = GetOutputInfo::builder().output_name("output1").build();
         let expected = responses::GetOutputInfo {
+            response_data: response_data(),
             output_info: responses::Output {
                 name: "simple_file_output".to_string(),
                 output_type: "ffmpeg_muxer".to_string(),
@@ -635,6 +642,7 @@ mod test {
             .item("source")
             .build();
         let expected = responses::GetSceneItemProperties {
+            response_data: response_data(),
             name: "source".to_string(),
             position: responses::Position {
                 x: 0.0,

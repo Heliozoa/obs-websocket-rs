@@ -50,6 +50,8 @@ where
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub struct GetVersion {
+    #[serde(flatten)]
+    pub response_data: Response,
     pub version: f64,
     pub obs_websocket_version: String,
     pub obs_studio_version: String,
@@ -60,6 +62,8 @@ pub struct GetVersion {
 #[derive(Deserialize, Debug, Eq, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct GetAuthRequired {
+    #[serde(flatten)]
+    pub response_data: Response,
     pub auth_required: bool,
     pub challenge: Option<String>,
     pub salt: Option<String>,
@@ -68,17 +72,23 @@ pub struct GetAuthRequired {
 #[derive(Deserialize, Debug, Eq, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub struct GetFilenameFormatting {
+    #[serde(flatten)]
+    pub response_data: Response,
     pub filename_formatting: String,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct GetStats {
+    #[serde(flatten)]
+    pub response_data: Response,
     pub stats: ObsStats,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct GetVideoInfo {
+    #[serde(flatten)]
+    pub response_data: Response,
     pub base_width: i32,
     pub base_height: i32,
     pub output_width: i32,
@@ -92,40 +102,64 @@ pub struct GetVideoInfo {
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct ListOutputs {
+    #[serde(flatten)]
+    pub response_data: Response,
     pub outputs: Vec<Output>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct GetOutputInfo {
+    #[serde(flatten)]
+    pub response_data: Response,
     pub output_info: Output,
 }
 
-pub type GetCurrentProfile = Profile;
+#[derive(Deserialize, Debug, PartialEq)]
+#[serde(rename_all = "kebab-case")]
+pub struct GetCurrentProfile {
+    #[serde(flatten)]
+    pub response_data: Response,
+    pub profile_name: String,
+}
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 pub struct ListProfiles {
+    #[serde(flatten)]
+    pub response_data: Response,
     pub profiles: Vec<Profile>,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 pub struct GetRecordingFolder {
+    #[serde(flatten)]
+    pub response_data: Response,
     pub rec_folder: String,
 }
 
-pub type GetCurrentSceneCollection = SceneCollection;
+#[derive(Deserialize, Debug, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
+pub struct GetCurrentSceneCollection {
+    #[serde(flatten)]
+    pub response_data: Response,
+    pub sc_name: String,
+}
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 pub struct ListSceneCollections {
+    #[serde(flatten)]
+    pub response_data: Response,
     pub scene_collections: Vec<SceneCollection>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct GetSceneItemProperties {
+    #[serde(flatten)]
+    pub response_data: Response,
     pub name: String,
     pub position: Position,
     pub rotation: f64,
@@ -142,31 +176,47 @@ pub struct GetSceneItemProperties {
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 pub struct DuplicateSceneItem {
+    #[serde(flatten)]
+    pub response_data: Response,
     pub scene: String,
     pub item: Item,
 }
 
-pub type GetCurrentScene = Scene;
+#[derive(Deserialize, Debug, PartialEq, Eq)]
+pub struct GetCurrentScene {
+    #[serde(flatten)]
+    pub response_data: Response,
+    pub name: String,
+    pub sources: Vec<SceneItem>,
+}
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 pub struct GetSceneList {
+    #[serde(flatten)]
+    pub response_data: Response,
     pub current_scene: String,
     pub scenes: Vec<Scene>,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 pub struct GetSourcesList {
+    #[serde(flatten)]
+    pub response_data: Response,
     pub sources: Vec<Source>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct GetSourceTypesList {
+    #[serde(flatten)]
+    pub response_data: Response,
     pub sources: Vec<SourceTypes>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct GetVolume {
+    #[serde(flatten)]
+    pub response_data: Response,
     pub name: String,
     pub volume: f64,
     pub muted: bool,
@@ -174,12 +224,16 @@ pub struct GetVolume {
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct GetMute {
+    #[serde(flatten)]
+    pub response_data: Response,
     pub name: String,
     pub muted: bool,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct GetSyncOffset {
+    #[serde(flatten)]
+    pub response_data: Response,
     pub name: String,
     pub offset: i32,
 }
@@ -187,6 +241,8 @@ pub struct GetSyncOffset {
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct GetSourceSettings {
+    #[serde(flatten)]
+    pub response_data: Response,
     pub source_name: String,
     pub source_type: String,
     pub source_settings: HashMap<String, Value>,
@@ -195,6 +251,8 @@ pub struct GetSourceSettings {
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct SetSourceSettings {
+    #[serde(flatten)]
+    pub response_data: Response,
     pub source_name: String,
     pub source_type: String,
     pub source_settings: HashMap<String, Value>,
@@ -202,6 +260,8 @@ pub struct SetSourceSettings {
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct GetTextGDIPlusProperties {
+    #[serde(flatten)]
+    pub response_data: Response,
     pub source: String,
     pub align: Align,
     #[serde(rename = "bk-color")]
@@ -232,6 +292,8 @@ pub struct GetTextGDIPlusProperties {
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct GetTextFreetype2Properties {
+    #[serde(flatten)]
+    pub response_data: Response,
     pub source: String,
     pub color1: i32,
     pub color2: i32,
@@ -248,6 +310,8 @@ pub struct GetTextFreetype2Properties {
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct GetBrowserSourceProperties {
+    #[serde(flatten)]
+    pub response_data: Response,
     pub source: String,
     pub is_local_file: bool,
     pub local_file: String,
@@ -262,6 +326,8 @@ pub struct GetBrowserSourceProperties {
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub struct GetSpecialSources {
+    #[serde(flatten)]
+    pub response_data: Response,
     pub desktop_1: Option<String>,
     pub desktop_2: Option<String>,
     pub mic_1: Option<String>,
@@ -272,14 +338,27 @@ pub struct GetSpecialSources {
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub struct GetSourceFilters {
+    #[serde(flatten)]
+    pub response_data: Response,
     pub filters: Vec<Filter>,
 }
 
-pub type GetSourceFilterInfo = Filter;
+#[derive(Deserialize, Debug, PartialEq)]
+pub struct GetSourceFilterInfo {
+    #[serde(flatten)]
+    pub response_data: Response,
+    pub enabled: bool,
+    #[serde(rename = "type")]
+    pub filter_type: String,
+    pub name: String,
+    pub settings: HashMap<String, Value>,
+}
 
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TakeSourceScreenshot {
+    #[serde(flatten)]
+    pub response_data: Response,
     pub source_name: String,
     pub img: String,
     pub image_file: String,
@@ -288,6 +367,8 @@ pub struct TakeSourceScreenshot {
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub struct GetStreamingStatus {
+    #[serde(flatten)]
+    pub response_data: Response,
     pub streaming: bool,
     pub recording: bool,
     pub stream_timecode: Option<String>,
@@ -297,6 +378,8 @@ pub struct GetStreamingStatus {
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub struct GetStreamSettings {
+    #[serde(flatten)]
+    pub response_data: Response,
     pub stream_type: StreamType,
     pub settings: StreamSettings,
 }
@@ -304,11 +387,15 @@ pub struct GetStreamSettings {
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub struct GetStudioModeStatus {
+    #[serde(flatten)]
+    pub response_data: Response,
     pub studio_mode: bool,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct GetPreviewScene {
+    #[serde(flatten)]
+    pub response_data: Response,
     pub name: String,
     pub sources: Vec<SceneItem>,
 }
@@ -316,18 +403,24 @@ pub struct GetPreviewScene {
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub struct GetTransitionList {
+    #[serde(flatten)]
+    pub response_data: Response,
     pub current_transition: String,
     pub transitions: Vec<Transition>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct GetCurrentTransition {
+    #[serde(flatten)]
+    pub response_data: Response,
     pub name: String,
     pub duration: Option<i32>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct GetTransitionDuration {
+    #[serde(flatten)]
+    pub response_data: Response,
     pub duration: i32,
 }
 
