@@ -787,7 +787,7 @@ pub struct GetSceneList<'a> {
 }
 
 impl ToRequest for GetSceneList<'_> {
-    type Output = responses::Response;
+    type Output = responses::GetSceneList;
 
     fn to_request(&self) -> Value {
         json!({
@@ -831,7 +831,7 @@ pub struct GetSourcesList<'a> {
 }
 
 impl ToRequest for GetSourcesList<'_> {
-    type Output = responses::Response;
+    type Output = responses::GetSourcesList;
 
     fn to_request(&self) -> Value {
         json!({
@@ -848,7 +848,7 @@ pub struct GetSourceTypesList<'a> {
 }
 
 impl ToRequest for GetSourceTypesList<'_> {
-    type Output = responses::Response;
+    type Output = responses::GetSourceTypesList;
 
     fn to_request(&self) -> Value {
         json!({
@@ -866,7 +866,7 @@ pub struct GetVolume<'a> {
 }
 
 impl ToRequest for GetVolume<'_> {
-    type Output = responses::Response;
+    type Output = responses::GetVolume;
 
     fn to_request(&self) -> Value {
         json!({
@@ -905,7 +905,7 @@ pub struct GetMute<'a> {
 }
 
 impl ToRequest for GetMute<'_> {
-    type Output = responses::Response;
+    type Output = responses::GetMute;
 
     fn to_request(&self) -> Value {
         json!({
@@ -985,7 +985,7 @@ pub struct GetSyncOffset<'a> {
 }
 
 impl ToRequest for GetSyncOffset<'_> {
-    type Output = responses::Response;
+    type Output = responses::GetSyncOffset;
 
     fn to_request(&self) -> Value {
         json!({
@@ -1005,7 +1005,7 @@ pub struct GetSourceSettings<'a> {
 }
 
 impl ToRequest for GetSourceSettings<'_> {
-    type Output = responses::Response;
+    type Output = responses::GetSourceSettings;
 
     fn to_request(&self) -> Value {
         json!({
@@ -1028,7 +1028,7 @@ pub struct SetSourceSettings<'a> {
 }
 
 impl ToRequest for SetSourceSettings<'_> {
-    type Output = responses::Response;
+    type Output = responses::SetSourceSettings;
 
     fn to_request(&self) -> Value {
         json!({
@@ -1049,7 +1049,7 @@ pub struct GetTextGDIPlusProperties<'a> {
 }
 
 impl ToRequest for GetTextGDIPlusProperties<'_> {
-    type Output = responses::Response;
+    type Output = responses::GetTextGDIPlusProperties;
 
     fn to_request(&self) -> Value {
         json!({
@@ -1178,7 +1178,7 @@ pub struct GetTextFreetype2Properties<'a> {
 }
 
 impl ToRequest for GetTextFreetype2Properties<'_> {
-    type Output = responses::Response;
+    type Output = responses::GetTextFreetype2Properties;
 
     fn to_request(&self) -> Value {
         json!({
@@ -1260,7 +1260,7 @@ pub struct GetBrowserSourceProperties<'a> {
 }
 
 impl ToRequest for GetBrowserSourceProperties<'_> {
-    type Output = responses::Response;
+    type Output = responses::GetBrowserSourceProperties;
 
     fn to_request(&self) -> Value {
         json!({
@@ -1324,7 +1324,7 @@ pub struct GetSpecialSources<'a> {
 }
 
 impl ToRequest for GetSpecialSources<'_> {
-    type Output = responses::Response;
+    type Output = responses::GetSpecialSources;
 
     fn to_request(&self) -> Value {
         json!({
@@ -1342,7 +1342,7 @@ pub struct GetSourceFilters<'a> {
 }
 
 impl ToRequest for GetSourceFilters<'_> {
-    type Output = responses::Response;
+    type Output = responses::GetSourceFilters;
 
     fn to_request(&self) -> Value {
         json!({
@@ -1362,7 +1362,7 @@ pub struct GetSourceFilterInfo<'a> {
 }
 
 impl ToRequest for GetSourceFilterInfo<'_> {
-    type Output = responses::Response;
+    type Output = responses::GetSourceFilterInfo;
 
     fn to_request(&self) -> Value {
         json!({
@@ -1553,7 +1553,7 @@ pub struct TakeSourceScreenshot<'a> {
 }
 
 impl ToRequest for TakeSourceScreenshot<'_> {
-    type Output = responses::Response;
+    type Output = responses::TakeSourceScreenshot;
 
     fn to_request(&self) -> Value {
         json!({
@@ -1575,7 +1575,7 @@ pub struct GetStreamingStatus<'a> {
 }
 
 impl ToRequest for GetStreamingStatus<'_> {
-    type Output = responses::Response;
+    type Output = responses::GetStreamingStatus;
 
     fn to_request(&self) -> Value {
         json!({
@@ -1708,7 +1708,7 @@ pub struct GetStreamSettings<'a> {
 }
 
 impl ToRequest for GetStreamSettings<'_> {
-    type Output = responses::Response;
+    type Output = responses::GetStreamSettings;
 
     fn to_request(&self) -> Value {
         json!({
@@ -1761,7 +1761,7 @@ pub struct GetStudioModeStatus<'a> {
 }
 
 impl ToRequest for GetStudioModeStatus<'_> {
-    type Output = responses::Response;
+    type Output = responses::GetStudioModeStatus;
 
     fn to_request(&self) -> Value {
         json!({
@@ -1778,7 +1778,7 @@ pub struct GetPreviewScene<'a> {
 }
 
 impl ToRequest for GetPreviewScene<'_> {
-    type Output = responses::Response;
+    type Output = responses::GetPreviewScene;
 
     fn to_request(&self) -> Value {
         json!({
@@ -1888,7 +1888,7 @@ pub struct GetTransitionList<'a> {
 }
 
 impl ToRequest for GetTransitionList<'_> {
-    type Output = responses::Response;
+    type Output = responses::GetTransitionList;
 
     fn to_request(&self) -> Value {
         json!({
@@ -1905,7 +1905,7 @@ pub struct GetCurrentTransition<'a> {
 }
 
 impl ToRequest for GetCurrentTransition<'_> {
-    type Output = responses::Response;
+    type Output = responses::GetCurrentTransition;
 
     fn to_request(&self) -> Value {
         json!({
@@ -1960,7 +1960,7 @@ pub struct GetTransitionDuration<'a> {
 }
 
 impl ToRequest for GetTransitionDuration<'_> {
-    type Output = responses::Response;
+    type Output = responses::GetTransitionDuration;
 
     fn to_request(&self) -> Value {
         json!({

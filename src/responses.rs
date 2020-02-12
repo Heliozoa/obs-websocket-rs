@@ -158,7 +158,7 @@ pub struct GetSourcesList {
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
-pub struct GetSourcesTypesList {
+pub struct GetSourceTypesList {
     sources: Vec<SourceTypes>,
 }
 
