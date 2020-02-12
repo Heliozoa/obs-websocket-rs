@@ -17,7 +17,7 @@ use futures::{
     task::{Context, Poll},
     Stream,
 };
-use log::{debug, info};
+use log::{debug, info, trace, warn};
 use requests::*;
 use serde::Deserialize;
 use serde_json::Value;
@@ -87,6 +87,7 @@ impl Obs {
     ) -> Result<(WebSocketStream, WebSocket<TcpStream>, WebSocket<TcpStream>)> {
         let addr = format!("localhost:{}", port);
         let ws_addr = format!("ws://{}", addr);
+        debug!("connecting to {}", addr);
         let recv_stream = TcpStream::connect(addr)?;
         let send_stream = recv_stream.try_clone()?;
         let close_stream = recv_stream.try_clone()?;
@@ -104,13 +105,15 @@ impl Obs {
         outgoing_receiver: Receiver<Message>,
         websocket_stream: WebSocketStream,
     ) -> JoinHandle<()> {
-        info!("started handler");
+        debug!("starting handler");
         thread::spawn(move || {
             let streams = select(outgoing_receiver, websocket_stream);
             let mut pending_sender = None;
             let fut = streams.for_each(|message| {
+                trace!("received message");
                 match message {
                     Message::Outgoing(json, sender) => {
+                        trace!("received outgoing message");
                         send_socket
                             .write_message(WebSocketMessage::text(json.to_string()))
                             .expect("failed to write message");
@@ -119,20 +122,25 @@ impl Obs {
                     }
                     Message::Incoming(message) => match message {
                         WebSocketMessage::Close(_) => {
-                            info!("closed websocket");
+                            info!("websocket connection closed");
                         }
                         WebSocketMessage::Text(text) => {
                             debug!("received text {:?}", text);
                             let parsed = serde_json::from_str::<ResponseOrEvent>(&text).unwrap();
                             if let Some(_message_id) = parsed.message_id {
+                                trace!("received response")
                                 if let Some(sender) = pending_sender.take() {
                                     sender.send(text).expect("failed to send");
+                                } else {
+                                    warn!("unexpected response");
                                 }
                             } else if let Some(update_type) = parsed.update_type {
                                 info!("received event {}", update_type);
                             }
                         }
-                        _ => {}
+                        _ => {
+                            warn!("unexpected websocket message");
+                        }
                     },
                 }
                 future::ready(())
@@ -143,6 +151,7 @@ impl Obs {
     }
 
     pub fn connect(&mut self, port: u16) -> Result<()> {
+        debug!("connecting with port {}", port);
         let (thread_sender, thread_receiver) = channel(2048);
         let (websocket_stream, send_socket, close_socket) = Obs::init_sockets(port)?;
         let handle = Obs::start_handler(send_socket, thread_receiver, websocket_stream);
@@ -154,6 +163,7 @@ impl Obs {
     }
 
     pub fn close(self) {
+        debug!("closing");
         self.thread_sender.unwrap().close_channel();
         self.socket_handle.unwrap().close(None).unwrap();
         self.thread_handle.unwrap().join().unwrap();
@@ -161,17 +171,22 @@ impl Obs {
 
     fn request<T>(&mut self, req: T) -> Result<T::Output>
     where
-        T: ToRequest,
+        T: ToRequest + std::fmt::Debug,
     {
+        debug!("requesting {:?}", req);
         let val = req.to_request();
+        trace!("converted request to json {}", val);
         let (os1, or1) = oneshot_channel();
         let message = Message::Outgoing(val, os1);
+        trace!("sending");
         self.thread_sender
             .as_mut()
             .expect("no thread sender")
             .try_send(message)
             .expect("failed to send");
+        trace!("sent");
         let res = executor::block_on(or1).expect("failed to receive");
+        debug!("received response {}", res);
         Ok(serde_json::from_str(&res)?)
     }
 
@@ -217,6 +232,7 @@ mod test {
     }
 
     fn init_without_server(port: u16) -> Obs {
+        debug!("initiating without server at {}", port);
         let mut obs = Obs::new();
         obs.connect(port).unwrap();
         obs
@@ -233,10 +249,11 @@ mod test {
             let mut websocket = accept(stream).expect("failed to accept");
             for response in responses {
                 let message = websocket.read_message().expect("failed to read message");
-                info!("read message");
+                info!("read message {:?}", message);
                 let parsed = serde_json::from_str::<Value>(&message.to_string())
                     .expect("failed to deserialize");
                 actual_requests.push(parsed);
+                info!("responding with {:?}", response);
                 websocket
                     .write_message(WebSocketMessage::Text(response.to_string()))
                     .expect("failed to write");
