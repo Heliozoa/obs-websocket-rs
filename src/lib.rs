@@ -108,11 +108,7 @@ impl Obs {
         let ws_addr = format!("ws://{}", addr);
         debug!("connecting to {}", addr);
         let recv_stream = TcpStream::connect_timeout(
-            &addr
-                .to_socket_addrs()
-                .expect("failed to parse address")
-                .next()
-                .expect("no addresses parsed"),
+            &addr.to_socket_addrs()?.next().expect("no addresses parsed"),
             Duration::from_millis(100),
         )?;
         recv_stream
@@ -249,7 +245,7 @@ impl Obs {
             trace!("sending");
             if thread_sender.try_send(message).is_err() {
                 thread_sender.close_channel();
-                socket_handle.close(None).expect("failed to close socket");
+                socket_handle.close(None)?;
                 self.connection_data = None;
                 return Err(Error::Custom("connection interrupted".to_string()));
             }
