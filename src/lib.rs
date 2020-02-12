@@ -850,6 +850,7 @@ mod test {
         thread::spawn(move || {
             let (stream, _) = server.accept().expect("accept");
             let mut websocket = accept(stream).expect("failed to accept");
+            info!("mock obs closing");
             websocket.close(None).expect("close");
         });
         obs.connect("localhost", port).expect("connect");
@@ -863,9 +864,13 @@ mod test {
         let port = server.local_addr().expect("local addr").port();
         let mut obs = Obs::new();
         thread::spawn(move || {
+            use std::panic;
+            panic::set_hook(Box::new(|_| {}));
+
             let (stream, _) = server.accept().expect("accept");
             accept(stream).expect("failed to accept");
-            panic!("mock obs crashed!");
+            info!("crashing mock obs");
+            panic!();
         });
         obs.connect("localhost", port).expect("connect");
         assert!(obs.request(GetVersion::default()).is_err());
