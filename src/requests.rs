@@ -764,7 +764,7 @@ impl ToRequest for SetCurrentScene<'_> {
     }
 }
 
-#[derive(TypedBuilder, Debug, PartialEq, Eq)]
+#[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct GetCurrentScene<'a> {
     #[builder(default)]
     message_id: &'a str,
@@ -781,7 +781,7 @@ impl ToRequest for GetCurrentScene<'_> {
     }
 }
 
-#[derive(TypedBuilder, Debug, PartialEq, Eq)]
+#[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct GetSceneList<'a> {
     #[builder(default)]
     message_id: &'a str,
@@ -835,7 +835,7 @@ impl ToRequest for ReorderSceneItems<'_> {
     }
 }
 
-#[derive(TypedBuilder, Debug, PartialEq, Eq)]
+#[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct GetSourcesList<'a> {
     #[builder(default)]
     message_id: &'a str,
@@ -852,7 +852,7 @@ impl ToRequest for GetSourcesList<'_> {
     }
 }
 
-#[derive(TypedBuilder, Debug, PartialEq, Eq)]
+#[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct GetSourceTypesList<'a> {
     #[builder(default)]
     message_id: &'a str,
@@ -1331,7 +1331,7 @@ impl ToRequest for SetBrowserSourceProperties<'_> {
     }
 }
 
-#[derive(TypedBuilder, Debug, PartialEq, Eq)]
+#[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct GetSpecialSources<'a> {
     #[builder(default)]
     message_id: &'a str,
@@ -1582,7 +1582,7 @@ impl ToRequest for TakeSourceScreenshot<'_> {
     }
 }
 
-#[derive(TypedBuilder, Debug, PartialEq, Eq)]
+#[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct GetStreamingStatus<'a> {
     #[builder(default)]
     message_id: &'a str,
@@ -1599,7 +1599,7 @@ impl ToRequest for GetStreamingStatus<'_> {
     }
 }
 
-#[derive(TypedBuilder, Debug, PartialEq, Eq)]
+#[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct StartStopStreaming<'a> {
     #[builder(default)]
     message_id: &'a str,
@@ -1659,7 +1659,7 @@ impl ToRequest for StartStreaming<'_> {
     }
 }
 
-#[derive(TypedBuilder, Debug, PartialEq, Eq)]
+#[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct StopStreaming<'a> {
     #[builder(default)]
     message_id: &'a str,
@@ -1715,7 +1715,7 @@ impl ToRequest for SetStreamSettings<'_> {
     }
 }
 
-#[derive(TypedBuilder, Debug, PartialEq, Eq)]
+#[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct GetStreamSettings<'a> {
     #[builder(default)]
     message_id: &'a str,
@@ -1732,7 +1732,7 @@ impl ToRequest for GetStreamSettings<'_> {
     }
 }
 
-#[derive(TypedBuilder, Debug, PartialEq, Eq)]
+#[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct SaveStreamSettings<'a> {
     #[builder(default)]
     message_id: &'a str,
@@ -1768,7 +1768,7 @@ impl ToRequest for SendCaptions<'_> {
     }
 }
 
-#[derive(TypedBuilder, Debug, PartialEq, Eq)]
+#[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct GetStudioModeStatus<'a> {
     #[builder(default)]
     message_id: &'a str,
@@ -1785,7 +1785,7 @@ impl ToRequest for GetStudioModeStatus<'_> {
     }
 }
 
-#[derive(TypedBuilder, Debug, PartialEq, Eq)]
+#[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct GetPreviewScene<'a> {
     #[builder(default)]
     message_id: &'a str,
@@ -1844,7 +1844,7 @@ impl ToRequest for TransitionToProgram<'_> {
     }
 }
 
-#[derive(TypedBuilder, Debug, PartialEq, Eq)]
+#[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct EnableStudioMode<'a> {
     #[builder(default)]
     message_id: &'a str,
@@ -1861,7 +1861,7 @@ impl ToRequest for EnableStudioMode<'_> {
     }
 }
 
-#[derive(TypedBuilder, Debug, PartialEq, Eq)]
+#[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct DisableStudioMode<'a> {
     #[builder(default)]
     message_id: &'a str,
@@ -1878,7 +1878,7 @@ impl ToRequest for DisableStudioMode<'_> {
     }
 }
 
-#[derive(TypedBuilder, Debug, PartialEq, Eq)]
+#[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct ToggleStudioMode<'a> {
     #[builder(default)]
     message_id: &'a str,
@@ -1895,7 +1895,7 @@ impl ToRequest for ToggleStudioMode<'_> {
     }
 }
 
-#[derive(TypedBuilder, Debug, PartialEq, Eq)]
+#[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct GetTransitionList<'a> {
     #[builder(default)]
     message_id: &'a str,
@@ -1912,7 +1912,7 @@ impl ToRequest for GetTransitionList<'_> {
     }
 }
 
-#[derive(TypedBuilder, Debug, PartialEq, Eq)]
+#[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct GetCurrentTransition<'a> {
     #[builder(default)]
     message_id: &'a str,
@@ -1967,7 +1967,7 @@ impl ToRequest for SetTransitionDuration<'_> {
     }
 }
 
-#[derive(TypedBuilder, Debug, PartialEq, Eq)]
+#[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct GetTransitionDuration<'a> {
     #[builder(default)]
     message_id: &'a str,

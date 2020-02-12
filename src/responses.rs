@@ -726,7 +726,7 @@ pub struct Filter {
     pub settings: HashMap<String, Value>,
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum StreamType {
     #[serde(rename = "rtmp_custom")]
@@ -735,7 +735,7 @@ pub enum StreamType {
     Common,
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 pub struct StreamSettings {
     pub server: String,
@@ -745,7 +745,7 @@ pub struct StreamSettings {
     pub password: String,
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 pub struct Transition {
     pub name: String,
 }
