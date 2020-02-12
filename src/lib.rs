@@ -25,9 +25,10 @@ use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::{
     io::ErrorKind as IoError,
-    net::TcpStream,
+    net::{TcpStream, ToSocketAddrs},
     pin::Pin,
     thread::{self, JoinHandle},
+    time::Duration,
 };
 use tungstenite::{
     client, protocol::Role, Error as WebSocketError, Message as WebSocketMessage, WebSocket,
@@ -102,7 +103,17 @@ impl Obs {
         let addr = format!("{}:{}", address, port);
         let ws_addr = format!("ws://{}", addr);
         debug!("connecting to {}", addr);
-        let recv_stream = TcpStream::connect(addr)?;
+        let mut recv_stream = TcpStream::connect_timeout(
+            &addr
+                .to_socket_addrs()
+                .expect("failed to parse address")
+                .next()
+                .expect("no addresses parsed"),
+            Duration::from_millis(100),
+        )?;
+        recv_stream
+            .set_read_timeout(Some(Duration::from_millis(100)))
+            .unwrap();
         let send_stream = recv_stream.try_clone()?;
         let close_stream = recv_stream.try_clone()?;
         let (recv_socket, _res) = client(ws_addr, recv_stream)?;
@@ -858,7 +869,7 @@ mod test {
     }
 
     #[test]
-    fn obs_crash() {
+    fn obs_crash_after_accept() {
         let _ = env_logger::builder().is_test(true).try_init();
         let server = TcpListener::bind("localhost:0").expect("bind");
         let port = server.local_addr().expect("local addr").port();
@@ -874,5 +885,33 @@ mod test {
         });
         obs.connect("localhost", port).expect("connect");
         assert!(obs.request(GetVersion::default()).is_err());
+    }
+
+    #[test]
+    fn obs_crash_before_accept() {
+        let _ = env_logger::builder().is_test(true).try_init();
+        let server = TcpListener::bind("localhost:0").expect("bind");
+        let port = server.local_addr().expect("local addr").port();
+        let mut obs = Obs::new();
+        thread::spawn(move || {
+            use std::panic;
+
+            server.accept().expect("accept");
+            info!("crashing mock obs");
+            panic::set_hook(Box::new(|_| {}));
+            panic!();
+        });
+        let res = obs.connect("localhost", port);
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn obs_offline() {
+        let _ = env_logger::builder().is_test(true).try_init();
+        let server = TcpListener::bind("localhost:0").expect("bind");
+        let port = server.local_addr().expect("local addr").port();
+        let mut obs = Obs::new();
+        let res = obs.connect("localhost", port);
+        assert!(res.is_err());
     }
 }
