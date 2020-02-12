@@ -18,7 +18,7 @@ use futures::{
     task::{Context, Poll},
     Stream,
 };
-use log::{debug, info, trace, warn};
+use log::{debug, error, info, trace, warn};
 use requests::*;
 use serde::Deserialize;
 use serde_json::Value;
@@ -120,7 +120,7 @@ impl Obs {
                         send_socket
                             .write_message(WebSocketMessage::text(json.to_string()))
                             .expect("failed to write message");
-                        debug!("sent text {:?}", json);
+                        debug!("sent text {}", json);
                         pending_sender = Some(sender);
                     }
                     Message::Incoming(message) => match message {
@@ -188,7 +188,7 @@ impl Obs {
     where
         T: ToRequest + std::fmt::Debug,
     {
-        debug!("requesting {:?}", req);
+        debug!("requesting {:#?}", req);
         let val = req.to_request();
         trace!("converted request to json {}", val);
         let (os1, or1) = oneshot_channel();
@@ -275,11 +275,11 @@ mod test {
             let mut websocket = accept(stream).expect("failed to accept");
             for response in responses {
                 let message = websocket.read_message().expect("failed to read message");
-                info!("read message {:?}", message);
+                info!("read message {:#?}", message);
                 let parsed = serde_json::from_str::<Value>(&message.to_string())
                     .expect("failed to deserialize");
                 actual_requests.push(parsed);
-                info!("responding with {:?}", response);
+                info!("responding with {:#?}", response);
                 websocket
                     .write_message(WebSocketMessage::Text(response.to_string()))
                     .expect("failed to write");
