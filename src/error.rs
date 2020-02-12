@@ -4,7 +4,6 @@ use tungstenite::{
     error::Error as TungsteniteError,
     handshake::{HandshakeError, HandshakeRole},
 };
-use url::ParseError;
 
 #[derive(Debug)]
 pub enum Error {
@@ -14,7 +13,6 @@ pub enum Error {
     HandshakeFailed(TungsteniteError),
     Tungstenite(TungsteniteError),
     Json(JsonError),
-    Parse(ParseError),
     Io(IoError),
 }
 
@@ -27,12 +25,6 @@ impl From<TungsteniteError> for Error {
 impl From<JsonError> for Error {
     fn from(err: JsonError) -> Error {
         Error::Json(err)
-    }
-}
-
-impl From<ParseError> for Error {
-    fn from(err: ParseError) -> Error {
-        Error::Parse(err)
     }
 }
 
