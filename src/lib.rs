@@ -20,6 +20,7 @@ use futures::{
 };
 use log::{debug, info};
 use requests::*;
+use serde::Deserialize;
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::{
@@ -33,6 +34,13 @@ use tungstenite::{
 };
 
 type Result<T> = std::result::Result<T, Error>;
+
+#[derive(Deserialize, Debug, Eq, PartialEq)]
+#[serde(rename_all = "kebab-case")]
+pub struct ResponseOrEvent {
+    pub message_id: Option<String>,
+    pub update_type: Option<String>,
+}
 
 #[derive(Debug)]
 enum Message {
@@ -118,7 +126,7 @@ impl Obs {
                         }
                         WebSocketMessage::Text(text) => {
                             debug!("received text {:?}", text);
-                            let parsed = serde_json::from_str::<responses::Message>(&text).unwrap();
+                            let parsed = serde_json::from_str::<ResponseOrEvent>(&text).unwrap();
                             if let Some(message_id) = parsed.message_id {
                                 // response
                                 if let Some(sender) = pending_sender.take() {

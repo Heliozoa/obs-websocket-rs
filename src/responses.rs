@@ -10,25 +10,10 @@ pub enum Status {
 
 #[derive(Deserialize, Debug, Eq, PartialEq)]
 #[serde(rename_all = "kebab-case")]
-pub struct Message {
-    pub message_id: Option<String>,
-    pub update_type: Option<String>,
-}
-
-#[derive(Deserialize, Debug, Eq, PartialEq)]
-#[serde(rename_all = "kebab-case")]
 pub struct Response {
     pub message_id: String,
     pub status: Status,
     pub error: Option<String>,
-}
-
-#[derive(Deserialize, Debug, Eq, PartialEq)]
-#[serde(rename_all = "kebab-case")]
-pub struct Event {
-    pub update_type: String,
-    pub stream_timecode: Option<String>,
-    pub rec_timecode: Option<String>,
 }
 
 fn deserialize_comma_separated_string<'de, D>(d: D) -> Result<Vec<String>, D::Error>
