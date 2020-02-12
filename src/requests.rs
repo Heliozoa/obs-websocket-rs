@@ -1986,7 +1986,7 @@ impl ToRequest for GetTransitionDuration<'_> {
 
 // #### other typedefs ####
 #[derive(Debug, PartialEq, Eq)]
-pub enum NameOrId<'a> {
+pub enum SceneId<'a> {
     Name(&'a str),
     Id(i32),
 }
