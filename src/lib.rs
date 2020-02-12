@@ -129,9 +129,9 @@ impl Obs {
                         }
                         WebSocketMessage::Text(text) => {
                             debug!("received text {}", text);
-                            let parsed = serde_json::from_str::<ResponseOrEvent>(&text).unwrap();
+                            let parsed = serde_json::from_str::<ResponseOrEvent>(&text);
                             match parsed {
-                                ResponseOrEvent::Response(response) => {
+                                Ok(ResponseOrEvent::Response(response)) => {
                                     trace!("received response {:#?}", response);
                                     if let Some(error) = &response.error {
                                         error!("error: {}", error);
@@ -148,9 +148,10 @@ impl Obs {
                                         }
                                     }
                                 }
-                                ResponseOrEvent::Event(event) => {
+                                Ok(ResponseOrEvent::Event(event)) => {
                                     info!("received event {:#?}", event);
                                 }
+                                Err(e) => error!("received invalid text: {} which failed to deserialize with {:#?}", text, e),
                             }
                         }
                         _ => {
