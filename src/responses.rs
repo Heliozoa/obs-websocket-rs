@@ -238,6 +238,7 @@ pub struct GetSyncOffset {
     pub offset: i32,
 }
 
+// TODO: deserialize source_settings
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct GetSourceSettings {
@@ -248,6 +249,7 @@ pub struct GetSourceSettings {
     pub source_settings: HashMap<String, Value>,
 }
 
+// TODO: deserialize source_settings
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct SetSourceSettings {
@@ -343,6 +345,7 @@ pub struct GetSourceFilters {
     pub filters: Vec<Filter>,
 }
 
+// TODO: deserialize settings
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct GetSourceFilterInfo {
     #[serde(flatten)]
@@ -525,7 +528,7 @@ pub struct Flags {
     pub service: bool,
 }
 
-// TODO: settings
+// TODO: figure out what settings is used for
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Output {
@@ -677,6 +680,7 @@ pub struct Caps {
     pub do_not_self_monitor: bool,
 }
 
+// TODO: deserialize default_settings (probably not worth it)
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct SourceTypes {
@@ -712,6 +716,7 @@ pub enum VerticalAlign {
     Bottom,
 }
 
+// TODO: deserialize settings
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct Filter {
     pub enabled: bool,

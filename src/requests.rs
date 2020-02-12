@@ -682,7 +682,7 @@ impl ToRequest for ResetSceneItem<'_> {
     }
 }
 
-// item_name or item_id required
+// TODO: improve API; item_name or item_id required
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct DeleteSceneItem<'a> {
     #[builder(default)]
@@ -711,7 +711,7 @@ impl ToRequest for DeleteSceneItem<'_> {
     }
 }
 
-// item_name or item_id required
+// TODO: improve API; item_name or item_id required
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct DuplicateSceneItem<'a> {
     #[builder(default)]
