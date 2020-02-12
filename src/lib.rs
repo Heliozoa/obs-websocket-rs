@@ -86,9 +86,10 @@ impl Obs {
     }
 
     fn init_sockets(
+        address: &str,
         port: u16,
     ) -> Result<(WebSocketStream, WebSocket<TcpStream>, WebSocket<TcpStream>)> {
-        let addr = format!("localhost:{}", port);
+        let addr = format!("{}:{}", address, port);
         let ws_addr = format!("ws://{}", addr);
         debug!("connecting to {}", addr);
         let recv_stream = TcpStream::connect(addr)?;
@@ -166,10 +167,10 @@ impl Obs {
         })
     }
 
-    pub fn connect(&mut self, port: u16) -> Result<()> {
-        debug!("connecting with port {}", port);
+    pub fn connect(&mut self, address: &str, port: u16) -> Result<()> {
+        debug!("connecting to {}:{}", address, port);
         let (thread_sender, thread_receiver) = channel(2048);
-        let (websocket_stream, send_socket, close_socket) = Obs::init_sockets(port)?;
+        let (websocket_stream, send_socket, close_socket) = Obs::init_sockets(address, port)?;
         let handle = Obs::start_handler(send_socket, thread_receiver, websocket_stream);
 
         self.socket_handle = Some(close_socket);
@@ -261,7 +262,7 @@ mod test {
     fn init_without_server(port: u16) -> Obs {
         debug!("initiating without server at {}", port);
         let mut obs = Obs::new();
-        obs.connect(port).unwrap();
+        obs.connect("localhost", port).unwrap();
         obs
     }
 
