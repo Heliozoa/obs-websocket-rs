@@ -210,7 +210,7 @@ pub struct GetSourcesList {
 pub struct GetSourceTypesList {
     #[serde(flatten)]
     pub response_data: Response,
-    pub sources: Vec<SourceTypes>,
+    pub types: Vec<SourceTypes>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
