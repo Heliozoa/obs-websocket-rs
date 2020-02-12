@@ -163,21 +163,15 @@ impl Obs {
     where
         T: ToRequest,
     {
-        info!("1");
         let val = req.to_request();
-        info!("2");
         let (os1, or1) = oneshot_channel();
-        info!("3");
         let message = Message::Outgoing(val, os1);
-        info!("4");
         self.thread_sender
             .as_mut()
             .expect("no thread sender")
             .try_send(message)
             .expect("failed to send");
-        info!("5");
         let res = executor::block_on(or1).expect("failed to receive");
-        info!("6");
         Ok(serde_json::from_str(&res)?)
     }
 
@@ -343,6 +337,7 @@ mod test {
 
     #[test]
     fn authenticate() {
+        let _ = env_logger::builder().is_test(true).try_init();
         let requests = vec![
             json!({
                 "request-type": "GetAuthRequired",
@@ -370,8 +365,20 @@ mod test {
         let expected = responses::Empty {
             response_data: response_data(),
         };
-        //request_test(requests, responses, expected, method);
-        // TODO
+        let (mut obs, handle) = init(responses);
+        let res = obs.authenticate("todo").unwrap();
+        let actual_requests = handle.join().unwrap();
+        obs.close();
+        for (request, actual_request) in requests.into_iter().zip(actual_requests) {
+            assert_eq!(
+                request, actual_request,
+                "request (left) did not match expected (right)"
+            );
+        }
+        assert_eq!(
+            res, expected,
+            "result (left) did not match expected (right)"
+        );
     }
 
     #[test]
