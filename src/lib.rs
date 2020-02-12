@@ -1224,4 +1224,41 @@ mod test {
         };
         request_test(vec![request], vec![response], req, expected);
     }
+
+    #[test]
+    fn duplicate_scene_item() {
+        let request = json!({
+            "request-type": "DuplicateSceneItem",
+            "message-id": "",
+            "fromScene": "scene1",
+            "toScene": "scene2",
+            "item": {
+                "name": "test",
+                "id": 1,
+            },
+        });
+        let req = DuplicateSceneItem::builder()
+            .from_scene("scene1")
+            .to_scene("scene2")
+            .item_name("test")
+            .item_id(1)
+            .build();
+        let response = json!({
+            "message-id": "",
+            "status": "ok",
+            "scene": "scene2",
+            "item": {
+                "id": 1,
+                "name": "test",
+            },
+        });
+        let expected = responses::DuplicateSceneItem {
+            scene: "scene2".to_string(),
+            item: responses::Item {
+                id: 1,
+                name: "test".to_string(),
+            },
+        };
+        request_test(vec![request], vec![response], req, expected);
+    }
 }

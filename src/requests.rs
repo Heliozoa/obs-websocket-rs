@@ -732,6 +732,7 @@ impl ToRequest for DuplicateSceneItem<'_> {
     fn to_request(&self) -> Value {
         json!({
             "request-type": "DuplicateSceneItem",
+            "message-id": self.message_id,
             "fromScene": self.from_scene,
             "toScene": self.to_scene,
             "item": {
