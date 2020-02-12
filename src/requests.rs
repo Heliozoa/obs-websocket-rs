@@ -798,7 +798,6 @@ impl ToRequest for GetSceneList<'_> {
     }
 }
 
-// TODO: items
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct ReorderSceneItems<'a> {
     #[builder(default)]
@@ -806,16 +805,27 @@ pub struct ReorderSceneItems<'a> {
     #[builder(default, setter(strip_option))]
     scene: Option<&'a str>,
     #[builder(default, setter(strip_option))]
-    item_names: Option<Vec<&'a str>>,
-    #[builder(default, setter(strip_option))]
-    item_ids: Option<Vec<i32>>,
+    items: Option<Vec<NameOrId<'a>>>,
 }
 
 impl ToRequest for ReorderSceneItems<'_> {
     type Output = responses::Empty;
 
     fn to_request(&self) -> Value {
-        let items = vec![0];
+        let items = self
+            .items
+            .as_ref()
+            .unwrap_or(&vec![])
+            .iter()
+            .map(|item| match item {
+                NameOrId::Name(name) => json!({
+                    "name": name,
+                }),
+                NameOrId::Id(id) => json!({
+                    "id": id,
+                }),
+            })
+            .collect::<Vec<_>>();
         json!({
             "request-type": "ReorderSceneItems",
             "message-id": self.message_id,
@@ -1972,4 +1982,11 @@ impl ToRequest for GetTransitionDuration<'_> {
             "message-id": self.message_id,
         })
     }
+}
+
+// #### other typedefs ####
+#[derive(Debug, PartialEq, Eq)]
+pub enum NameOrId<'a> {
+    Name(&'a str),
+    Id(i32),
 }

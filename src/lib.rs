@@ -760,4 +760,33 @@ mod test {
         };
         request_test(vec![request], vec![response], req, expected);
     }
+
+    #[test]
+    fn reorder_scene_items() {
+        let request = json!({
+            "request-type": "ReorderSceneItems",
+            "message-id": "",
+            "scene": "s",
+            "items": [
+                {
+                    "name": "n",
+                },
+                {
+                    "id": 1,
+                },
+            ],
+        });
+        let response = json!({
+            "message-id": "",
+            "status": "ok",
+        });
+        let req = ReorderSceneItems::builder()
+            .scene("s")
+            .items(vec![NameOrId::Name("n"), NameOrId::Id(1)])
+            .build();
+        let expected = responses::Empty {
+            response_data: response_data(),
+        };
+        request_test(vec![request], vec![response], req, expected);
+    }
 }
