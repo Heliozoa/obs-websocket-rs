@@ -127,6 +127,7 @@ impl Obs {
                     Message::Incoming(message) => match message {
                         WebSocketMessage::Close(_) => {
                             info!("websocket connection closed");
+                            panic!("connection to OBS lost");
                         }
                         WebSocketMessage::Text(text) => {
                             debug!("received text {}", text);
@@ -196,11 +197,20 @@ impl Obs {
         let (os1, or1) = oneshot_channel();
         let message = Message::Outgoing(val, os1);
         trace!("sending");
-        self.thread_sender
+        if self
+            .thread_sender
             .as_mut()
             .expect("no thread sender")
             .try_send(message)
-            .expect("failed to send");
+            .is_err()
+        {
+            self.thread_sender.as_mut().unwrap().close_channel();
+            self.socket_handle.as_mut().unwrap().close(None).unwrap();
+            self.thread_sender = None;
+            self.socket_handle = None;
+            self.thread_handle = None;
+            return Err(Error::Custom("connection interrupted".to_string()));
+        }
         trace!("sent");
         let res = executor::block_on(or1).expect("failed to receive");
         match res {
