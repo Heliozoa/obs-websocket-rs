@@ -1,6 +1,6 @@
-mod error;
-mod requests;
-mod responses;
+pub mod error;
+pub mod requests;
+pub mod responses;
 
 #[macro_use]
 extern crate typed_builder;
