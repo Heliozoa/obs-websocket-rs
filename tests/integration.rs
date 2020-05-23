@@ -1,7 +1,6 @@
 // requires an OBS WebSocket server to be on with server port 4444 and password 1234
 
-use obs_websocket::obs::Obs;
-use obs_websocket::requests;
+use obs_websocket::{obs::Obs, requests};
 
 const ADDRESS: &'static str = "localhost";
 const PORT: u16 = 4444;

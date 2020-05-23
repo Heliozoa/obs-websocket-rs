@@ -1,16 +1,22 @@
+//! Crate error types
+
+use futures::channel::oneshot::Canceled;
 use thiserror::Error;
 use tungstenite::handshake::{HandshakeError, HandshakeRole};
 
+/// Wraps all the errors that can occur in the crate
 #[derive(Debug, Error)]
 pub enum ObsError {
     #[error("Connection interrupted")]
     ConnectionInterrupted,
-    #[error("Handled channel closed")]
-    HandlerChannelClosed,
+    #[error("Oneshot channel sender closed: {0}")]
+    OneshotCanceled(Canceled),
     #[error("Not connected")]
     NotConnected,
+    #[error("No authentication required")]
+    NoAuthRequired,
 
-    #[error("OBS error: {0}")]
+    #[error("Error from OBS: {0}")]
     ObsError(String),
     #[error("Handshake interrupted")]
     HandshakeInterrupted,

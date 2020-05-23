@@ -3,17 +3,13 @@
 mod websocket_stream;
 use websocket_stream::WebSocketStream;
 
-use crate::error::ObsError;
-use crate::events;
-use crate::requests::*;
-use crate::responses;
+use crate::{error::ObsError, events, requests::*, responses};
 
 use base64;
-use futures::channel::oneshot::Sender as OneshotSender;
 use futures::{
     channel::{
         mpsc::{self, Receiver, Sender},
-        oneshot::channel as oneshot_channel,
+        oneshot::{channel as oneshot_channel, Sender as OneshotSender},
     },
     executor, future,
     stream::{self, StreamExt, TryStreamExt},
@@ -22,6 +18,7 @@ use serde::Deserialize;
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::{
+    collections::HashMap,
     net::{TcpStream, ToSocketAddrs},
     thread::{self, JoinHandle},
     time::Duration,
@@ -38,105 +35,7 @@ impl Obs {
         Obs::default()
     }
 
-    fn init_sockets(
-        address: &str,
-        port: u16,
-    ) -> Result<(WebSocketStream, WebSocket<TcpStream>, WebSocket<TcpStream>), ObsError> {
-        let addr = format!("{}:{}", address, port);
-        let ws_addr = format!("ws://{}", addr);
-        log::debug!("connecting to {}", addr);
-        let recv_stream = TcpStream::connect_timeout(
-            &addr.to_socket_addrs()?.next().expect("no addresses parsed"),
-            Duration::from_millis(100),
-        )?;
-        recv_stream
-            .set_read_timeout(Some(Duration::from_millis(100)))
-            .unwrap();
-        let send_stream = recv_stream.try_clone()?;
-        let close_stream = recv_stream.try_clone()?;
-        let (recv_socket, _res) = tungstenite::client(ws_addr, recv_stream)?;
-        close_stream.set_nonblocking(true)?;
-
-        let recv_socket_iter = WebSocketStream(recv_socket);
-        let send_socket = WebSocket::from_raw_socket(send_stream, Role::Client, None);
-        let close_socket = WebSocket::from_raw_socket(close_stream, Role::Client, None);
-        Ok((recv_socket_iter, send_socket, close_socket))
-    }
-
-    fn start_handler(
-        mut send_socket: WebSocket<TcpStream>,
-        outgoing_receiver: Receiver<Message>,
-        websocket_stream: WebSocketStream,
-        mut event_sender: Sender<events::Event>,
-    ) -> JoinHandle<()> {
-        log::debug!("starting handler");
-        thread::Builder::new().name("handler".to_string()).spawn(move || {
-            let outgoing_receiver_adapted = outgoing_receiver.map(|msg| Ok(msg));
-            let websocket_stream_adapted = websocket_stream.map(|msg| msg.map_err(|err| std::result::Result::<(), ()>::Err(err)));
-            let streams = stream::select(outgoing_receiver_adapted, websocket_stream_adapted);
-            let mut pending_sender = None;
-            let fut = streams.try_for_each(|message| {
-                log::trace!("received message");
-                match message {
-                    Message::Outgoing(json, sender) => {
-                        log::trace!("received outgoing message");
-                        send_socket
-                            .write_message(WebSocketMessage::text(json.to_string()))
-                            .expect("failed to write message");
-                        log::debug!("sent text {}", json);
-                        pending_sender = Some(sender);
-                    }
-                    Message::Incoming(message) => match message {
-                        WebSocketMessage::Close(_) => {
-                            log::info!("websocket connection closed");
-                            return future::err(Err(()));
-                        }
-                        WebSocketMessage::Text(text) => {
-                            log::debug!("received text {}", text);
-                            let parsed = serde_json::from_str::<ResponseOrEvent>(&text);
-                            match parsed {
-                                Ok(ResponseOrEvent::Response(response)) => {
-                                    log::trace!("received response {:#?}", response);
-                                    if let Some(error) = &response.error {
-                                        log::error!("error: {}", error);
-                                        if let Some(sender) = pending_sender.take() {
-                                            sender.send(Err(response)).expect("failed to send");
-                                        } else {
-                                            log::warn!("unexpected response");
-                                        }
-                                    } else {
-                                        if let Some(sender) = pending_sender.take() {
-                                            sender.send(Ok(text)).expect("failed to send");
-                                        } else {
-                                            log::warn!("unexpected response");
-                                        }
-                                    }
-                                }
-                                Ok(ResponseOrEvent::Event(event)) => {
-                                    log::info!("received event {:#?}", event);
-                                    if event_sender.try_send(event).is_err() {
-                                        log::error!("failed to send event");
-                                    };
-                                }
-                                Err(e) => log::error!("received invalid text: {} which failed to deserialize with {:#?}", text, e),
-                            }
-                        }
-                        _ => {
-                            log::warn!("unexpected websocket message");
-                        }
-                    },
-                }
-                future::ready(Ok(()))
-            });
-            let res = executor::block_on(fut);
-            match res {
-                Ok(ok) => log::debug!("{:#?}", ok),
-                Err(err) => log::debug!("{:#?}", err),
-            }
-            log::info!("receivers closed");
-        }).expect("failed to create thread")
-    }
-
+    /// Attempts to connect to OBS.
     pub fn connect(&mut self, address: &str, port: u16) -> Result<(), ObsError> {
         log::debug!("connecting to {}:{}", address, port);
         let (thread_sender, thread_receiver) = mpsc::channel(2048);
@@ -154,7 +53,8 @@ impl Obs {
         Ok(())
     }
 
-    pub fn close(mut self) {
+    /// Closes the connection to OBS (if any).
+    pub fn close(&mut self) {
         if let Some(ConnectionData {
             mut thread_sender,
             mut socket_handle,
@@ -174,32 +74,32 @@ impl Obs {
         }
     }
 
+    /// Sends the given request to OBS and blocks until a response has been received.
+    // TODO: async?
     pub fn request<T>(&mut self, req: &T) -> Result<T::Output, ObsError>
     where
         T: Request + std::fmt::Debug,
     {
-        if let Some(ConnectionData {
-            thread_sender,
-            socket_handle,
-            thread_handle: _,
-            event_receiver: _,
-        }) = &mut self.connection_data
-        {
+        if let Some(ConnectionData { thread_sender, .. }) = self.connection_data.as_mut() {
             log::debug!("requesting {:#?}", req);
-            let val = req.to_json();
-            log::trace!("converted request to json {}", val);
-            let (os1, or1) = oneshot_channel();
-            let message = Message::Outgoing(val, os1);
+            let value = req.to_json();
+            log::trace!("converted request to json {}", value);
+            let (oneshot_sender, oneshot_receiver) = oneshot_channel();
+            let message = Message::Outgoing {
+                message_id: req.message_id().to_string(),
+                value,
+                sender: oneshot_sender,
+            };
             log::trace!("sending");
             if thread_sender.try_send(message).is_err() {
-                thread_sender.close_channel();
-                socket_handle.close(None)?;
-                self.connection_data = None;
+                // failed to connect to thread, close connection
+                self.close();
                 return Err(ObsError::ConnectionInterrupted);
             }
             log::trace!("sent");
-            let res = executor::block_on(or1);
+            let res = executor::block_on(oneshot_receiver);
             match res {
+                // received something from channel
                 Ok(res) => match res {
                     Ok(res) => {
                         log::debug!("received response {}", res);
@@ -213,9 +113,9 @@ impl Obs {
                         ))
                     }
                 },
-                Err(e) => {
-                    log::info!("channel to handler closed: {}", e);
-                    Err(ObsError::HandlerChannelClosed)
+                Err(canceled) => {
+                    log::info!("channel to handler closed: {}", canceled);
+                    Err(ObsError::OneshotCanceled(canceled))
                 }
             }
         } else {
@@ -223,6 +123,7 @@ impl Obs {
         }
     }
 
+    /// Tries to authenticate with OBS. Returns an error if no authentication is required.
     pub fn authenticate(&mut self, password: &str) -> Result<responses::Empty, ObsError> {
         let auth = self.request(&GetAuthRequired::builder().build())?;
         if auth.auth_required {
@@ -241,14 +142,115 @@ impl Obs {
             let req = Authenticate::builder().auth(&auth_response).build();
             Ok(self.request(&req)?)
         } else {
-            Err(ObsError::ObsError("no auth required".to_string()))
+            Err(ObsError::NoAuthRequired)
         }
+    }
+
+    pub fn check_event(&mut self) -> Option<events::Event> {
+        if let Some(data) = self.connection_data.as_mut() {
+            data.event_receiver.next();
+            todo!()
+        } else {
+            None
+        }
+    }
+
+    // initializes connection data
+    fn init_sockets(
+        address: &str,
+        port: u16,
+    ) -> Result<(WebSocketStream, WebSocket<TcpStream>, WebSocket<TcpStream>), ObsError> {
+        let addr = format!("{}:{}", address, port);
+        let ws_addr = format!("ws://{}", addr);
+        let recv_stream = TcpStream::connect_timeout(
+            &addr.to_socket_addrs()?.next().expect("no addresses parsed"),
+            Duration::from_millis(100),
+        )?;
+        recv_stream
+            .set_read_timeout(Some(Duration::from_millis(100)))
+            .unwrap();
+        let send_stream = recv_stream.try_clone()?;
+        let close_stream = recv_stream.try_clone()?;
+        let (recv_socket, _res) = tungstenite::client(ws_addr, recv_stream)?;
+        close_stream.set_nonblocking(true)?;
+
+        let recv_socket_iter = WebSocketStream(recv_socket);
+        let send_socket = WebSocket::from_raw_socket(send_stream, Role::Client, None);
+        let close_socket = WebSocket::from_raw_socket(close_stream, Role::Client, None);
+        Ok((recv_socket_iter, send_socket, close_socket))
+    }
+
+    // starts the handler thread
+    fn start_handler(
+        mut send_socket: WebSocket<TcpStream>,
+        outgoing_receiver: Receiver<Message>,
+        websocket_stream: WebSocketStream,
+        mut event_sender: Sender<events::Event>,
+    ) -> JoinHandle<()> {
+        log::debug!("starting handler");
+        thread::Builder::new().name("handler".to_string()).spawn(move || {
+            // map to result to make compatible with ws stream
+            let outgoing_receiver_adapted = outgoing_receiver.map(|m| Ok(m));
+
+            // combine streams for outgoing (JSON from user) and incoming (WS from OBS) messages to thread
+            let streams = stream::select(websocket_stream, outgoing_receiver_adapted);
+            let mut pending_senders = HashMap::new();
+
+            let fut = streams.try_for_each(|message| {
+                log::trace!("received message");
+                match message {
+                    Message::Close => {}
+                    Message::Outgoing { message_id, value, sender } => {
+                        log::trace!("received outgoing message");
+                        send_socket
+                            .write_message(WebSocketMessage::text(value.to_string()))
+                            .expect("failed to write message");
+                        log::debug!("sent text {}", value);
+                        pending_senders.insert(message_id, sender);
+                    }
+                    Message::Incoming(message) => match message {
+                        WebSocketMessage::Text(text) => {
+                            log::debug!("received text {}", text);
+                            let parsed = serde_json::from_str::<ResponseOrEvent>(&text);
+                            match parsed {
+                                Ok(ResponseOrEvent::Response(response)) => {
+                                    if let Some(sender) = pending_senders.remove(&response.message_id) {
+                                        log::trace!("received response {:#?}", response);
+                                        if let Some(error) = &response.error {
+                                            log::error!("error: {}", error);
+                                            sender.send(Err(response)).expect("failed to send");
+                                        } else {
+                                            sender.send(Ok(text)).expect("failed to send");
+                                        }
+                                    } else {
+                                        log::warn!("unexpected response");
+                                    }
+                                }
+                                Ok(ResponseOrEvent::Event(event)) => {
+                                    log::info!("received event {:#?}", event);
+                                    if event_sender.try_send(event).is_err() {
+                                        log::error!("failed to send event");
+                                    };
+                                }
+                                Err(e) => log::error!("received invalid text: {} which failed to deserialize with {:#?}", text, e),
+                            }
+                        }
+                        unexpected => {
+                            log::warn!("unexpected websocket message: {:?}", unexpected);
+                        }
+                    },
+                }
+                future::ok(())
+            });
+            let res = executor::block_on(fut);
+            log::info!("res {:?}", res);
+            log::info!("receivers closed");
+        }).expect("failed to create thread")
     }
 }
 
 // message from the WebSocket server
 #[derive(Deserialize, Debug, PartialEq)]
-#[serde(rename_all = "kebab-case")]
 #[serde(untagged)]
 enum ResponseOrEvent {
     Response(responses::Response),
@@ -258,11 +260,17 @@ enum ResponseOrEvent {
 // message used to communicate with the handler channel that owns the WebSocket connection
 #[derive(Debug)]
 enum Message {
-    Outgoing(Value, OneshotSender<Result<String, responses::Response>>),
+    // message id, JSON to be sent, and oneshot sender to send the result back with
+    Outgoing {
+        message_id: String,
+        value: Value,
+        sender: OneshotSender<Result<String, responses::Response>>,
+    },
     Incoming(WebSocketMessage),
+    Close,
 }
 
-// all the data related to the WebSocket connection
+// container for data related to the WebSocket connection
 struct ConnectionData {
     socket_handle: WebSocket<TcpStream>,
     thread_handle: JoinHandle<()>,

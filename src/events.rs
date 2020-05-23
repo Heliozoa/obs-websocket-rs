@@ -1,3 +1,5 @@
+//! Event types. Sent by the server as they occur in OBS.
+
 use serde::Deserialize;
 
 #[derive(Deserialize, Debug, PartialEq)]
