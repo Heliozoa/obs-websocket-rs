@@ -20,8 +20,8 @@ impl Stream for WebSocketStream {
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         let message = Pin::into_inner(self).0.read_message();
         match message {
-            // connection closed, close stream
-            Ok(WebSocketMessage::Close(_)) => Poll::Ready(None),
+            // connection closed, close stream with error so handler can react
+            Ok(WebSocketMessage::Close(_)) => Poll::Ready(Some(Err(StreamError::Close))),
             // OK, return message
             Ok(message) => Poll::Ready(Some(Ok(Message::Incoming(message)))),
             Err(error) => match error {
@@ -53,6 +53,9 @@ impl Stream for WebSocketStream {
 
 #[derive(Error, Debug)]
 pub enum StreamError {
+    #[error("Close handler")]
+    Close,
+
     #[error(transparent)]
     Tungstenite(#[from] tungstenite::error::Error),
     #[error(transparent)]

@@ -1,7 +1,7 @@
 //! Contains OBS, the primary struct for interacting with the OBS WebSocket server.
 
 mod websocket_stream;
-use websocket_stream::WebSocketStream;
+use websocket_stream::{StreamError, WebSocketStream};
 
 use crate::{error::ObsError, events, requests::*, responses};
 
@@ -199,7 +199,6 @@ impl Obs {
             let fut = streams.try_for_each(|message| {
                 log::trace!("received message");
                 match message {
-                    Message::Close => {}
                     Message::Outgoing { message_id, value, sender } => {
                         log::trace!("received outgoing message");
                         send_socket
@@ -242,8 +241,10 @@ impl Obs {
                 }
                 future::ok(())
             });
-            let res = executor::block_on(fut);
-            log::info!("res {:?}", res);
+            match executor::block_on(fut) {
+                Err(StreamError::Close) => (), // OK, closed properly
+                other => log::warn!("Unexpected result {:?}", other),
+            }
             log::info!("receivers closed");
         }).expect("failed to create thread")
     }
@@ -267,7 +268,6 @@ enum Message {
         sender: OneshotSender<Result<String, responses::Response>>,
     },
     Incoming(WebSocketMessage),
-    Close,
 }
 
 // container for data related to the WebSocket connection
