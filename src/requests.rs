@@ -177,35 +177,6 @@ impl Request for GetVideoInfo<'_> {
 }
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
-pub struct OpenProjector<'a> {
-    #[builder(default)]
-    message_id: &'a str,
-    #[builder(default, setter(strip_option))]
-    projector_type: Option<String>,
-    #[builder(default, setter(strip_option))]
-    monitor: Option<Monitor>,
-    #[builder(default, setter(strip_option))]
-    name: Option<String>,
-}
-
-impl Request for OpenProjector<'_> {
-    type Output = responses::Empty;
-
-    fn to_json(&self) -> Value {
-        let monitor = self.monitor.as_ref().and_then(Monitor::to_monitor);
-        let geometry = self.monitor.as_ref().and_then(Monitor::to_geometry);
-        json!({
-            "request-type": "OpenProjector",
-            "message-id": self.message_id,
-            "type": self.projector_type,
-            "monitor": monitor,
-            "geometry": geometry,
-            "name": self.name,
-        })
-    }
-}
-
-#[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct ListOutputs<'a> {
     #[builder(default)]
     message_id: &'a str,

@@ -174,7 +174,7 @@ impl Obs {
         }
     }
 
-    fn request<T>(&mut self, req: T) -> Result<T::Output, ObsError>
+    pub fn request<T>(&mut self, req: &T) -> Result<T::Output, ObsError>
     where
         T: Request + std::fmt::Debug,
     {
@@ -224,7 +224,7 @@ impl Obs {
     }
 
     pub fn authenticate(&mut self, password: &str) -> Result<responses::Empty, ObsError> {
-        let auth = self.request(GetAuthRequired::builder().build())?;
+        let auth = self.request(&GetAuthRequired::builder().build())?;
         if auth.auth_required {
             log::info!("auth required");
             let challenge = auth.challenge.expect("should have challenge");
@@ -239,7 +239,7 @@ impl Obs {
             let auth_response = base64::encode(&auth_response_hash);
             log::info!("authing");
             let req = Authenticate::builder().auth(&auth_response).build();
-            Ok(self.request(req)?)
+            Ok(self.request(&req)?)
         } else {
             Err(ObsError::ObsError("no auth required".to_string()))
         }
@@ -330,7 +330,7 @@ mod test {
     {
         let _ = env_logger::builder().is_test(true).try_init();
         let (mut obs, handle) = init(responses);
-        let res = obs.request(request).expect("request returned err");
+        let res = obs.request(&request).expect("request returned err");
         let actual_requests = handle.join().expect("failed to join");
         obs.close();
         for (request, actual_request) in requests.into_iter().zip(actual_requests) {
@@ -836,7 +836,7 @@ mod test {
             websocket.close(None).expect("close");
         });
         obs.connect("localhost", port).expect("connect");
-        assert!(obs.request(GetVersion::default()).is_err());
+        assert!(obs.request(&GetVersion::default()).is_err());
     }
 
     #[test]
@@ -855,7 +855,7 @@ mod test {
             panic!();
         });
         obs.connect("localhost", port).expect("connect");
-        assert!(obs.request(GetVersion::default()).is_err());
+        assert!(obs.request(&GetVersion::default()).is_err());
     }
 
     #[test]
