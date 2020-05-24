@@ -6,14 +6,22 @@ const ADDRESS: &'static str = "localhost";
 const PORT: u16 = 4444;
 const PASSWORD: &'static str = "1234";
 
+fn init() {
+    let _ = env_logger::builder().is_test(true).try_init();
+}
+
 #[test]
-fn test() {
-    let mut obs = Obs::new();
-    obs.connect(ADDRESS, PORT).unwrap();
-    obs.authenticate(PASSWORD).unwrap();
-    let req = requests::GetVersion::default();
-    let res = obs.request(&req).unwrap();
-    println!("{:?}", res);
-    obs.close();
-    panic!()
+fn asyncer() {
+    init();
+
+    smol::run(async {
+        let mut obs = Obs::new();
+        obs.connect(ADDRESS, PORT).await.unwrap();
+        obs.authenticate(PASSWORD).await.unwrap();
+        let req = requests::GetVersion::default();
+        let res = obs.request(&req).await.unwrap();
+        println!("{:?}", res);
+        obs.close().await;
+        panic!();
+    });
 }

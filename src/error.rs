@@ -1,8 +1,11 @@
 //! Crate error types
 
+use async_tungstenite::tungstenite::{
+    self,
+    handshake::{HandshakeError, HandshakeRole},
+};
 use futures::channel::oneshot::Canceled;
 use thiserror::Error;
-use tungstenite::handshake::{HandshakeError, HandshakeRole};
 
 /// Wraps all the errors that can occur in the crate
 #[derive(Debug, Error)]
@@ -15,6 +18,8 @@ pub enum ObsError {
     NotConnected,
     #[error("No authentication required")]
     NoAuthRequired,
+    #[error("Tungstenite timed out")]
+    TungsteniteTimeout,
 
     #[error("Error from OBS: {0}")]
     ObsError(String),
