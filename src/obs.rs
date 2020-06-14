@@ -338,7 +338,7 @@ mod test {
 
     fn response_data() -> responses::Response {
         responses::Response {
-            message_id: "".to_string(),
+            message_id: "_0".to_string(),
         }
     }
 
@@ -377,16 +377,20 @@ mod test {
         (obs, handle)
     }
 
-    fn request_test<T>(requests: Vec<Value>, responses: Vec<Value>, request: T, expected: T::Output)
-    where
+    fn request_test<T>(
+        expected_requests: Vec<Value>,
+        expected_responses: Vec<Value>,
+        request: T,
+        expected: T::Output,
+    ) where
         T: Request + PartialEq + std::fmt::Debug,
         T::Output: PartialEq + std::fmt::Debug,
     {
-        let (mut obs, handle) = init(responses);
+        let (mut obs, handle) = init(expected_responses);
         let res = smol::run(obs.request(&request)).expect("request returned err");
         let actual_requests = handle.join().expect("failed to join");
-        smol::run(obs.disconnect());
-        for (request, actual_request) in requests.into_iter().zip(actual_requests) {
+        smol::run(obs.disconnect()).unwrap();
+        for (request, actual_request) in expected_requests.into_iter().zip(actual_requests) {
             assert_eq!(
                 request, actual_request,
                 "request (left) did not match expected (right)"
@@ -404,11 +408,11 @@ mod test {
 
         let request = json!({
             "request-type": "GetVersion",
-            "message-id": "",
+            "message-id": "_0",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "",
+            "message-id": "_0",
             "version": 1.1,
             "obs-websocket-version": "4.7.0",
             "obs-studio-version": "24.0.3",
@@ -416,7 +420,7 @@ mod test {
         });
         let req = GetVersion::default();
         let expected = responses::GetVersion {
-            message_id: "".to_string(),
+            message_id: "_0".to_string(),
             version: 1.1,
             obs_websocket_version: "4.7.0".to_string(),
             obs_studio_version: "24.0.3".to_string(),
@@ -431,18 +435,18 @@ mod test {
 
         let request = json!({
             "request-type": "GetAuthRequired",
-            "message-id": "",
+            "message-id": "_0",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "",
+            "message-id": "_0",
             "authRequired": true,
             "challenge": "ch",
             "salt": "sa",
         });
         let req = GetAuthRequired::default();
         let expected = responses::GetAuthRequired {
-            message_id: "".to_string(),
+            message_id: "_0".to_string(),
             auth_required: true,
             challenge: Some("ch".to_string()),
             salt: Some("sa".to_string()),
@@ -456,16 +460,16 @@ mod test {
 
         let request = json!({
             "request-type": "GetAuthRequired",
-            "message-id": "",
+            "message-id": "_0",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "",
+            "message-id": "_0",
             "authRequired": false,
         });
         let req = GetAuthRequired::default();
         let expected = responses::GetAuthRequired {
-            message_id: "".to_string(),
+            message_id: "_0".to_string(),
             auth_required: false,
             challenge: None,
             salt: None,
@@ -480,34 +484,34 @@ mod test {
         let requests = vec![
             json!({
                 "request-type": "GetAuthRequired",
-                "message-id": "",
+                "message-id": "_0",
             }),
             json!({
                 "request-type": "Authenticate",
-                "message-id": "",
+                "message-id": "_1",
                 "auth": "Z69J+b7C5Zj7jIXlqVp/xjp36sFSmpJpxZ41GN/UTu4=",
             }),
         ];
         let responses = vec![
             json!({
                 "status": "ok",
-                "message-id": "",
+                "message-id": "_0",
                 "authRequired": true,
                 "challenge": "123",
                 "salt": "456",
             }),
             json!({
                 "status": "ok",
-                "message-id": "",
+                "message-id": "_1",
             }),
         ];
         let expected = responses::Empty {
-            message_id: "".to_string(),
+            message_id: "_1".to_string(),
         };
         let (mut obs, handle) = init(responses);
         let res = smol::run(obs.authenticate("todo")).expect("authenticate");
         let actual_requests = handle.join().expect("join");
-        smol::run(obs.disconnect());
+        smol::run(obs.disconnect()).unwrap();
         for (request, actual_request) in requests.into_iter().zip(actual_requests) {
             assert_eq!(
                 request, actual_request,
@@ -526,11 +530,11 @@ mod test {
 
         let request = json!({
             "request-type": "GetStats",
-            "message-id": "",
+            "message-id": "_0",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "",
+            "message-id": "_0",
             "stats": {
                 "fps": 0.0,
                 "render-total-frames": 1,
@@ -545,7 +549,7 @@ mod test {
         });
         let req = GetStats::default();
         let expected = responses::GetStats {
-            message_id: "".to_string(),
+            message_id: "_0".to_string(),
             stats: responses::ObsStats {
                 fps: 0.0,
                 render_total_frames: 1,
@@ -567,11 +571,11 @@ mod test {
 
         let request = json!({
             "request-type": "GetVideoInfo",
-            "message-id": "",
+            "message-id": "_0",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "",
+            "message-id": "_0",
             "baseWidth": 0,
             "baseHeight": 1,
             "outputWidth": 2,
@@ -584,7 +588,7 @@ mod test {
         });
         let req = GetVideoInfo::default();
         let expected = responses::GetVideoInfo {
-            message_id: "".to_string(),
+            message_id: "_0".to_string(),
             base_width: 0,
             base_height: 1,
             output_width: 2,
@@ -604,11 +608,11 @@ mod test {
 
         let request = json!({
             "request-type": "ListOutputs",
-            "message-id": "",
+            "message-id": "_0",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "",
+            "message-id": "_0",
             "outputs": [
                 {
                     "name": "simple_file_output",
@@ -635,7 +639,7 @@ mod test {
         });
         let req = ListOutputs::default();
         let expected = responses::ListOutputs {
-            message_id: "".to_string(),
+            message_id: "_0".to_string(),
             outputs: vec![responses::Output {
                 name: "simple_file_output".to_string(),
                 output_type: "ffmpeg_muxer".to_string(),
@@ -667,12 +671,12 @@ mod test {
 
         let request = json!({
             "request-type": "GetOutputInfo",
-            "message-id": "",
+            "message-id": "_0",
             "outputName": "output1",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "",
+            "message-id": "_0",
             "outputInfo": {
                 "name": "simple_file_output",
                 "type": "ffmpeg_muxer",
@@ -697,7 +701,7 @@ mod test {
         });
         let req = GetOutputInfo::builder().output_name("output1").build();
         let expected = responses::GetOutputInfo {
-            message_id: "".to_string(),
+            message_id: "_0".to_string(),
             output_info: responses::Output {
                 name: "simple_file_output".to_string(),
                 output_type: "ffmpeg_muxer".to_string(),
@@ -729,13 +733,13 @@ mod test {
 
         let request = json!({
             "request-type": "GetSceneItemProperties",
-            "message-id": "",
+            "message-id": "_0",
             "scene-name": "scene",
             "item": "source"
         });
         let response = json!({
             "status": "ok",
-            "message-id": "",
+            "message-id": "_0",
             "name": "source",
             "position": {
                 "x": 0,
@@ -771,7 +775,7 @@ mod test {
             .item("source")
             .build();
         let expected = responses::GetSceneItemProperties {
-            message_id: "".to_string(),
+            message_id: "_0".to_string(),
             name: "source".to_string(),
             position: responses::Position {
                 x: 0.0,
@@ -808,7 +812,7 @@ mod test {
 
         let request = json!({
             "request-type": "SetSceneItemProperties",
-            "message-id": "",
+            "message-id": "_0",
             "scene-name": "scene",
             "item": "test",
             "position": {
@@ -837,7 +841,7 @@ mod test {
             },
         });
         let response = json!({
-            "message-id": "",
+            "message-id": "_0",
             "status": "ok",
         });
         let req = SetSceneItemProperties::builder()
@@ -861,7 +865,7 @@ mod test {
             .bounds_y(13.0)
             .build();
         let expected = responses::Empty {
-            message_id: "".to_string(),
+            message_id: "_0".to_string(),
         };
         request_test(vec![request], vec![response], req, expected);
     }
@@ -872,7 +876,7 @@ mod test {
 
         let request = json!({
             "request-type": "ReorderSceneItems",
-            "message-id": "",
+            "message-id": "_0",
             "scene": "s",
             "items": [
                 {
@@ -884,7 +888,7 @@ mod test {
             ],
         });
         let response = json!({
-            "message-id": "",
+            "message-id": "_0",
             "status": "ok",
         });
         let req = ReorderSceneItems::builder()
@@ -892,7 +896,7 @@ mod test {
             .items(vec![ItemId::Name("n"), ItemId::Id(1)])
             .build();
         let expected = responses::Empty {
-            message_id: "".to_string(),
+            message_id: "_0".to_string(),
         };
         request_test(vec![request], vec![response], req, expected);
     }
@@ -972,34 +976,5 @@ mod test {
         let mut obs = Obs::new();
         let res = smol::run(obs.connect("localhost", 1234));
         assert!(res.is_err());
-    }
-
-    #[test]
-    fn check_event() {
-        init_logger();
-
-        let server = TcpListener::bind("localhost:0").expect("failed to bind");
-        let port = server.local_addr().expect("local addr").port();
-        log::info!("mock server started at {}", port);
-        let handle = spawn(move || {
-            let (stream, _) = server.accept().expect("accept");
-            log::info!("incoming connection");
-            let mut websocket = accept(stream).expect("failed to accept");
-            let event = json!({
-                "update-type": "asd",
-            });
-            std::thread::sleep(std::time::Duration::from_secs(2));
-            websocket
-                .write_message(WebSocketMessage::Text(event.to_string()))
-                .expect("failed to write");
-            log::info!("closing mock server");
-            websocket.close(None).expect("failed to close");
-        });
-
-        let mut obs = Obs::new();
-        let mut event_receiver = smol::run(obs.connect("localhost", port)).unwrap();
-        let event = smol::run(event_receiver.next());
-        panic!("{:?}", event);
-        handle.join().unwrap();
     }
 }
