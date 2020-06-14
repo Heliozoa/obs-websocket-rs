@@ -21,7 +21,7 @@ fn asyncer() {
         let req = requests::GetVersion::default();
         let res = obs.request(&req).await.unwrap();
         println!("{:?}", res);
-        obs.close().await;
+        obs.disconnect().await;
         panic!();
     });
 }

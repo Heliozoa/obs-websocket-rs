@@ -10,21 +10,21 @@ pub trait Request {
     // type of the response from the server
     type Output: DeserializeOwned;
     // returns the message_id
-    fn message_id(&self) -> &str;
+    fn message_id(&self) -> Option<&str>;
     // converts the struct into a JSON value
     fn to_json(&self) -> Value;
 }
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct GetVersion<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
 }
 
 impl Request for GetVersion<'_> {
     type Output = responses::GetVersion;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -38,14 +38,14 @@ impl Request for GetVersion<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct GetAuthRequired<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
 }
 
 impl Request for GetAuthRequired<'_> {
     type Output = responses::GetAuthRequired;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -59,15 +59,15 @@ impl Request for GetAuthRequired<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct Authenticate<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     auth: &'a str,
 }
 
 impl Request for Authenticate<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -82,15 +82,15 @@ impl Request for Authenticate<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct SetHeartbeat<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     enable: bool,
 }
 
 impl Request for SetHeartbeat<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -105,15 +105,15 @@ impl Request for SetHeartbeat<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct SetFilenameFormatting<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     filename_formatting: &'a str,
 }
 
 impl Request for SetFilenameFormatting<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -128,14 +128,14 @@ impl Request for SetFilenameFormatting<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct GetFilenameFormatting<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
 }
 
 impl Request for GetFilenameFormatting<'_> {
     type Output = responses::GetFilenameFormatting;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -149,14 +149,14 @@ impl Request for GetFilenameFormatting<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct GetStats<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
 }
 
 impl Request for GetStats<'_> {
     type Output = responses::GetStats;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -170,8 +170,8 @@ impl Request for GetStats<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq)]
 pub struct BroadcastCustomMessage<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     realm: &'a str,
     data: Value,
 }
@@ -179,7 +179,7 @@ pub struct BroadcastCustomMessage<'a> {
 impl Request for BroadcastCustomMessage<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -195,14 +195,14 @@ impl Request for BroadcastCustomMessage<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct GetVideoInfo<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
 }
 
 impl Request for GetVideoInfo<'_> {
     type Output = responses::GetVideoInfo;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -216,14 +216,14 @@ impl Request for GetVideoInfo<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct ListOutputs<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
 }
 
 impl Request for ListOutputs<'_> {
     type Output = responses::ListOutputs;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -237,15 +237,15 @@ impl Request for ListOutputs<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetOutputInfo<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     output_name: &'a str,
 }
 
 impl Request for GetOutputInfo<'_> {
     type Output = responses::GetOutputInfo;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -260,15 +260,15 @@ impl Request for GetOutputInfo<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct StartOutput<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     output_name: &'a str,
 }
 
 impl Request for StartOutput<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -283,8 +283,8 @@ impl Request for StartOutput<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct StopOutput<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     output_name: &'a str,
     #[builder(default, setter(strip_option))]
     force: Option<bool>,
@@ -293,7 +293,7 @@ pub struct StopOutput<'a> {
 impl Request for StopOutput<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -309,15 +309,15 @@ impl Request for StopOutput<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct SetCurrentProfile<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     profile_name: &'a str,
 }
 
 impl Request for SetCurrentProfile<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -332,14 +332,14 @@ impl Request for SetCurrentProfile<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct GetCurrentProfile<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
 }
 
 impl Request for GetCurrentProfile<'_> {
     type Output = responses::GetCurrentProfile;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -353,14 +353,14 @@ impl Request for GetCurrentProfile<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct ListProfiles<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
 }
 
 impl Request for ListProfiles<'_> {
     type Output = responses::ListProfiles;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -374,14 +374,14 @@ impl Request for ListProfiles<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct StartStopRecording<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
 }
 
 impl Request for StartStopRecording<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -395,14 +395,14 @@ impl Request for StartStopRecording<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct StartRecording<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
 }
 
 impl Request for StartRecording<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -416,14 +416,14 @@ impl Request for StartRecording<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct StopRecording<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
 }
 
 impl Request for StopRecording<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -437,14 +437,14 @@ impl Request for StopRecording<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct PauseRecording<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
 }
 
 impl Request for PauseRecording<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -458,14 +458,14 @@ impl Request for PauseRecording<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct ResumeRecording<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
 }
 
 impl Request for ResumeRecording<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -479,15 +479,15 @@ impl Request for ResumeRecording<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct SetRecordingFolder<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     rec_folder: &'a str,
 }
 
 impl Request for SetRecordingFolder<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -502,14 +502,14 @@ impl Request for SetRecordingFolder<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct GetRecordingFolder<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
 }
 
 impl Request for GetRecordingFolder<'_> {
     type Output = responses::GetRecordingFolder;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -523,14 +523,14 @@ impl Request for GetRecordingFolder<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct StartStopReplayBuffer<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
 }
 
 impl Request for StartStopReplayBuffer<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -544,14 +544,14 @@ impl Request for StartStopReplayBuffer<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct StartReplayBuffer<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
 }
 
 impl Request for StartReplayBuffer<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -565,14 +565,14 @@ impl Request for StartReplayBuffer<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct StopReplayBuffer<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
 }
 
 impl Request for StopReplayBuffer<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -586,14 +586,14 @@ impl Request for StopReplayBuffer<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct SaveReplayBuffer<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
 }
 
 impl Request for SaveReplayBuffer<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -607,15 +607,15 @@ impl Request for SaveReplayBuffer<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct SetCurrentSceneCollection<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     sc_name: &'a str,
 }
 
 impl Request for SetCurrentSceneCollection<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -630,14 +630,14 @@ impl Request for SetCurrentSceneCollection<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct GetCurrentSceneCollection<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
 }
 
 impl Request for GetCurrentSceneCollection<'_> {
     type Output = responses::GetCurrentSceneCollection;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -651,14 +651,14 @@ impl Request for GetCurrentSceneCollection<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct ListSceneCollections<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
 }
 
 impl Request for ListSceneCollections<'_> {
     type Output = responses::ListSceneCollections;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -672,8 +672,8 @@ impl Request for ListSceneCollections<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetSceneItemProperties<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     #[builder(default, setter(strip_option))]
     scene_name: Option<&'a str>,
     item: &'a str,
@@ -682,7 +682,7 @@ pub struct GetSceneItemProperties<'a> {
 impl Request for GetSceneItemProperties<'_> {
     type Output = responses::GetSceneItemProperties;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -716,8 +716,8 @@ pub enum BoundsType {
 
 #[derive(Debug, TypedBuilder, PartialEq)]
 pub struct SetSceneItemProperties<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     #[builder(default, setter(strip_option))]
     scene_name: Option<&'a str>,
     item: &'a str,
@@ -758,7 +758,7 @@ pub struct SetSceneItemProperties<'a> {
 impl Request for SetSceneItemProperties<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -798,8 +798,8 @@ impl Request for SetSceneItemProperties<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct ResetSceneItem<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     #[builder(default, setter(strip_option))]
     scene_name: Option<&'a str>,
     item: &'a str,
@@ -808,7 +808,7 @@ pub struct ResetSceneItem<'a> {
 impl Request for ResetSceneItem<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -824,8 +824,8 @@ impl Request for ResetSceneItem<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct DeleteSceneItem<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     #[builder(default, setter(strip_option))]
     scene: Option<&'a str>,
     #[builder(default, setter(strip_option))]
@@ -835,7 +835,7 @@ pub struct DeleteSceneItem<'a> {
 impl Request for DeleteSceneItem<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -856,8 +856,8 @@ impl Request for DeleteSceneItem<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct DuplicateSceneItem<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     #[builder(default, setter(strip_option))]
     from_scene: Option<&'a str>,
     #[builder(default, setter(strip_option))]
@@ -869,7 +869,7 @@ pub struct DuplicateSceneItem<'a> {
 impl Request for DuplicateSceneItem<'_> {
     type Output = responses::DuplicateSceneItem;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -893,15 +893,15 @@ impl Request for DuplicateSceneItem<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct SetCurrentScene<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     scene_name: &'a str,
 }
 
 impl Request for SetCurrentScene<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -916,14 +916,14 @@ impl Request for SetCurrentScene<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct GetCurrentScene<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
 }
 
 impl Request for GetCurrentScene<'_> {
     type Output = responses::GetCurrentScene;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -937,14 +937,14 @@ impl Request for GetCurrentScene<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct GetSceneList<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
 }
 
 impl Request for GetSceneList<'_> {
     type Output = responses::GetSceneList;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -958,8 +958,8 @@ impl Request for GetSceneList<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct ReorderSceneItems<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     #[builder(default, setter(strip_option))]
     scene: Option<&'a str>,
     #[builder(default, setter(strip_option))]
@@ -969,7 +969,7 @@ pub struct ReorderSceneItems<'a> {
 impl Request for ReorderSceneItems<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -999,14 +999,14 @@ impl Request for ReorderSceneItems<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct GetSourcesList<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
 }
 
 impl Request for GetSourcesList<'_> {
     type Output = responses::GetSourcesList;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -1020,14 +1020,14 @@ impl Request for GetSourcesList<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct GetSourceTypesList<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
 }
 
 impl Request for GetSourceTypesList<'_> {
     type Output = responses::GetSourceTypesList;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -1041,15 +1041,15 @@ impl Request for GetSourceTypesList<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetVolume<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     source: &'a str,
 }
 
 impl Request for GetVolume<'_> {
     type Output = responses::GetVolume;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -1064,8 +1064,8 @@ impl Request for GetVolume<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq)]
 pub struct SetVolume<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     source: &'a str,
     volume: f64,
 }
@@ -1073,7 +1073,7 @@ pub struct SetVolume<'a> {
 impl Request for SetVolume<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -1089,15 +1089,15 @@ impl Request for SetVolume<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetMute<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     source: &'a str,
 }
 
 impl Request for GetMute<'_> {
     type Output = responses::GetMute;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -1112,8 +1112,8 @@ impl Request for GetMute<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct SetMute<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     source: &'a str,
     mute: bool,
 }
@@ -1121,7 +1121,7 @@ pub struct SetMute<'a> {
 impl Request for SetMute<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -1137,15 +1137,15 @@ impl Request for SetMute<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct ToggleMute<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     source: &'a str,
 }
 
 impl Request for ToggleMute<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -1160,8 +1160,8 @@ impl Request for ToggleMute<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct SetSyncOffset<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     source: &'a str,
     offset: i32,
 }
@@ -1169,7 +1169,7 @@ pub struct SetSyncOffset<'a> {
 impl Request for SetSyncOffset<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -1185,15 +1185,15 @@ impl Request for SetSyncOffset<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetSyncOffset<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     source: &'a str,
 }
 
 impl Request for GetSyncOffset<'_> {
     type Output = responses::GetSyncOffset;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -1208,8 +1208,8 @@ impl Request for GetSyncOffset<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetSourceSettings<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     source_name: &'a str,
     #[builder(default, setter(strip_option))]
     source_type: Option<&'a str>,
@@ -1218,7 +1218,7 @@ pub struct GetSourceSettings<'a> {
 impl Request for GetSourceSettings<'_> {
     type Output = responses::GetSourceSettings;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -1235,8 +1235,8 @@ impl Request for GetSourceSettings<'_> {
 // TODO: source settings
 #[derive(TypedBuilder, Debug, PartialEq)]
 pub struct SetSourceSettings<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     source_name: &'a str,
     #[builder(default, setter(strip_option))]
     source_type: Option<&'a str>,
@@ -1246,7 +1246,7 @@ pub struct SetSourceSettings<'a> {
 impl Request for SetSourceSettings<'_> {
     type Output = responses::SetSourceSettings;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -1263,15 +1263,15 @@ impl Request for SetSourceSettings<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetTextGDIPlusProperties<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     source: &'a str,
 }
 
 impl Request for GetTextGDIPlusProperties<'_> {
     type Output = responses::GetTextGDIPlusProperties;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -1294,8 +1294,8 @@ pub enum Alignment {
 
 #[derive(TypedBuilder, Debug, PartialEq)]
 pub struct SetTextGDIPlusProperties<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     source: &'a str,
     #[builder(default, setter(strip_option))]
     align: Option<Alignment>,
@@ -1356,7 +1356,7 @@ pub struct SetTextGDIPlusProperties<'a> {
 impl Request for SetTextGDIPlusProperties<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -1400,15 +1400,15 @@ impl Request for SetTextGDIPlusProperties<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetTextFreetype2Properties<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     source: &'a str,
 }
 
 impl Request for GetTextFreetype2Properties<'_> {
     type Output = responses::GetTextFreetype2Properties;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -1423,8 +1423,8 @@ impl Request for GetTextFreetype2Properties<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct SetTextFreetype2Properties<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     source: &'a str,
     #[builder(default, setter(strip_option))]
     color_1: Option<i32>,
@@ -1459,7 +1459,7 @@ pub struct SetTextFreetype2Properties<'a> {
 impl Request for SetTextFreetype2Properties<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -1490,15 +1490,15 @@ impl Request for SetTextFreetype2Properties<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetBrowserSourceProperties<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     source: &'a str,
 }
 
 impl Request for GetBrowserSourceProperties<'_> {
     type Output = responses::GetBrowserSourceProperties;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -1513,8 +1513,8 @@ impl Request for GetBrowserSourceProperties<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct SetBrowserSourceProperties<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     source: &'a str,
     #[builder(default, setter(strip_option))]
     is_local_file: Option<bool>,
@@ -1539,7 +1539,7 @@ pub struct SetBrowserSourceProperties<'a> {
 impl Request for SetBrowserSourceProperties<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -1563,14 +1563,14 @@ impl Request for SetBrowserSourceProperties<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct GetSpecialSources<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
 }
 
 impl Request for GetSpecialSources<'_> {
     type Output = responses::GetSpecialSources;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -1584,15 +1584,15 @@ impl Request for GetSpecialSources<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetSourceFilters<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     source_name: &'a str,
 }
 
 impl Request for GetSourceFilters<'_> {
     type Output = responses::GetSourceFilters;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -1607,8 +1607,8 @@ impl Request for GetSourceFilters<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetSourceFilterInfo<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     source_name: &'a str,
     filter_name: &'a str,
 }
@@ -1616,7 +1616,7 @@ pub struct GetSourceFilterInfo<'a> {
 impl Request for GetSourceFilterInfo<'_> {
     type Output = responses::GetSourceFilterInfo;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -1633,8 +1633,8 @@ impl Request for GetSourceFilterInfo<'_> {
 // TODO: filter settings
 #[derive(TypedBuilder, Debug, PartialEq)]
 pub struct AddFilterToSource<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     source_name: &'a str,
     filter_name: &'a str,
     filter_type: &'a str,
@@ -1644,7 +1644,7 @@ pub struct AddFilterToSource<'a> {
 impl Request for AddFilterToSource<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -1662,8 +1662,8 @@ impl Request for AddFilterToSource<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct RemoveFilterFromSource<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     source_name: &'a str,
     filter_name: &'a str,
 }
@@ -1671,7 +1671,7 @@ pub struct RemoveFilterFromSource<'a> {
 impl Request for RemoveFilterFromSource<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -1687,8 +1687,8 @@ impl Request for RemoveFilterFromSource<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct ReorderSourceFilter<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     source_name: &'a str,
     filter_name: &'a str,
     new_index: i32,
@@ -1697,7 +1697,7 @@ pub struct ReorderSourceFilter<'a> {
 impl Request for ReorderSourceFilter<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -1722,8 +1722,8 @@ pub enum MovementType {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct MoveSourceFilter<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     source_name: &'a str,
     filter_name: &'a str,
     movement_type: MovementType,
@@ -1732,7 +1732,7 @@ pub struct MoveSourceFilter<'a> {
 impl Request for MoveSourceFilter<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -1750,8 +1750,8 @@ impl Request for MoveSourceFilter<'_> {
 // TODO: filter settings
 #[derive(TypedBuilder, Debug, PartialEq)]
 pub struct SetSourceFilterSettings<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     source_name: &'a str,
     filter_name: &'a str,
     filter_settings: Value,
@@ -1760,7 +1760,7 @@ pub struct SetSourceFilterSettings<'a> {
 impl Request for SetSourceFilterSettings<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -1777,8 +1777,8 @@ impl Request for SetSourceFilterSettings<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct SetSourceFilterVisibility<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     source_name: &'a str,
     filter_name: &'a str,
     filter_enabled: bool,
@@ -1787,7 +1787,7 @@ pub struct SetSourceFilterVisibility<'a> {
 impl Request for SetSourceFilterVisibility<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -1819,8 +1819,8 @@ pub enum EmbedPictureFormat {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct TakeSourceScreenshot<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     source_name: &'a str,
     #[builder(default, setter(strip_option))]
     embed_picture_format: Option<EmbedPictureFormat>,
@@ -1835,7 +1835,7 @@ pub struct TakeSourceScreenshot<'a> {
 impl Request for TakeSourceScreenshot<'_> {
     type Output = responses::TakeSourceScreenshot;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -1854,14 +1854,14 @@ impl Request for TakeSourceScreenshot<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct GetStreamingStatus<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
 }
 
 impl Request for GetStreamingStatus<'_> {
     type Output = responses::GetStreamingStatus;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -1875,14 +1875,14 @@ impl Request for GetStreamingStatus<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct StartStopStreaming<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
 }
 
 impl Request for StartStopStreaming<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -1897,8 +1897,8 @@ impl Request for StartStopStreaming<'_> {
 // TODO:
 #[derive(TypedBuilder, Debug, PartialEq)]
 pub struct StartStreaming<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     #[builder(default, setter(strip_option))]
     stream_type: Option<&'a str>,
     #[builder(default, setter(strip_option))]
@@ -1918,7 +1918,7 @@ pub struct StartStreaming<'a> {
 impl Request for StartStreaming<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -1943,14 +1943,14 @@ impl Request for StartStreaming<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct StopStreaming<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
 }
 
 impl Request for StopStreaming<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -1964,8 +1964,8 @@ impl Request for StopStreaming<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct SetStreamSettings<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     #[builder(default, setter(strip_option))]
     stream_type: Option<&'a str>,
     #[builder(default, setter(strip_option))]
@@ -1984,7 +1984,7 @@ pub struct SetStreamSettings<'a> {
 impl Request for SetStreamSettings<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -2007,14 +2007,14 @@ impl Request for SetStreamSettings<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct GetStreamSettings<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
 }
 
 impl Request for GetStreamSettings<'_> {
     type Output = responses::GetStreamSettings;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -2028,14 +2028,14 @@ impl Request for GetStreamSettings<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct SaveStreamSettings<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
 }
 
 impl Request for SaveStreamSettings<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -2049,15 +2049,15 @@ impl Request for SaveStreamSettings<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct SendCaptions<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     text: &'a str,
 }
 
 impl Request for SendCaptions<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -2072,14 +2072,14 @@ impl Request for SendCaptions<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct GetStudioModeStatus<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
 }
 
 impl Request for GetStudioModeStatus<'_> {
     type Output = responses::GetStudioModeStatus;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -2093,14 +2093,14 @@ impl Request for GetStudioModeStatus<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct GetPreviewScene<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
 }
 
 impl Request for GetPreviewScene<'_> {
     type Output = responses::GetPreviewScene;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -2114,15 +2114,15 @@ impl Request for GetPreviewScene<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct SetPreviewScene<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     scene_name: &'a str,
 }
 
 impl Request for SetPreviewScene<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -2137,8 +2137,8 @@ impl Request for SetPreviewScene<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct TransitionToProgram<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     with_transition_name: Option<&'a str>,
     with_transition_duration: Option<&'a str>,
 }
@@ -2146,7 +2146,7 @@ pub struct TransitionToProgram<'a> {
 impl Request for TransitionToProgram<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -2164,14 +2164,14 @@ impl Request for TransitionToProgram<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct EnableStudioMode<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
 }
 
 impl Request for EnableStudioMode<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -2185,14 +2185,14 @@ impl Request for EnableStudioMode<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct DisableStudioMode<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
 }
 
 impl Request for DisableStudioMode<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -2206,14 +2206,14 @@ impl Request for DisableStudioMode<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct ToggleStudioMode<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
 }
 
 impl Request for ToggleStudioMode<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -2227,14 +2227,14 @@ impl Request for ToggleStudioMode<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct GetTransitionList<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
 }
 
 impl Request for GetTransitionList<'_> {
     type Output = responses::GetTransitionList;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -2248,14 +2248,14 @@ impl Request for GetTransitionList<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct GetCurrentTransition<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
 }
 
 impl Request for GetCurrentTransition<'_> {
     type Output = responses::GetCurrentTransition;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -2269,15 +2269,15 @@ impl Request for GetCurrentTransition<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct SetCurrentTransition<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     transition_name: &'a str,
 }
 
 impl Request for SetCurrentTransition<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -2292,15 +2292,15 @@ impl Request for SetCurrentTransition<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct SetTransitionDuration<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
     duration: i32,
 }
 
 impl Request for SetTransitionDuration<'_> {
     type Output = responses::Empty;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 
@@ -2315,14 +2315,14 @@ impl Request for SetTransitionDuration<'_> {
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
 pub struct GetTransitionDuration<'a> {
-    #[builder(default)]
-    message_id: &'a str,
+    #[builder(default, setter(strip_option))]
+    message_id: Option<&'a str>,
 }
 
 impl Request for GetTransitionDuration<'_> {
     type Output = responses::GetTransitionDuration;
 
-    fn message_id(&self) -> &str {
+    fn message_id(&self) -> Option<&str> {
         self.message_id
     }
 

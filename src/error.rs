@@ -5,6 +5,7 @@ use async_tungstenite::tungstenite::{
     handshake::{HandshakeError, HandshakeRole},
 };
 use futures::channel::oneshot::Canceled;
+use std::any::Any;
 use thiserror::Error;
 
 /// Wraps all the errors that can occur in the crate
@@ -20,6 +21,15 @@ pub enum ObsError {
     NoAuthRequired,
     #[error("Tungstenite timed out")]
     TungsteniteTimeout,
+    #[error("Already connected")]
+    AlreadyConnected,
+    #[error("Handler thread panicked")]
+    HandlerThreadError(Box<dyn Any + Send + 'static>),
+    #[error("Error(s) while disconnecting: socket: {socket_error:?}, thread: {thread_error:?}")]
+    DisconnectError {
+        socket_error: Option<Box<ObsError>>,
+        thread_error: Option<Box<ObsError>>,
+    },
 
     #[error("Error from OBS: {0}")]
     ObsError(String),

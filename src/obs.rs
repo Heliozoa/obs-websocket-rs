@@ -1,4 +1,4 @@
-//! Contains OBS, the primary struct for interacting with the OBS WebSocket server.
+//! Contains Obs, the primary struct for interacting with the OBS WebSocket server.
 
 use crate::{error::ObsError, events, requests::*, responses};
 
@@ -23,14 +23,17 @@ use smol::{Async, Timer};
 use std::{
     collections::HashMap,
     net::TcpStream,
+    num::Wrapping,
     thread::{self, JoinHandle},
     time::Duration,
 };
 
 type WebSocketHandle = WebSocketStream<Arc<Async<TcpStream>>>;
 
+/// The primary struct for interacting with the OBS WebSocket server.
 #[derive(Default)]
 pub struct Obs {
+    running_message_id: Wrapping<u32>,
     connection_data: Option<ConnectionData>,
 }
 
@@ -39,8 +42,17 @@ impl Obs {
         Obs::default()
     }
 
-    /// Attempts to connect to OBS.
-    pub async fn connect(&mut self, address: &str, port: u16) -> Result<(), ObsError> {
+    /// Attempts to connect to OBS. Starts a thread that handles
+    /// Returns an error if already connected.
+    pub async fn connect(
+        &mut self,
+        address: &str,
+        port: u16,
+    ) -> Result<UnboundedReceiver<events::Event>, ObsError> {
+        if self.connection_data.is_none() {
+            return Err(ObsError::AlreadyConnected);
+        }
+
         log::debug!("connecting to {}:{}", address, port);
 
         let (thread_sender, thread_receiver) = mpsc::unbounded();
@@ -54,56 +66,72 @@ impl Obs {
             socket_handle: close_handle,
             thread_handle,
             thread_sender,
-            event_receiver,
         });
-        Ok(())
+        Ok(event_receiver)
     }
 
-    /// Closes the connection to OBS (if any).
-    pub async fn close(&mut self) {
+    /// Disconnects from OBS if connected. Does nothing if already connected.
+    /// Returns an error if not connected, or if there was an issue closing the WebSocket socket
+    /// or closing the thread.
+    pub async fn disconnect(&mut self) -> Result<(), ObsError> {
         if let Some(ConnectionData {
             thread_sender,
             mut socket_handle,
             thread_handle,
-            mut event_receiver,
         }) = self.connection_data.take()
         {
             log::info!("closing connection");
+            // closing thread sender should close the thread
             thread_sender.close_channel();
-            socket_handle
-                .close(None)
-                .await
-                .expect("failed to close socket handle");
-            thread_handle.join().expect("failed to join thread handle");
-            event_receiver.close();
+            let socket_res = socket_handle.close(None).await;
+            let thread_res = thread_handle.join();
+
+            if socket_res.is_err() || thread_res.is_err() {
+                return Err(ObsError::DisconnectError {
+                    socket_error: socket_res.err().map(|e| Box::new(e.into())),
+                    thread_error: thread_res
+                        .err()
+                        .map(|e| Box::new(ObsError::HandlerThreadError(e))),
+                });
+            }
+            Ok(())
         } else {
-            log::info!("not connected");
+            return Err(ObsError::NotConnected);
         }
     }
 
-    /// Sends the given request to OBS and blocks until a response has been received.
-    // TODO: async?
+    /// Sends the given request to OBS.
+    /// If no message id is included in the request, a running number prepended with an underscore will be used.
     pub async fn request<T>(&mut self, req: &T) -> Result<T::Output, ObsError>
     where
         T: Request + std::fmt::Debug,
     {
+        // use request's message id if one was given, else use a running, wrapping number
+        // prepended with an underscore to reduce the chance of conflicting with user-given ids
+        let message_id = req.message_id().map(|s| s.to_string()).unwrap_or_else(|| {
+            let id = self.running_message_id.0;
+            self.running_message_id += Wrapping(1);
+            format!("_{}", id.to_string())
+        });
+
         if let Some(ConnectionData { thread_sender, .. }) = self.connection_data.as_mut() {
             log::debug!("requesting {:#?}", req);
             let value = req.to_json();
-            log::trace!("converted request to json {}", value);
+            log::trace!("converted request to json {:#}", value);
+            // channel for receiving the response
             let (oneshot_sender, oneshot_receiver) = oneshot_channel();
+
             let message = Message {
-                message_id: req.message_id().to_string(),
+                message_id,
                 value,
                 sender: oneshot_sender,
             };
             log::trace!("sending");
-            if thread_sender.unbounded_send(message).is_err() {
-                // failed to connect to thread, close connection
-                self.close().await;
-                return Err(ObsError::ConnectionInterrupted);
-            }
+            thread_sender
+                .unbounded_send(message)
+                .map_err(|_| ObsError::ConnectionInterrupted)?;
             log::trace!("sent");
+
             let res = oneshot_receiver.await;
             match res {
                 // received something from channel
@@ -114,14 +142,11 @@ impl Obs {
                     }
                     Err(res) => {
                         log::error!("received error {:#?}", res);
-                        Err(ObsError::ObsError(
-                            res.error
-                                .expect("error from sender should have error message"),
-                        ))
+                        Err(ObsError::ObsError(res))
                     }
                 },
                 Err(canceled) => {
-                    log::info!("channel to handler closed: {}", canceled);
+                    log::info!("channel to handler canceled: {}", canceled);
                     Err(ObsError::OneshotCanceled(canceled))
                 }
             }
@@ -150,15 +175,6 @@ impl Obs {
             Ok(self.request(&req).await?)
         } else {
             Err(ObsError::NoAuthRequired)
-        }
-    }
-
-    pub async fn check_event(&mut self) -> Option<events::Event> {
-        if let Some(data) = self.connection_data.as_mut() {
-            data.event_receiver.next().await;
-            todo!()
-        } else {
-            None
         }
     }
 
@@ -199,10 +215,7 @@ impl Obs {
     ) -> JoinHandle<()> {
         // handles incoming WebSocket messages
         async fn handle_incoming(
-            pending_senders: &mut HashMap<
-                String,
-                OneshotSender<Result<String, responses::Response>>,
-            >,
+            pending_senders: &mut HashMap<String, OneshotSender<Result<String, String>>>,
             event_sender: &mut UnboundedSender<events::Event>,
             message: String,
         ) {
@@ -210,13 +223,16 @@ impl Obs {
             let parsed = serde_json::from_str::<ResponseOrEvent>(&message);
             match parsed {
                 Ok(ResponseOrEvent::Response(response)) => {
-                    if let Some(sender) = pending_senders.remove(&response.message_id) {
+                    if let Some(sender) = pending_senders.remove(response.message_id()) {
                         log::trace!("received response {:#?}", response);
-                        if let Some(error) = &response.error {
-                            log::error!("error: {}", error);
-                            sender.send(Err(response)).expect("failed to send");
-                        } else {
-                            sender.send(Ok(message)).expect("failed to send");
+                        match response {
+                            responses::ResponseWrapper::Ok(ok) => {
+                                sender.send(Ok(message)).expect("failed to send");
+                            }
+                            responses::ResponseWrapper::Error(err) => {
+                                log::error!("error: {}", err.error);
+                                sender.send(Err(err.error)).expect("failed to send");
+                            }
                         }
                     } else {
                         log::warn!("unexpected response");
@@ -239,10 +255,7 @@ impl Obs {
         // handles outgoing Messages
         async fn handle_outgoing(
             send_socket: &mut WebSocketHandle,
-            pending_senders: &mut HashMap<
-                String,
-                OneshotSender<Result<String, responses::Response>>,
-            >,
+            pending_senders: &mut HashMap<String, OneshotSender<Result<String, String>>>,
             message: Message,
         ) {
             log::trace!("received outgoing message");
@@ -291,17 +304,21 @@ impl Obs {
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(untagged)]
 enum ResponseOrEvent {
-    Response(responses::Response),
+    Response(responses::ResponseWrapper),
     Event(events::Event),
 }
 
 // message used to communicate with the handler channel that owns the WebSocket connection
 #[derive(Debug)]
 struct Message {
-    // message id, JSON to be sent, and oneshot sender to send the result back with
+    // message id
     message_id: String,
+    // JSON to be sent
     value: Value,
-    sender: OneshotSender<Result<String, responses::Response>>,
+    // oneshot sender to send the result back with
+    // ok contains the entire message which has been checked to not be an error
+    // err contains the error message
+    sender: OneshotSender<Result<String, String>>,
 }
 
 // container for data related to the WebSocket connection
@@ -309,7 +326,6 @@ struct ConnectionData {
     socket_handle: WebSocketHandle,
     thread_handle: JoinHandle<()>,
     thread_sender: UnboundedSender<Message>,
-    event_receiver: UnboundedReceiver<events::Event>,
 }
 
 #[cfg(test)]
@@ -329,8 +345,6 @@ mod test {
     fn response_data() -> responses::Response {
         responses::Response {
             message_id: "".to_string(),
-            status: responses::Status::Ok,
-            error: None,
         }
     }
 
@@ -377,7 +391,7 @@ mod test {
         let (mut obs, handle) = init(responses);
         let res = smol::run(obs.request(&request)).expect("request returned err");
         let actual_requests = handle.join().expect("failed to join");
-        smol::run(obs.close());
+        smol::run(obs.disconnect());
         for (request, actual_request) in requests.into_iter().zip(actual_requests) {
             assert_eq!(
                 request, actual_request,
@@ -499,7 +513,7 @@ mod test {
         let (mut obs, handle) = init(responses);
         let res = smol::run(obs.authenticate("todo")).expect("authenticate");
         let actual_requests = handle.join().expect("join");
-        smol::run(obs.close());
+        smol::run(obs.disconnect());
         for (request, actual_request) in requests.into_iter().zip(actual_requests) {
             assert_eq!(
                 request, actual_request,
@@ -964,5 +978,34 @@ mod test {
         let mut obs = Obs::new();
         let res = smol::run(obs.connect("localhost", 1234));
         assert!(res.is_err());
+    }
+
+    #[test]
+    fn check_event() {
+        init_logger();
+
+        let server = TcpListener::bind("localhost:0").expect("failed to bind");
+        let port = server.local_addr().expect("local addr").port();
+        log::info!("mock server started at {}", port);
+        let handle = spawn(move || {
+            let (stream, _) = server.accept().expect("accept");
+            log::info!("incoming connection");
+            let mut websocket = accept(stream).expect("failed to accept");
+            let event = json!({
+                "update-type": "asd",
+            });
+            std::thread::sleep(std::time::Duration::from_secs(2));
+            websocket
+                .write_message(WebSocketMessage::Text(event.to_string()))
+                .expect("failed to write");
+            log::info!("closing mock server");
+            websocket.close(None).expect("failed to close");
+        });
+
+        let mut obs = Obs::new();
+        let mut event_receiver = smol::run(obs.connect("localhost", port)).unwrap();
+        let event = smol::run(event_receiver.next());
+        panic!("{:?}", event);
+        handle.join().unwrap();
     }
 }

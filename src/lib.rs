@@ -5,3 +5,7 @@ mod events;
 pub mod obs;
 pub mod requests;
 pub mod responses;
+
+pub use events::Event;
+pub use futures;
+pub use obs::Obs;

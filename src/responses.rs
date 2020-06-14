@@ -10,11 +10,33 @@ pub enum Status {
 }
 
 #[derive(Deserialize, Debug, Eq, PartialEq)]
+#[serde(rename_all = "lowercase")]
+#[serde(tag = "status")]
+pub enum ResponseWrapper {
+    Ok(Response),
+    Error(ResponseError),
+}
+
+impl ResponseWrapper {
+    pub fn message_id(&self) -> &str {
+        match self {
+            ResponseWrapper::Ok(r) => &r.message_id,
+            ResponseWrapper::Error(r) => &r.message_id,
+        }
+    }
+}
+
+#[derive(Deserialize, Debug, Eq, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub struct Response {
     pub message_id: String,
-    pub status: Status,
-    pub error: Option<String>,
+}
+
+#[derive(Deserialize, Debug, Eq, PartialEq)]
+#[serde(rename_all = "kebab-case")]
+pub struct ResponseError {
+    pub message_id: String,
+    pub error: String,
 }
 
 #[derive(Deserialize, Debug, Eq, PartialEq)]
@@ -748,4 +770,41 @@ pub struct StreamSettings {
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 pub struct Transition {
     pub name: String,
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn convert_successful_response() {
+        let successful = serde_json::json!(
+            {
+                "message-id": "id",
+                "status": "ok",
+                "other": "abcd",
+            }
+        );
+
+        let res: ResponseWrapper = serde_json::from_value(successful).unwrap();
+        if let ResponseWrapper::Error(_) = res {
+            panic!();
+        }
+    }
+
+    #[test]
+    fn convert_error_response() {
+        let successful = serde_json::json!(
+            {
+                "message-id": "id",
+                "status": "error",
+                "error": "errormsg",
+            }
+        );
+
+        let res: ResponseWrapper = serde_json::from_value(successful).unwrap();
+        if let ResponseWrapper::Ok(_) = res {
+            panic!();
+        }
+    }
 }
