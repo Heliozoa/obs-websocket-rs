@@ -3,16 +3,30 @@
 use super::responses;
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::{json, Value};
+use std::num::Wrapping;
 use typed_builder::TypedBuilder;
 
 // trait that all request types must implement
 pub trait Request {
     // type of the response from the server
     type Output: DeserializeOwned;
+
     // returns the message_id
     fn message_id(&self) -> Option<&str>;
+
     // converts the struct into a JSON value
-    fn to_json(&self) -> Value;
+    // use request's message id if one was given, else use running number
+    // prepended with an underscore to reduce the chance of conflicting with user-given ids
+    fn to_json(&self, message_id: String) -> Value;
+
+    // gets the message id or makes a new one using the running id
+    fn message_id_or_running(&self, running_id: &mut Wrapping<u32>) -> String {
+        self.message_id().map(|s| s.to_string()).unwrap_or_else(|| {
+            let id = running_id.0;
+            *running_id += Wrapping(1);
+            format!("_{}", id)
+        })
+    }
 }
 
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Default)]
@@ -28,10 +42,10 @@ impl Request for GetVersion<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "GetVersion",
-            "message-id": self.message_id,
+            "message-id": message_id,
         })
     }
 }
@@ -49,10 +63,10 @@ impl Request for GetAuthRequired<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "GetAuthRequired",
-            "message-id": self.message_id,
+            "message-id": message_id,
         })
     }
 }
@@ -71,10 +85,10 @@ impl Request for Authenticate<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "Authenticate",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "auth": self.auth,
         })
     }
@@ -94,10 +108,10 @@ impl Request for SetHeartbeat<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "SetHeartbeat",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "enable": self.enable,
         })
     }
@@ -117,10 +131,10 @@ impl Request for SetFilenameFormatting<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "SetFilenameFormatting",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "filename-formatting": self.filename_formatting,
         })
     }
@@ -139,10 +153,10 @@ impl Request for GetFilenameFormatting<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "GetFilenameFormatting",
-            "message-id": self.message_id,
+            "message-id": message_id,
         })
     }
 }
@@ -160,10 +174,10 @@ impl Request for GetStats<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "GetStats",
-            "message-id": self.message_id,
+            "message-id": message_id,
         })
     }
 }
@@ -183,10 +197,10 @@ impl Request for BroadcastCustomMessage<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "BroadcastCustomMessage",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "realm": self.realm,
             "data": self.data,
         })
@@ -206,10 +220,10 @@ impl Request for GetVideoInfo<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "GetVideoInfo",
-            "message-id": self.message_id,
+            "message-id": message_id,
         })
     }
 }
@@ -227,10 +241,10 @@ impl Request for ListOutputs<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "ListOutputs",
-            "message-id": self.message_id,
+            "message-id": message_id,
         })
     }
 }
@@ -249,10 +263,10 @@ impl Request for GetOutputInfo<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "GetOutputInfo",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "outputName": self.output_name,
         })
     }
@@ -272,10 +286,10 @@ impl Request for StartOutput<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "StartOutput",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "outputName": self.output_name,
         })
     }
@@ -297,10 +311,10 @@ impl Request for StopOutput<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "StopOutput",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "outputName": self.output_name,
             "force": self.force,
         })
@@ -321,10 +335,10 @@ impl Request for SetCurrentProfile<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "SetCurrentProfile",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "profile-name": self.profile_name,
         })
     }
@@ -343,10 +357,10 @@ impl Request for GetCurrentProfile<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "GetCurrentProfile",
-            "message-id": self.message_id,
+            "message-id": message_id,
         })
     }
 }
@@ -364,10 +378,10 @@ impl Request for ListProfiles<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "ListProfiles",
-            "message-id": self.message_id,
+            "message-id": message_id,
         })
     }
 }
@@ -385,10 +399,10 @@ impl Request for StartStopRecording<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "StartStopRecording",
-            "message-id": self.message_id,
+            "message-id": message_id,
         })
     }
 }
@@ -406,10 +420,10 @@ impl Request for StartRecording<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "StartRecording",
-            "message-id": self.message_id,
+            "message-id": message_id,
         })
     }
 }
@@ -427,10 +441,10 @@ impl Request for StopRecording<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "StopRecording",
-            "message-id": self.message_id,
+            "message-id": message_id,
         })
     }
 }
@@ -448,10 +462,10 @@ impl Request for PauseRecording<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "PauseRecording",
-            "message-id": self.message_id,
+            "message-id": message_id,
         })
     }
 }
@@ -469,10 +483,10 @@ impl Request for ResumeRecording<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "ResumeRecording",
-            "message-id": self.message_id,
+            "message-id": message_id,
         })
     }
 }
@@ -491,10 +505,10 @@ impl Request for SetRecordingFolder<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "SetRecordingFolder",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "rec-folder": self.rec_folder,
         })
     }
@@ -513,10 +527,10 @@ impl Request for GetRecordingFolder<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "GetRecordingFolder",
-            "message-id": self.message_id,
+            "message-id": message_id,
         })
     }
 }
@@ -534,10 +548,10 @@ impl Request for StartStopReplayBuffer<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "StartStopReplayBuffer",
-            "message-id": self.message_id,
+            "message-id": message_id,
         })
     }
 }
@@ -555,10 +569,10 @@ impl Request for StartReplayBuffer<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "StartReplayBuffer",
-            "message-id": self.message_id,
+            "message-id": message_id,
         })
     }
 }
@@ -576,10 +590,10 @@ impl Request for StopReplayBuffer<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "StopReplayBuffer",
-            "message-id": self.message_id,
+            "message-id": message_id,
         })
     }
 }
@@ -597,10 +611,10 @@ impl Request for SaveReplayBuffer<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "SaveReplayBuffer",
-            "message-id": self.message_id,
+            "message-id": message_id,
         })
     }
 }
@@ -619,10 +633,10 @@ impl Request for SetCurrentSceneCollection<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "SetCurrentSceneCollection",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "sc-name": self.sc_name,
         })
     }
@@ -641,10 +655,10 @@ impl Request for GetCurrentSceneCollection<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "GetCurrentSceneCollection",
-            "message-id": self.message_id,
+            "message-id": message_id,
         })
     }
 }
@@ -662,10 +676,10 @@ impl Request for ListSceneCollections<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "ListSceneCollections",
-            "message-id": self.message_id,
+            "message-id": message_id,
         })
     }
 }
@@ -686,10 +700,10 @@ impl Request for GetSceneItemProperties<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "GetSceneItemProperties",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "scene-name": self.scene_name,
             "item": self.item,
         })
@@ -762,9 +776,9 @@ impl Request for SetSceneItemProperties<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
-            "message-id": self.message_id,
+            "message-id": message_id,
             "request-type": "SetSceneItemProperties",
             "scene-name": self.scene_name,
             "item": self.item,
@@ -812,10 +826,10 @@ impl Request for ResetSceneItem<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "ResetSceneItem",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "scene-name": self.scene_name,
             "item": self.item,
         })
@@ -839,12 +853,12 @@ impl Request for DeleteSceneItem<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         let item_id = self.item_id.as_ref().and_then(ItemId::to_id);
         let item_name = self.item_id.as_ref().and_then(ItemId::to_name);
         json!({
             "request-type": "DeleteSceneItem",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "scene": self.scene,
             "item": {
                 "id": item_id,
@@ -873,12 +887,12 @@ impl Request for DuplicateSceneItem<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         let item_name = self.item_id.as_ref().and_then(ItemId::to_name);
         let item_id = self.item_id.as_ref().and_then(ItemId::to_id);
         json!({
             "request-type": "DuplicateSceneItem",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "fromScene": self.from_scene,
             "toScene": self.to_scene,
             "item": {
@@ -905,10 +919,10 @@ impl Request for SetCurrentScene<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "SetCurrentScene",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "scene-name": self.scene_name,
         })
     }
@@ -927,10 +941,10 @@ impl Request for GetCurrentScene<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "GetCurrentScene",
-            "message-id": self.message_id,
+            "message-id": message_id,
         })
     }
 }
@@ -948,10 +962,10 @@ impl Request for GetSceneList<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "GetSceneList",
-            "message-id": self.message_id,
+            "message-id": message_id,
         })
     }
 }
@@ -973,7 +987,7 @@ impl Request for ReorderSceneItems<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         let items = self
             .items
             .as_ref()
@@ -990,7 +1004,7 @@ impl Request for ReorderSceneItems<'_> {
             .collect::<Vec<_>>();
         json!({
             "request-type": "ReorderSceneItems",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "scene": self.scene,
             "items": items,
         })
@@ -1010,10 +1024,10 @@ impl Request for GetSourcesList<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "GetSourcesList",
-            "message-id": self.message_id,
+            "message-id": message_id,
         })
     }
 }
@@ -1031,10 +1045,10 @@ impl Request for GetSourceTypesList<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "GetSourceTypesList",
-            "message-id": self.message_id,
+            "message-id": message_id,
         })
     }
 }
@@ -1053,10 +1067,10 @@ impl Request for GetVolume<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "GetVolume",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "source": self.source,
         })
     }
@@ -1077,10 +1091,10 @@ impl Request for SetVolume<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "SetVolume",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "source": self.source,
             "volume": self.volume,
         })
@@ -1101,10 +1115,10 @@ impl Request for GetMute<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "GetMute",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "source": self.source,
         })
     }
@@ -1125,10 +1139,10 @@ impl Request for SetMute<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "SetMute",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "source": self.source,
             "mute": self.mute,
         })
@@ -1149,10 +1163,10 @@ impl Request for ToggleMute<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "ToggleMute",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "source": self.source,
         })
     }
@@ -1173,10 +1187,10 @@ impl Request for SetSyncOffset<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "SetSyncOffset",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "source": self.source,
             "offset": self.offset
         })
@@ -1197,10 +1211,10 @@ impl Request for GetSyncOffset<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "GetSyncOffset",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "source": self.source,
         })
     }
@@ -1222,10 +1236,10 @@ impl Request for GetSourceSettings<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "GetSourceSettings",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "sourceName": self.source_name,
             "sourceType": self.source_type,
         })
@@ -1250,10 +1264,10 @@ impl Request for SetSourceSettings<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "SetSourceSettings",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "sourceName": self.source_name,
             "sourceType": self.source_type,
             "sourceSettings": self.source_settings,
@@ -1275,10 +1289,10 @@ impl Request for GetTextGDIPlusProperties<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "GetTextGDIPlusProperties",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "source": self.source,
         })
     }
@@ -1360,10 +1374,10 @@ impl Request for SetTextGDIPlusProperties<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "SetTextGDIPlusProperties",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "source": self.source,
             "align": self.align,
             "bk-color": self.bk_color,
@@ -1412,10 +1426,10 @@ impl Request for GetTextFreetype2Properties<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "GetTextFreetype2Properties",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "source": self.source,
         })
     }
@@ -1463,10 +1477,10 @@ impl Request for SetTextFreetype2Properties<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "SetTextFreetype2Properties",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "source": self.source,
             "color1": self.color_1,
             "color2": self.color_2,
@@ -1502,10 +1516,10 @@ impl Request for GetBrowserSourceProperties<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "GetBrowserSourceProperties",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "source": self.source,
         })
     }
@@ -1543,10 +1557,10 @@ impl Request for SetBrowserSourceProperties<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "SetBrowserSourceProperties",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "source": self.source,
             "is_local_file": self.is_local_file,
             "local_file": self.local_file,
@@ -1574,10 +1588,10 @@ impl Request for GetSpecialSources<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "GetSpecialSources",
-            "message-id": self.message_id,
+            "message-id": message_id,
         })
     }
 }
@@ -1596,10 +1610,10 @@ impl Request for GetSourceFilters<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "GetSourceFilters",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "sourceName": self.source_name,
         })
     }
@@ -1620,10 +1634,10 @@ impl Request for GetSourceFilterInfo<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "GetSourceFilterInfo",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "sourceName": self.source_name,
             "filterName": self.filter_name,
         })
@@ -1648,10 +1662,10 @@ impl Request for AddFilterToSource<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "AddFilterToSource",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "sourceName": self.source_name,
             "filterName": self.filter_name,
             "filterType": self.filter_type,
@@ -1675,10 +1689,10 @@ impl Request for RemoveFilterFromSource<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "RemoveFilterFromSource",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "sourceName": self.source_name,
             "filterName": self.filter_name,
         })
@@ -1701,10 +1715,10 @@ impl Request for ReorderSourceFilter<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "ReorderSourceFilter",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "sourceName": self.source_name,
             "filterName": self.filter_name,
             "newIndex": self.new_index,
@@ -1736,10 +1750,10 @@ impl Request for MoveSourceFilter<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "MoveSourceFilter",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "sourceName": self.source_name,
             "filterName": self.filter_name,
             "movementType": self.movement_type,
@@ -1764,10 +1778,10 @@ impl Request for SetSourceFilterSettings<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "SetSourceFilterSettings",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "sourceName": self.source_name,
             "filterName": self.filter_name,
             "filterSettings": self.filter_settings,
@@ -1791,10 +1805,10 @@ impl Request for SetSourceFilterVisibility<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "SetSourceFilterVisibility",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "sourceName": self.source_name,
             "filterName": self.filter_name,
             "filterEnabled": self.filter_enabled,
@@ -1839,10 +1853,10 @@ impl Request for TakeSourceScreenshot<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "TakeSourceScreenshot",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "sourceName": self.source_name,
             "embedPictureFormat": self.embed_picture_format,
             "saveToFilePath": self.save_to_file_path,
@@ -1865,10 +1879,10 @@ impl Request for GetStreamingStatus<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "GetStreamingStatus",
-            "message-id": self.message_id,
+            "message-id": message_id,
         })
     }
 }
@@ -1886,10 +1900,10 @@ impl Request for StartStopStreaming<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "StartStopStreaming",
-            "message-id": self.message_id,
+            "message-id": message_id,
         })
     }
 }
@@ -1922,10 +1936,10 @@ impl Request for StartStreaming<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "StartStreaming",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "stream": {
                 "type": self.stream_type,
                 "metadata": self.stream_metadata,
@@ -1954,10 +1968,10 @@ impl Request for StopStreaming<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "StopStreaming",
-            "message-id": self.message_id,
+            "message-id": message_id,
         })
     }
 }
@@ -1988,10 +2002,10 @@ impl Request for SetStreamSettings<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "SetStreamSettings",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "type": self.stream_type,
             "settings": {
                 "server": self.server,
@@ -2018,10 +2032,10 @@ impl Request for GetStreamSettings<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "GetStreamSettings",
-            "message-id": self.message_id,
+            "message-id": message_id,
         })
     }
 }
@@ -2039,10 +2053,10 @@ impl Request for SaveStreamSettings<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "SaveStreamSettings",
-            "message-id": self.message_id,
+            "message-id": message_id,
         })
     }
 }
@@ -2061,10 +2075,10 @@ impl Request for SendCaptions<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "SendCaptions",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "text": self.text,
         })
     }
@@ -2083,10 +2097,10 @@ impl Request for GetStudioModeStatus<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "GetStudioModeStatus",
-            "message-id": self.message_id,
+            "message-id": message_id,
         })
     }
 }
@@ -2104,10 +2118,10 @@ impl Request for GetPreviewScene<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "GetPreviewScene",
-            "message-id": self.message_id,
+            "message-id": message_id,
         })
     }
 }
@@ -2126,10 +2140,10 @@ impl Request for SetPreviewScene<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "SetPreviewScene",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "scene-name": self.scene_name,
         })
     }
@@ -2150,10 +2164,10 @@ impl Request for TransitionToProgram<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "TransitionToProgram",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "with-transition": {
                 "name": self.with_transition_name,
                 "duration": self.with_transition_duration,
@@ -2175,10 +2189,10 @@ impl Request for EnableStudioMode<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "EnableStudioMode",
-            "message-id": self.message_id,
+            "message-id": message_id,
         })
     }
 }
@@ -2196,10 +2210,10 @@ impl Request for DisableStudioMode<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "DisableStudioMode",
-            "message-id": self.message_id,
+            "message-id": message_id,
         })
     }
 }
@@ -2217,10 +2231,10 @@ impl Request for ToggleStudioMode<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "ToggleStudioMode",
-            "message-id": self.message_id,
+            "message-id": message_id,
         })
     }
 }
@@ -2238,10 +2252,10 @@ impl Request for GetTransitionList<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "GetTransitionList",
-            "message-id": self.message_id,
+            "message-id": message_id,
         })
     }
 }
@@ -2259,10 +2273,10 @@ impl Request for GetCurrentTransition<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "GetCurrentTransition",
-            "message-id": self.message_id,
+            "message-id": message_id,
         })
     }
 }
@@ -2281,10 +2295,10 @@ impl Request for SetCurrentTransition<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "SetCurrentTransition",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "transition-name": self.transition_name,
         })
     }
@@ -2304,10 +2318,10 @@ impl Request for SetTransitionDuration<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "SetTransitionDuration",
-            "message-id": self.message_id,
+            "message-id": message_id,
             "duration": self.duration,
         })
     }
@@ -2326,10 +2340,10 @@ impl Request for GetTransitionDuration<'_> {
         self.message_id
     }
 
-    fn to_json(&self) -> Value {
+    fn to_json(&self, message_id: String) -> Value {
         json!({
             "request-type": "GetTransitionDuration",
-            "message-id": self.message_id,
+            "message-id": message_id,
         })
     }
 }

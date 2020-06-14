@@ -49,7 +49,7 @@ impl Obs {
         address: &str,
         port: u16,
     ) -> Result<UnboundedReceiver<events::Event>, ObsError> {
-        if self.connection_data.is_none() {
+        if self.connection_data.is_some() {
             return Err(ObsError::AlreadyConnected);
         }
 
@@ -106,18 +106,12 @@ impl Obs {
     where
         T: Request + std::fmt::Debug,
     {
-        // use request's message id if one was given, else use a running, wrapping number
-        // prepended with an underscore to reduce the chance of conflicting with user-given ids
-        let message_id = req.message_id().map(|s| s.to_string()).unwrap_or_else(|| {
-            let id = self.running_message_id.0;
-            self.running_message_id += Wrapping(1);
-            format!("_{}", id.to_string())
-        });
-
         if let Some(ConnectionData { thread_sender, .. }) = self.connection_data.as_mut() {
             log::debug!("requesting {:#?}", req);
-            let value = req.to_json();
+            let message_id = req.message_id_or_running(&mut self.running_message_id);
+            let value = req.to_json(message_id.clone());
             log::trace!("converted request to json {:#}", value);
+
             // channel for receiving the response
             let (oneshot_sender, oneshot_receiver) = oneshot_channel();
 
@@ -226,7 +220,7 @@ impl Obs {
                     if let Some(sender) = pending_senders.remove(response.message_id()) {
                         log::trace!("received response {:#?}", response);
                         match response {
-                            responses::ResponseWrapper::Ok(ok) => {
+                            responses::ResponseWrapper::Ok(_) => {
                                 sender.send(Ok(message)).expect("failed to send");
                             }
                             responses::ResponseWrapper::Error(err) => {
@@ -422,7 +416,7 @@ mod test {
         });
         let req = GetVersion::default();
         let expected = responses::GetVersion {
-            response_data: response_data(),
+            message_id: "".to_string(),
             version: 1.1,
             obs_websocket_version: "4.7.0".to_string(),
             obs_studio_version: "24.0.3".to_string(),
@@ -448,7 +442,7 @@ mod test {
         });
         let req = GetAuthRequired::default();
         let expected = responses::GetAuthRequired {
-            response_data: response_data(),
+            message_id: "".to_string(),
             auth_required: true,
             challenge: Some("ch".to_string()),
             salt: Some("sa".to_string()),
@@ -471,7 +465,7 @@ mod test {
         });
         let req = GetAuthRequired::default();
         let expected = responses::GetAuthRequired {
-            response_data: response_data(),
+            message_id: "".to_string(),
             auth_required: false,
             challenge: None,
             salt: None,
@@ -508,7 +502,7 @@ mod test {
             }),
         ];
         let expected = responses::Empty {
-            response_data: response_data(),
+            message_id: "".to_string(),
         };
         let (mut obs, handle) = init(responses);
         let res = smol::run(obs.authenticate("todo")).expect("authenticate");
@@ -551,7 +545,7 @@ mod test {
         });
         let req = GetStats::default();
         let expected = responses::GetStats {
-            response_data: response_data(),
+            message_id: "".to_string(),
             stats: responses::ObsStats {
                 fps: 0.0,
                 render_total_frames: 1,
@@ -590,7 +584,7 @@ mod test {
         });
         let req = GetVideoInfo::default();
         let expected = responses::GetVideoInfo {
-            response_data: response_data(),
+            message_id: "".to_string(),
             base_width: 0,
             base_height: 1,
             output_width: 2,
@@ -641,7 +635,7 @@ mod test {
         });
         let req = ListOutputs::default();
         let expected = responses::ListOutputs {
-            response_data: response_data(),
+            message_id: "".to_string(),
             outputs: vec![responses::Output {
                 name: "simple_file_output".to_string(),
                 output_type: "ffmpeg_muxer".to_string(),
@@ -703,7 +697,7 @@ mod test {
         });
         let req = GetOutputInfo::builder().output_name("output1").build();
         let expected = responses::GetOutputInfo {
-            response_data: response_data(),
+            message_id: "".to_string(),
             output_info: responses::Output {
                 name: "simple_file_output".to_string(),
                 output_type: "ffmpeg_muxer".to_string(),
@@ -777,7 +771,7 @@ mod test {
             .item("source")
             .build();
         let expected = responses::GetSceneItemProperties {
-            response_data: response_data(),
+            message_id: "".to_string(),
             name: "source".to_string(),
             position: responses::Position {
                 x: 0.0,
@@ -867,7 +861,7 @@ mod test {
             .bounds_y(13.0)
             .build();
         let expected = responses::Empty {
-            response_data: response_data(),
+            message_id: "".to_string(),
         };
         request_test(vec![request], vec![response], req, expected);
     }
@@ -898,7 +892,7 @@ mod test {
             .items(vec![ItemId::Name("n"), ItemId::Id(1)])
             .build();
         let expected = responses::Empty {
-            response_data: response_data(),
+            message_id: "".to_string(),
         };
         request_test(vec![request], vec![response], req, expected);
     }
