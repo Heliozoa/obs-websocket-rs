@@ -1,3 +1,5 @@
+pub use crate::common_types::*;
+
 use serde::{de, Deserialize, Deserializer};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -195,7 +197,7 @@ pub struct DuplicateSceneItem {
     pub item: Item,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Eq)]
+#[derive(Deserialize, Debug, PartialEq)]
 pub struct GetCurrentScene {
     #[serde(rename = "message-id")]
     pub message_id: String,
@@ -203,7 +205,7 @@ pub struct GetCurrentScene {
     pub sources: Vec<SceneItem>,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Eq)]
+#[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub struct GetSceneList {
     pub message_id: String,
@@ -564,53 +566,6 @@ pub struct Profile {
 pub struct SceneCollection {
     pub sc_name: String,
 }
-#[derive(Deserialize, Debug, PartialEq)]
-pub struct Position {
-    pub x: f64,
-    pub y: f64,
-    pub alignment: i32,
-}
-
-#[derive(Deserialize, Debug, PartialEq)]
-pub struct Scale {
-    pub x: f64,
-    pub y: f64,
-}
-
-#[derive(Deserialize, Debug, PartialEq, Eq)]
-pub struct Crop {
-    pub top: i32,
-    pub right: i32,
-    pub bottom: i32,
-    pub left: i32,
-}
-
-#[derive(Deserialize, Debug, PartialEq, Eq)]
-pub enum BoundsType {
-    #[serde(rename = "OBS_BOUNDS_NONE")]
-    None,
-    #[serde(rename = "OBS_BOUNDS_STRETCH")]
-    Stretch,
-    #[serde(rename = "OBS_BOUNDS_SCALE_INNER")]
-    ScaleInner,
-    #[serde(rename = "OBS_BOUNDS_SCALE_OUTER")]
-    ScaleOuter,
-    #[serde(rename = "OBS_BOUNDS_SCALE_TO_WIDTH")]
-    ScaleToWidth,
-    #[serde(rename = "OBS_BOUNDS_SCALE_TO_HEIGHT")]
-    ScaleToHeight,
-    #[serde(rename = "OBS_BOUNDS_MAX_ONLY")]
-    MaxOnly,
-}
-
-#[derive(Deserialize, Debug, PartialEq)]
-pub struct Bounds {
-    #[serde(rename = "type")]
-    pub bounds_type: BoundsType,
-    pub alignment: i32,
-    pub x: f64,
-    pub y: f64,
-}
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 pub struct Item {
@@ -618,43 +573,11 @@ pub struct Item {
     pub id: i32,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Eq)]
-#[serde(rename_all = "lowercase")]
-pub enum SceneItemType {
-    Input,
-    Filter,
-    Transition,
-    Scene,
-    Unknown,
-}
-
-#[derive(Deserialize, Debug, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
-pub struct SceneItem {
-    pub cy: i32,
-    pub cx: i32,
-    pub name: String,
-    pub id: i32,
-    pub render: bool,
-    pub locked: bool,
-    pub source_cx: i32,
-    pub source_cy: i32,
-    #[serde(rename = "type")]
-    pub scene_item_type: SceneItemType,
-    pub volume: i32,
-    pub x: i32,
-    pub y: i32,
-    pub parent_group_name: Option<String>,
-    pub group_children: Option<Vec<SceneItem>>,
-}
-
-#[derive(Deserialize, Debug, PartialEq, Eq)]
+#[derive(Deserialize, Debug, PartialEq)]
 pub struct Scene {
     pub name: String,
     pub sources: Vec<SceneItem>,
 }
-
-pub type SourceType = SceneItemType;
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -664,6 +587,8 @@ pub struct Source {
     #[serde(rename = "type")]
     pub source_type: SourceType,
 }
+
+pub type SourceType = SceneItemType;
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]

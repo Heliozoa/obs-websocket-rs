@@ -1,6 +1,6 @@
 //! Contains Obs, the primary struct for interacting with the OBS WebSocket server.
 
-use crate::{error::ObsError, events, requests::*, responses};
+use crate::{common_types, error::ObsError, events, requests::*, responses};
 
 use async_tungstenite::{
     tungstenite::{protocol::Role, Message as WebSocketMessage},
@@ -777,14 +777,14 @@ mod test {
         let expected = responses::GetSceneItemProperties {
             message_id: "_0".to_string(),
             name: "source".to_string(),
-            position: responses::Position {
+            position: common_types::Position {
                 x: 0.0,
                 y: 1.0,
                 alignment: 2,
             },
             rotation: 3.0,
-            scale: responses::Scale { x: 4.0, y: 5.0 },
-            crop: responses::Crop {
+            scale: common_types::Scale { x: 4.0, y: 5.0 },
+            crop: common_types::Crop {
                 top: 6,
                 right: 7,
                 bottom: 8,
@@ -792,8 +792,8 @@ mod test {
             },
             visible: true,
             locked: true,
-            bounds: responses::Bounds {
-                bounds_type: responses::BoundsType::Stretch,
+            bounds: common_types::Bounds {
+                bounds_type: common_types::BoundsType::Stretch,
                 alignment: 10,
                 x: 11.0,
                 y: 12.0,
