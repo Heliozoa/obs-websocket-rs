@@ -1,3 +1,5 @@
+//! Types used in both events and responses.
+
 use serde::Deserialize;
 
 #[derive(Deserialize, Debug, PartialEq)]

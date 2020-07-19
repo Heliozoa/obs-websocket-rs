@@ -1,9 +1,8 @@
 //! A more "real-world" example for the library.
+
 use futures::io::{AsyncBufReadExt, BufReader};
-use obs_websocket::futures::stream::StreamExt;
-use obs_websocket::{requests::*, Obs};
+use obs_websocket::{futures::stream::StreamExt, requests::*, Obs};
 use smol::Task;
-//use futures::prelude::*;
 
 fn main() {
     env_logger::init();
@@ -28,12 +27,18 @@ fn main() {
             println!("press 1 to request with GetVersion");
             println!("press 2 to request with GetStats");
             stdin.read_line(&mut buffer).await.unwrap();
-            let response = match buffer.trim() {
-                "1" => obs.request(&GetVersion::default()).await.unwrap(),
-                //"2" => obs.request(&GetStats::default()).await.unwrap(),
+            match buffer.trim() {
+                "1" => {
+                    let gv = obs.request(&GetVersion::default()).await.unwrap();
+                    println!("version {:#?}", gv);
+                }
+                "2" => {
+                    let gs = obs.request(&GetStats::default()).await.unwrap();
+
+                    println!("stats {:#?}", gs);
+                }
                 _ => continue,
             };
-            println!("{:#?}", response);
         }
     });
 }

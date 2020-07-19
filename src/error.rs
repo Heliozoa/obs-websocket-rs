@@ -13,8 +13,8 @@ use thiserror::Error;
 pub enum ObsError {
     #[error("Connection interrupted")]
     ConnectionInterrupted,
-    #[error("Oneshot channel sender closed: {0}")]
-    OneshotCanceled(Canceled),
+    #[error("Oneshot channel sender closed")]
+    OneshotCanceled(#[source] Canceled),
     #[error("Not connected")]
     NotConnected,
     #[error("No authentication required")]

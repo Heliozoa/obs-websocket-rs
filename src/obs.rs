@@ -1,6 +1,6 @@
 //! Contains Obs, the primary struct for interacting with the OBS WebSocket server.
 
-use crate::{common_types, error::ObsError, events, requests::*, responses};
+use crate::{error::ObsError, events, requests::*, responses};
 
 use async_tungstenite::{
     tungstenite::{protocol::Role, Message as WebSocketMessage},
@@ -16,7 +16,7 @@ use futures::{
     stream::StreamExt,
 };
 use piper::Arc;
-use serde::Deserialize;
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use smol::{Async, Timer};
@@ -325,6 +325,7 @@ struct ConnectionData {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::common_types;
     use async_tungstenite::tungstenite::server::accept;
     use serde_json::{json, Value};
     use std::{
