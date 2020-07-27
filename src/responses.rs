@@ -4,45 +4,25 @@ use serde::{de, Deserialize, Deserializer};
 use serde_json::Value;
 use std::collections::HashMap;
 
-// used to separate successful and error responses
-#[derive(Deserialize, Debug, Eq, PartialEq)]
-#[serde(rename_all = "lowercase")]
+#[derive(Debug, Deserialize, PartialEq)]
+pub(crate) struct ResponseWrapper {
+    #[serde(rename = "message-id")]
+    pub message_id: String,
+    #[serde(flatten)]
+    pub response_data: ResponseData,
+}
+
+#[derive(Debug, Deserialize, PartialEq)]
 #[serde(tag = "status")]
-pub(crate) enum ResponseWrapper {
-    Ok(Response),
-    Error(ResponseError),
-}
-
-impl ResponseWrapper {
-    pub fn message_id(&self) -> &str {
-        match self {
-            ResponseWrapper::Ok(r) => &r.message_id,
-            ResponseWrapper::Error(r) => &r.message_id,
-        }
-    }
-}
-
-// not really used for anything
-// would be nice to convert directly to the response type
-// but may not be worth the trouble
-#[derive(Deserialize, Debug, Eq, PartialEq)]
-pub(crate) struct Response {
-    #[serde(rename = "message-id")]
-    pub message_id: String,
+#[serde(rename_all = "lowercase")]
+pub(crate) enum ResponseData {
+    // contains the rest of the JSON that can be used to deserialize the appropriate response
+    Ok(Value),
+    Error { error: String },
 }
 
 #[derive(Deserialize, Debug, Eq, PartialEq)]
-pub(crate) struct ResponseError {
-    #[serde(rename = "message-id")]
-    pub message_id: String,
-    pub error: String,
-}
-
-#[derive(Deserialize, Debug, Eq, PartialEq)]
-pub struct Empty {
-    #[serde(rename = "message-id")]
-    pub message_id: String,
-}
+pub struct Empty {}
 
 // used to deserialize "a,b,c,d" => ["a", "b", "c", "d"]
 fn deserialize_comma_separated_string<'de, D>(d: D) -> Result<Vec<String>, D::Error>
@@ -54,8 +34,8 @@ where
     impl<'de> de::Visitor<'de> for V {
         type Value = Vec<String>;
 
-        fn expecting(&self, _: &mut std::fmt::Formatter) -> std::fmt::Result {
-            unreachable!()
+        fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+            write!(formatter, "a comma-separated string")
         }
 
         fn visit_str<E>(self, s: &str) -> Result<Self::Value, E>
@@ -72,7 +52,6 @@ where
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub struct GetVersion {
-    pub message_id: String,
     pub version: f64,
     pub obs_websocket_version: String,
     pub obs_studio_version: String,
@@ -83,8 +62,6 @@ pub struct GetVersion {
 #[derive(Deserialize, Debug, Eq, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct GetAuthRequired {
-    #[serde(rename = "message-id")]
-    pub message_id: String,
     pub auth_required: bool,
     pub challenge: Option<String>,
     pub salt: Option<String>,
@@ -93,22 +70,17 @@ pub struct GetAuthRequired {
 #[derive(Deserialize, Debug, Eq, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub struct GetFilenameFormatting {
-    pub message_id: String,
     pub filename_formatting: String,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct GetStats {
-    #[serde(rename = "message-id")]
-    pub message_id: String,
     pub stats: ObsStats,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct GetVideoInfo {
-    #[serde(rename = "message-id")]
-    pub message_id: String,
     pub base_width: i32,
     pub base_height: i32,
     pub output_width: i32,
@@ -122,59 +94,47 @@ pub struct GetVideoInfo {
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct ListOutputs {
-    #[serde(rename = "message-id")]
-    pub message_id: String,
     pub outputs: Vec<Output>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct GetOutputInfo {
-    #[serde(rename = "message-id")]
-    pub message_id: String,
     pub output_info: Output,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub struct GetCurrentProfile {
-    pub message_id: String,
     pub profile_name: String,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
-#[serde(rename_all = "kebab-case")]
 pub struct ListProfiles {
-    pub message_id: String,
     pub profiles: Vec<Profile>,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 pub struct GetRecordingFolder {
-    pub message_id: String,
     pub rec_folder: String,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 pub struct GetCurrentSceneCollection {
-    pub message_id: String,
     pub sc_name: String,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 pub struct ListSceneCollections {
-    pub message_id: String,
     pub scene_collections: Vec<SceneCollection>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct GetSceneItemProperties {
-    #[serde(rename = "message-id")]
-    pub message_id: String,
     pub name: String,
     pub position: Position,
     pub rotation: f64,
@@ -191,16 +151,12 @@ pub struct GetSceneItemProperties {
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 pub struct DuplicateSceneItem {
-    #[serde(rename = "message-id")]
-    pub message_id: String,
     pub scene: String,
     pub item: Item,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct GetCurrentScene {
-    #[serde(rename = "message-id")]
-    pub message_id: String,
     pub name: String,
     pub sources: Vec<SceneItem>,
 }
@@ -208,29 +164,22 @@ pub struct GetCurrentScene {
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub struct GetSceneList {
-    pub message_id: String,
     pub current_scene: String,
     pub scenes: Vec<Scene>,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 pub struct GetSourcesList {
-    #[serde(rename = "message-id")]
-    pub message_id: String,
     pub sources: Vec<Source>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct GetSourceTypesList {
-    #[serde(rename = "message-id")]
-    pub message_id: String,
     pub types: Vec<SourceTypes>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct GetVolume {
-    #[serde(rename = "message-id")]
-    pub message_id: String,
     pub name: String,
     pub volume: f64,
     pub muted: bool,
@@ -238,16 +187,12 @@ pub struct GetVolume {
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct GetMute {
-    #[serde(rename = "message-id")]
-    pub message_id: String,
     pub name: String,
     pub muted: bool,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct GetSyncOffset {
-    #[serde(rename = "message-id")]
-    pub message_id: String,
     pub name: String,
     pub offset: i32,
 }
@@ -256,8 +201,6 @@ pub struct GetSyncOffset {
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct GetSourceSettings {
-    #[serde(rename = "message-id")]
-    pub message_id: String,
     pub source_name: String,
     pub source_type: String,
     pub source_settings: HashMap<String, Value>,
@@ -267,8 +210,6 @@ pub struct GetSourceSettings {
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct SetSourceSettings {
-    #[serde(rename = "message-id")]
-    pub message_id: String,
     pub source_name: String,
     pub source_type: String,
     pub source_settings: HashMap<String, Value>,
@@ -276,8 +217,6 @@ pub struct SetSourceSettings {
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct GetTextGDIPlusProperties {
-    #[serde(rename = "message-id")]
-    pub message_id: String,
     pub source: String,
     pub align: Align,
     #[serde(rename = "bk-color")]
@@ -308,8 +247,6 @@ pub struct GetTextGDIPlusProperties {
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct GetTextFreetype2Properties {
-    #[serde(rename = "message-id")]
-    pub message_id: String,
     pub source: String,
     pub color1: i32,
     pub color2: i32,
@@ -326,8 +263,6 @@ pub struct GetTextFreetype2Properties {
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct GetBrowserSourceProperties {
-    #[serde(rename = "message-id")]
-    pub message_id: String,
     pub source: String,
     pub is_local_file: bool,
     pub local_file: String,
@@ -342,7 +277,6 @@ pub struct GetBrowserSourceProperties {
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub struct GetSpecialSources {
-    pub message_id: String,
     pub desktop_1: Option<String>,
     pub desktop_2: Option<String>,
     pub mic_1: Option<String>,
@@ -353,15 +287,12 @@ pub struct GetSpecialSources {
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub struct GetSourceFilters {
-    pub message_id: String,
     pub filters: Vec<Filter>,
 }
 
 // TODO: deserialize settings
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct GetSourceFilterInfo {
-    #[serde(rename = "message-id")]
-    pub message_id: String,
     pub enabled: bool,
     #[serde(rename = "type")]
     pub filter_type: String,
@@ -372,8 +303,6 @@ pub struct GetSourceFilterInfo {
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TakeSourceScreenshot {
-    #[serde(rename = "message-id")]
-    pub message_id: String,
     pub source_name: String,
     pub img: String,
     pub image_file: String,
@@ -382,7 +311,6 @@ pub struct TakeSourceScreenshot {
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub struct GetStreamingStatus {
-    pub message_id: String,
     pub streaming: bool,
     pub recording: bool,
     pub stream_timecode: Option<String>,
@@ -392,7 +320,6 @@ pub struct GetStreamingStatus {
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub struct GetStreamSettings {
-    pub message_id: String,
     pub stream_type: StreamType,
     pub settings: StreamSettings,
 }
@@ -400,14 +327,11 @@ pub struct GetStreamSettings {
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub struct GetStudioModeStatus {
-    pub message_id: String,
     pub studio_mode: bool,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct GetPreviewScene {
-    #[serde(rename = "message-id")]
-    pub message_id: String,
     pub name: String,
     pub sources: Vec<SceneItem>,
 }
@@ -415,23 +339,18 @@ pub struct GetPreviewScene {
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub struct GetTransitionList {
-    pub message_id: String,
     pub current_transition: String,
     pub transitions: Vec<Transition>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct GetCurrentTransition {
-    #[serde(rename = "message-id")]
-    pub message_id: String,
     pub name: String,
     pub duration: Option<i32>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct GetTransitionDuration {
-    #[serde(rename = "message-id")]
-    pub message_id: String,
     pub duration: i32,
 }
 
@@ -696,7 +615,7 @@ mod test {
         );
 
         let res: ResponseWrapper = serde_json::from_value(successful).unwrap();
-        if let ResponseWrapper::Error(_) = res {
+        if let ResponseData::Error { .. } = res.response_data {
             panic!();
         }
     }
@@ -712,8 +631,28 @@ mod test {
         );
 
         let res: ResponseWrapper = serde_json::from_value(successful).unwrap();
-        if let ResponseWrapper::Ok(_) = res {
+        if let ResponseData::Ok(_) = res.response_data {
             panic!();
+        }
+    }
+
+    #[test]
+    fn convert_successful_response_data() {
+        let successful = serde_json::json!(
+            {
+                "message-id": "id",
+                "status": "ok",
+                "filename-formatting": "formatting",
+            }
+        );
+
+        let res: ResponseWrapper = serde_json::from_value(successful).unwrap();
+        match res.response_data {
+            ResponseData::Ok(value) => {
+                let data: GetFilenameFormatting = serde_json::from_value(value).unwrap();
+                assert_eq!(data.filename_formatting, "formatting");
+            }
+            ResponseData::Error { .. } => panic!(),
         }
     }
 }

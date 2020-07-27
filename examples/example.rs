@@ -1,6 +1,5 @@
 //! A more "real-world" example for the library.
 
-use futures::io::{AsyncBufReadExt, BufReader};
 use obs_websocket::{futures::stream::StreamExt, requests::*, Obs};
 use smol::Task;
 
@@ -21,12 +20,12 @@ fn main() {
         .detach();
 
         let mut buffer = String::new();
-        let mut stdin = BufReader::new(smol::reader(std::io::stdin()));
+        let stdin = std::io::stdin();
         loop {
             buffer.clear();
             println!("press 1 to request with GetVersion");
             println!("press 2 to request with GetStats");
-            stdin.read_line(&mut buffer).await.unwrap();
+            stdin.read_line(&mut buffer).unwrap();
             match buffer.trim() {
                 "1" => {
                     let gv = obs.request(&GetVersion::default()).await.unwrap();

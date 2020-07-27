@@ -30,7 +30,6 @@ pub enum ObsError {
         socket_error: Option<Box<ObsError>>,
         thread_error: Option<Box<ObsError>>,
     },
-
     #[error("Error from OBS: {0}")]
     ObsError(String),
     #[error("Handshake interrupted")]

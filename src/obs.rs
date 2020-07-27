@@ -16,13 +16,13 @@ use futures::{
     stream::StreamExt,
 };
 use piper::Arc;
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::Deserialize;
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use smol::{Async, Timer};
 use std::{
     collections::HashMap,
-    net::TcpStream,
+    net::{TcpStream, ToSocketAddrs},
     num::Wrapping,
     thread::{self, JoinHandle},
     time::Duration,
@@ -96,20 +96,19 @@ impl Obs {
             }
             Ok(())
         } else {
-            return Err(ObsError::NotConnected);
+            Err(ObsError::NotConnected)
         }
     }
 
     /// Sends the given request to OBS.
     /// If no message id is included in the request, a running number prepended with an underscore will be used.
-    pub async fn request<T>(&mut self, req: &T) -> Result<T::Output, ObsError>
+    pub async fn request<T>(&mut self, req: &T) -> Result<T::Response, ObsError>
     where
         T: Request + std::fmt::Debug,
     {
         if let Some(ConnectionData { thread_sender, .. }) = self.connection_data.as_mut() {
             log::debug!("requesting {:#?}", req);
-            let message_id = req.message_id_or_running(&mut self.running_message_id);
-            let value = req.to_json(message_id.clone());
+            let value = req.to_json();
             log::trace!("converted request to json {:#}", value);
 
             // channel for receiving the response
@@ -132,7 +131,7 @@ impl Obs {
                 Ok(res) => match res {
                     Ok(res) => {
                         log::debug!("received response {}", res);
-                        Ok(serde_json::from_str(&res)?)
+                        Ok(serde_json::from_value(res)?)
                     }
                     Err(res) => {
                         log::error!("received error {:#?}", res);
@@ -180,6 +179,7 @@ impl Obs {
         let addr = format!("{}:{}", address, port);
         let ws_addr = format!("ws://{}", addr);
 
+        let addr = addr.to_socket_addrs().unwrap().next().unwrap();
         log::debug!("connecting tcp stream to {}", addr);
 
         let tcp_stream = Async::<TcpStream>::connect(addr).await?;
@@ -189,7 +189,7 @@ impl Obs {
 
         let tungstenite_future = async_tungstenite::client_async(ws_addr, tcp_stream);
         futures::pin_mut!(tungstenite_future);
-        let timer = Timer::after(Duration::from_millis(100));
+        let timer = Timer::new(Duration::from_millis(100));
         let (recv_socket, _res) = match future::select(tungstenite_future, timer).await {
             Either::Left((tungstenite_client, _)) => tungstenite_client?,
             Either::Right(_) => return Err(ObsError::TungsteniteTimeout),
@@ -209,7 +209,7 @@ impl Obs {
     ) -> JoinHandle<()> {
         // handles incoming WebSocket messages
         async fn handle_incoming(
-            pending_senders: &mut HashMap<String, OneshotSender<Result<String, String>>>,
+            pending_senders: &mut HashMap<String, OneshotSender<Result<Value, String>>>,
             event_sender: &mut UnboundedSender<events::Event>,
             message: String,
         ) {
@@ -217,15 +217,15 @@ impl Obs {
             let parsed = serde_json::from_str::<ResponseOrEvent>(&message);
             match parsed {
                 Ok(ResponseOrEvent::Response(response)) => {
-                    if let Some(sender) = pending_senders.remove(response.message_id()) {
+                    if let Some(sender) = pending_senders.remove(&response.message_id) {
                         log::trace!("received response {:#?}", response);
-                        match response {
-                            responses::ResponseWrapper::Ok(_) => {
-                                sender.send(Ok(message)).expect("failed to send");
+                        match response.response_data {
+                            responses::ResponseData::Ok(value) => {
+                                sender.send(Ok(value)).expect("failed to send");
                             }
-                            responses::ResponseWrapper::Error(err) => {
-                                log::error!("error: {}", err.error);
-                                sender.send(Err(err.error)).expect("failed to send");
+                            responses::ResponseData::Error { error } => {
+                                log::error!("error: {}", error);
+                                sender.send(Err(error)).expect("failed to send");
                             }
                         }
                     } else {
@@ -234,7 +234,7 @@ impl Obs {
                 }
                 Ok(ResponseOrEvent::Event(event)) => {
                     log::info!("received event {:#?}", event);
-                    if event_sender.send(event).await.is_err() {
+                    if event_sender.send(*event).await.is_err() {
                         log::error!("failed to send event");
                     };
                 }
@@ -249,7 +249,7 @@ impl Obs {
         // handles outgoing Messages
         async fn handle_outgoing(
             send_socket: &mut WebSocketHandle,
-            pending_senders: &mut HashMap<String, OneshotSender<Result<String, String>>>,
+            pending_senders: &mut HashMap<String, OneshotSender<Result<Value, String>>>,
             message: Message,
         ) {
             log::trace!("received outgoing message");
@@ -299,7 +299,7 @@ impl Obs {
 #[serde(untagged)]
 enum ResponseOrEvent {
     Response(responses::ResponseWrapper),
-    Event(events::Event),
+    Event(Box<events::Event>),
 }
 
 // message used to communicate with the handler channel that owns the WebSocket connection
@@ -312,7 +312,7 @@ struct Message {
     // oneshot sender to send the result back with
     // ok contains the entire message which has been checked to not be an error
     // err contains the error message
-    sender: OneshotSender<Result<String, String>>,
+    sender: OneshotSender<Result<Value, String>>,
 }
 
 // container for data related to the WebSocket connection
@@ -335,12 +335,6 @@ mod test {
 
     fn init_logger() {
         let _ = env_logger::builder().is_test(true).try_init();
-    }
-
-    fn response_data() -> responses::Response {
-        responses::Response {
-            message_id: "_0".to_string(),
-        }
     }
 
     fn init_without_server(port: u16) -> Obs {
@@ -382,10 +376,10 @@ mod test {
         expected_requests: Vec<Value>,
         expected_responses: Vec<Value>,
         request: T,
-        expected: T::Output,
+        expected: T::Response,
     ) where
         T: Request + PartialEq + std::fmt::Debug,
-        T::Output: PartialEq + std::fmt::Debug,
+        T::Response: PartialEq + std::fmt::Debug,
     {
         let (mut obs, handle) = init(expected_responses);
         let res = smol::run(obs.request(&request)).expect("request returned err");
@@ -421,7 +415,6 @@ mod test {
         });
         let req = GetVersion::default();
         let expected = responses::GetVersion {
-            message_id: "_0".to_string(),
             version: 1.1,
             obs_websocket_version: "4.7.0".to_string(),
             obs_studio_version: "24.0.3".to_string(),
@@ -447,7 +440,6 @@ mod test {
         });
         let req = GetAuthRequired::default();
         let expected = responses::GetAuthRequired {
-            message_id: "_0".to_string(),
             auth_required: true,
             challenge: Some("ch".to_string()),
             salt: Some("sa".to_string()),
@@ -470,7 +462,6 @@ mod test {
         });
         let req = GetAuthRequired::default();
         let expected = responses::GetAuthRequired {
-            message_id: "_0".to_string(),
             auth_required: false,
             challenge: None,
             salt: None,
@@ -506,9 +497,7 @@ mod test {
                 "message-id": "_1",
             }),
         ];
-        let expected = responses::Empty {
-            message_id: "_1".to_string(),
-        };
+        let expected = responses::Empty {};
         let (mut obs, handle) = init(responses);
         let res = smol::run(obs.authenticate("todo")).expect("authenticate");
         let actual_requests = handle.join().expect("join");
@@ -550,7 +539,6 @@ mod test {
         });
         let req = GetStats::default();
         let expected = responses::GetStats {
-            message_id: "_0".to_string(),
             stats: responses::ObsStats {
                 fps: 0.0,
                 render_total_frames: 1,
@@ -589,7 +577,6 @@ mod test {
         });
         let req = GetVideoInfo::default();
         let expected = responses::GetVideoInfo {
-            message_id: "_0".to_string(),
             base_width: 0,
             base_height: 1,
             output_width: 2,
@@ -640,7 +627,6 @@ mod test {
         });
         let req = ListOutputs::default();
         let expected = responses::ListOutputs {
-            message_id: "_0".to_string(),
             outputs: vec![responses::Output {
                 name: "simple_file_output".to_string(),
                 output_type: "ffmpeg_muxer".to_string(),
@@ -702,7 +688,6 @@ mod test {
         });
         let req = GetOutputInfo::builder().output_name("output1").build();
         let expected = responses::GetOutputInfo {
-            message_id: "_0".to_string(),
             output_info: responses::Output {
                 name: "simple_file_output".to_string(),
                 output_type: "ffmpeg_muxer".to_string(),
@@ -776,7 +761,6 @@ mod test {
             .item("source")
             .build();
         let expected = responses::GetSceneItemProperties {
-            message_id: "_0".to_string(),
             name: "source".to_string(),
             position: common_types::Position {
                 x: 0.0,
@@ -865,9 +849,7 @@ mod test {
             .bounds_x(12.0)
             .bounds_y(13.0)
             .build();
-        let expected = responses::Empty {
-            message_id: "_0".to_string(),
-        };
+        let expected = responses::Empty {};
         request_test(vec![request], vec![response], req, expected);
     }
 
@@ -896,9 +878,7 @@ mod test {
             .scene("s")
             .items(vec![ItemId::Name("n"), ItemId::Id(1)])
             .build();
-        let expected = responses::Empty {
-            message_id: "_0".to_string(),
-        };
+        let expected = responses::Empty {};
         request_test(vec![request], vec![response], req, expected);
     }
 

@@ -282,6 +282,7 @@ mod test {
     #[test]
     fn simple_de() {
         let text = r#"{
+            "stream-timecode": "12341234",
             "scene-name": "Scene",
             "sources": [
                 {
