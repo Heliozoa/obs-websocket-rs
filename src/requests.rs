@@ -10,6 +10,9 @@ static RUNNING_MESSAGE_ID: AtomicU32 = AtomicU32::new(0);
 
 // trait that all request types must implement
 pub trait Request {
+    // request-type
+    const REQUEST_TYPE: &'static str;
+
     // type of the response from the server
     type Response: DeserializeOwned;
 
@@ -32,6 +35,7 @@ pub struct GetVersion {
 }
 
 impl Request for GetVersion {
+    const REQUEST_TYPE: &'static str = "GetVersion";
     type Response = responses::GetVersion;
 
     fn get_message_id(&self) -> &str {
@@ -40,8 +44,8 @@ impl Request for GetVersion {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "GetVersion",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
         })
     }
 }
@@ -53,6 +57,7 @@ pub struct GetAuthRequired {
 }
 
 impl Request for GetAuthRequired {
+    const REQUEST_TYPE: &'static str = "GetAuthRequired";
     type Response = responses::GetAuthRequired;
 
     fn get_message_id(&self) -> &str {
@@ -61,8 +66,8 @@ impl Request for GetAuthRequired {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "GetAuthRequired",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
         })
     }
 }
@@ -76,6 +81,7 @@ pub struct Authenticate {
 }
 
 impl Request for Authenticate {
+    const REQUEST_TYPE: &'static str = "Authenticate";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -84,8 +90,8 @@ impl Request for Authenticate {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "Authenticate",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "auth": self.auth,
         })
     }
@@ -99,6 +105,7 @@ pub struct SetHeartbeat {
 }
 
 impl Request for SetHeartbeat {
+    const REQUEST_TYPE: &'static str = "SetHeartbeat";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -107,8 +114,8 @@ impl Request for SetHeartbeat {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "SetHeartbeat",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "enable": self.enable,
         })
     }
@@ -123,6 +130,7 @@ pub struct SetFilenameFormatting {
 }
 
 impl Request for SetFilenameFormatting {
+    const REQUEST_TYPE: &'static str = "SetFilenameFormatting";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -131,8 +139,8 @@ impl Request for SetFilenameFormatting {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "SetFilenameFormatting",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "filename-formatting": self.filename_formatting,
         })
     }
@@ -145,6 +153,7 @@ pub struct GetFilenameFormatting {
 }
 
 impl Request for GetFilenameFormatting {
+    const REQUEST_TYPE: &'static str = "GetFilenameFormatting";
     type Response = responses::GetFilenameFormatting;
 
     fn get_message_id(&self) -> &str {
@@ -153,8 +162,8 @@ impl Request for GetFilenameFormatting {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "GetFilenameFormatting",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
         })
     }
 }
@@ -166,6 +175,7 @@ pub struct GetStats {
 }
 
 impl Request for GetStats {
+    const REQUEST_TYPE: &'static str = "GetStats";
     type Response = responses::GetStats;
 
     fn get_message_id(&self) -> &str {
@@ -174,8 +184,8 @@ impl Request for GetStats {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "GetStats",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
         })
     }
 }
@@ -190,6 +200,7 @@ pub struct BroadcastCustomMessage {
 }
 
 impl Request for BroadcastCustomMessage {
+    const REQUEST_TYPE: &'static str = "BroadcastCustomMessage";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -198,8 +209,8 @@ impl Request for BroadcastCustomMessage {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "BroadcastCustomMessage",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "realm": self.realm,
             "data": self.data,
         })
@@ -213,6 +224,7 @@ pub struct GetVideoInfo {
 }
 
 impl Request for GetVideoInfo {
+    const REQUEST_TYPE: &'static str = "GetVideoInfo";
     type Response = responses::GetVideoInfo;
 
     fn get_message_id(&self) -> &str {
@@ -221,8 +233,8 @@ impl Request for GetVideoInfo {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "GetVideoInfo",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
         })
     }
 }
@@ -234,6 +246,7 @@ pub struct ListOutputs {
 }
 
 impl Request for ListOutputs {
+    const REQUEST_TYPE: &'static str = "ListOutputs";
     type Response = responses::ListOutputs;
 
     fn get_message_id(&self) -> &str {
@@ -242,8 +255,8 @@ impl Request for ListOutputs {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "ListOutputs",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
         })
     }
 }
@@ -257,6 +270,7 @@ pub struct GetOutputInfo {
 }
 
 impl Request for GetOutputInfo {
+    const REQUEST_TYPE: &'static str = "GetOutputInfo";
     type Response = responses::GetOutputInfo;
 
     fn get_message_id(&self) -> &str {
@@ -265,8 +279,8 @@ impl Request for GetOutputInfo {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "GetOutputInfo",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "outputName": self.output_name,
         })
     }
@@ -281,6 +295,7 @@ pub struct StartOutput {
 }
 
 impl Request for StartOutput {
+    const REQUEST_TYPE: &'static str = "StartOutput";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -289,8 +304,8 @@ impl Request for StartOutput {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "StartOutput",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "outputName": self.output_name,
         })
     }
@@ -307,6 +322,7 @@ pub struct StopOutput {
 }
 
 impl Request for StopOutput {
+    const REQUEST_TYPE: &'static str = "StopOutput";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -315,8 +331,8 @@ impl Request for StopOutput {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "StopOutput",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "outputName": self.output_name,
             "force": self.force,
         })
@@ -332,6 +348,7 @@ pub struct SetCurrentProfile {
 }
 
 impl Request for SetCurrentProfile {
+    const REQUEST_TYPE: &'static str = "SetCurrentProfile";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -340,8 +357,8 @@ impl Request for SetCurrentProfile {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "SetCurrentProfile",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "profile-name": self.profile_name,
         })
     }
@@ -354,6 +371,7 @@ pub struct GetCurrentProfile {
 }
 
 impl Request for GetCurrentProfile {
+    const REQUEST_TYPE: &'static str = "GetCurrentProfile";
     type Response = responses::GetCurrentProfile;
 
     fn get_message_id(&self) -> &str {
@@ -362,8 +380,8 @@ impl Request for GetCurrentProfile {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "GetCurrentProfile",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
         })
     }
 }
@@ -375,6 +393,7 @@ pub struct ListProfiles {
 }
 
 impl Request for ListProfiles {
+    const REQUEST_TYPE: &'static str = "ListProfiles";
     type Response = responses::ListProfiles;
 
     fn get_message_id(&self) -> &str {
@@ -383,8 +402,8 @@ impl Request for ListProfiles {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "ListProfiles",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
         })
     }
 }
@@ -396,6 +415,7 @@ pub struct StartStopRecording {
 }
 
 impl Request for StartStopRecording {
+    const REQUEST_TYPE: &'static str = "StartStopRecording";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -404,8 +424,8 @@ impl Request for StartStopRecording {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "StartStopRecording",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
         })
     }
 }
@@ -417,6 +437,7 @@ pub struct StartRecording {
 }
 
 impl Request for StartRecording {
+    const REQUEST_TYPE: &'static str = "StartRecording";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -425,8 +446,8 @@ impl Request for StartRecording {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "StartRecording",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
         })
     }
 }
@@ -438,6 +459,7 @@ pub struct StopRecording {
 }
 
 impl Request for StopRecording {
+    const REQUEST_TYPE: &'static str = "StopRecording";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -446,8 +468,8 @@ impl Request for StopRecording {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "StopRecording",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
         })
     }
 }
@@ -459,6 +481,7 @@ pub struct PauseRecording {
 }
 
 impl Request for PauseRecording {
+    const REQUEST_TYPE: &'static str = "PauseRecording";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -467,8 +490,8 @@ impl Request for PauseRecording {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "PauseRecording",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
         })
     }
 }
@@ -480,6 +503,7 @@ pub struct ResumeRecording {
 }
 
 impl Request for ResumeRecording {
+    const REQUEST_TYPE: &'static str = "ResumeRecording";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -488,8 +512,8 @@ impl Request for ResumeRecording {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "ResumeRecording",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
         })
     }
 }
@@ -503,6 +527,7 @@ pub struct SetRecordingFolder {
 }
 
 impl Request for SetRecordingFolder {
+    const REQUEST_TYPE: &'static str = "SetRecordingFolder";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -511,8 +536,8 @@ impl Request for SetRecordingFolder {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "SetRecordingFolder",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "rec-folder": self.rec_folder,
         })
     }
@@ -525,6 +550,7 @@ pub struct GetRecordingFolder {
 }
 
 impl Request for GetRecordingFolder {
+    const REQUEST_TYPE: &'static str = "GetRecordingFolder";
     type Response = responses::GetRecordingFolder;
 
     fn get_message_id(&self) -> &str {
@@ -533,8 +559,8 @@ impl Request for GetRecordingFolder {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "GetRecordingFolder",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
         })
     }
 }
@@ -546,6 +572,7 @@ pub struct StartStopReplayBuffer {
 }
 
 impl Request for StartStopReplayBuffer {
+    const REQUEST_TYPE: &'static str = "StartStopReplayBuffer";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -554,8 +581,8 @@ impl Request for StartStopReplayBuffer {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "StartStopReplayBuffer",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
         })
     }
 }
@@ -567,6 +594,7 @@ pub struct StartReplayBuffer {
 }
 
 impl Request for StartReplayBuffer {
+    const REQUEST_TYPE: &'static str = "StartReplayBuffer";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -575,8 +603,8 @@ impl Request for StartReplayBuffer {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "StartReplayBuffer",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
         })
     }
 }
@@ -588,6 +616,7 @@ pub struct StopReplayBuffer {
 }
 
 impl Request for StopReplayBuffer {
+    const REQUEST_TYPE: &'static str = "StopReplayBuffer";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -596,8 +625,8 @@ impl Request for StopReplayBuffer {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "StopReplayBuffer",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
         })
     }
 }
@@ -609,6 +638,7 @@ pub struct SaveReplayBuffer {
 }
 
 impl Request for SaveReplayBuffer {
+    const REQUEST_TYPE: &'static str = "SaveReplayBuffer";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -617,8 +647,8 @@ impl Request for SaveReplayBuffer {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "SaveReplayBuffer",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
         })
     }
 }
@@ -632,6 +662,7 @@ pub struct SetCurrentSceneCollection {
 }
 
 impl Request for SetCurrentSceneCollection {
+    const REQUEST_TYPE: &'static str = "SetCurrentSceneCollection";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -640,8 +671,8 @@ impl Request for SetCurrentSceneCollection {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "SetCurrentSceneCollection",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "sc-name": self.sc_name,
         })
     }
@@ -654,6 +685,7 @@ pub struct GetCurrentSceneCollection {
 }
 
 impl Request for GetCurrentSceneCollection {
+    const REQUEST_TYPE: &'static str = "GetCurrentSceneCollection";
     type Response = responses::GetCurrentSceneCollection;
 
     fn get_message_id(&self) -> &str {
@@ -662,8 +694,8 @@ impl Request for GetCurrentSceneCollection {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "GetCurrentSceneCollection",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
         })
     }
 }
@@ -675,6 +707,7 @@ pub struct ListSceneCollections {
 }
 
 impl Request for ListSceneCollections {
+    const REQUEST_TYPE: &'static str = "ListSceneCollections";
     type Response = responses::ListSceneCollections;
 
     fn get_message_id(&self) -> &str {
@@ -683,8 +716,8 @@ impl Request for ListSceneCollections {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "ListSceneCollections",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
         })
     }
 }
@@ -700,6 +733,7 @@ pub struct GetSceneItemProperties {
 }
 
 impl Request for GetSceneItemProperties {
+    const REQUEST_TYPE: &'static str = "GetSceneItemProperties";
     type Response = responses::GetSceneItemProperties;
 
     fn get_message_id(&self) -> &str {
@@ -708,8 +742,8 @@ impl Request for GetSceneItemProperties {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "GetSceneItemProperties",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "scene-name": self.scene_name,
             "item": self.item,
         })
@@ -777,6 +811,7 @@ pub struct SetSceneItemProperties {
 }
 
 impl Request for SetSceneItemProperties {
+    const REQUEST_TYPE: &'static str = "SetSceneItemProperties";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -785,8 +820,8 @@ impl Request for SetSceneItemProperties {
 
     fn to_json(&self) -> Value {
         json!({
-            "message-id": self.get_message_id(),
-            "request-type": "SetSceneItemProperties",
+            "message-id": self.message_id,
+            "request-type": Self::REQUEST_TYPE,
             "scene-name": self.scene_name,
             "item": self.item,
             "position": {
@@ -828,6 +863,7 @@ pub struct ResetSceneItem {
 }
 
 impl Request for ResetSceneItem {
+    const REQUEST_TYPE: &'static str = "ResetSceneItem";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -836,8 +872,8 @@ impl Request for ResetSceneItem {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "ResetSceneItem",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "scene-name": self.scene_name,
             "item": self.item,
         })
@@ -855,6 +891,7 @@ pub struct DeleteSceneItem {
 }
 
 impl Request for DeleteSceneItem {
+    const REQUEST_TYPE: &'static str = "DeleteSceneItem";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -865,8 +902,8 @@ impl Request for DeleteSceneItem {
         let item_id = self.item_id.as_ref().and_then(ItemId::to_id);
         let item_name = self.item_id.as_ref().and_then(ItemId::to_name);
         json!({
-            "request-type": "DeleteSceneItem",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "scene": self.scene,
             "item": {
                 "id": item_id,
@@ -889,6 +926,7 @@ pub struct DuplicateSceneItem {
 }
 
 impl Request for DuplicateSceneItem {
+    const REQUEST_TYPE: &'static str = "DuplicateSceneItem";
     type Response = responses::DuplicateSceneItem;
 
     fn get_message_id(&self) -> &str {
@@ -899,8 +937,8 @@ impl Request for DuplicateSceneItem {
         let item_name = self.item_id.as_ref().and_then(ItemId::to_name);
         let item_id = self.item_id.as_ref().and_then(ItemId::to_id);
         json!({
-            "request-type": "DuplicateSceneItem",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "fromScene": self.from_scene,
             "toScene": self.to_scene,
             "item": {
@@ -922,6 +960,7 @@ pub struct SetCurrentScene {
 }
 
 impl Request for SetCurrentScene {
+    const REQUEST_TYPE: &'static str = "SetCurrentScene";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -930,8 +969,8 @@ impl Request for SetCurrentScene {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "SetCurrentScene",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "scene-name": self.scene_name,
         })
     }
@@ -944,6 +983,7 @@ pub struct GetCurrentScene {
 }
 
 impl Request for GetCurrentScene {
+    const REQUEST_TYPE: &'static str = "GetCurrentScene";
     type Response = responses::GetCurrentScene;
 
     fn get_message_id(&self) -> &str {
@@ -952,8 +992,8 @@ impl Request for GetCurrentScene {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "GetCurrentScene",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
         })
     }
 }
@@ -965,6 +1005,7 @@ pub struct GetSceneList {
 }
 
 impl Request for GetSceneList {
+    const REQUEST_TYPE: &'static str = "GetSceneList";
     type Response = responses::GetSceneList;
 
     fn get_message_id(&self) -> &str {
@@ -973,8 +1014,8 @@ impl Request for GetSceneList {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "GetSceneList",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
         })
     }
 }
@@ -990,6 +1031,7 @@ pub struct ReorderSceneItems {
 }
 
 impl Request for ReorderSceneItems {
+    const REQUEST_TYPE: &'static str = "ReorderSceneItems";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -1012,8 +1054,8 @@ impl Request for ReorderSceneItems {
             })
             .collect::<Vec<_>>();
         json!({
-            "request-type": "ReorderSceneItems",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "scene": self.scene,
             "items": items,
         })
@@ -1027,6 +1069,7 @@ pub struct GetSourcesList {
 }
 
 impl Request for GetSourcesList {
+    const REQUEST_TYPE: &'static str = "GetSourcesList";
     type Response = responses::GetSourcesList;
 
     fn get_message_id(&self) -> &str {
@@ -1035,8 +1078,8 @@ impl Request for GetSourcesList {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "GetSourcesList",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
         })
     }
 }
@@ -1048,6 +1091,7 @@ pub struct GetSourceTypesList {
 }
 
 impl Request for GetSourceTypesList {
+    const REQUEST_TYPE: &'static str = "GetSourceTypesList";
     type Response = responses::GetSourceTypesList;
 
     fn get_message_id(&self) -> &str {
@@ -1056,8 +1100,8 @@ impl Request for GetSourceTypesList {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "GetSourceTypesList",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
         })
     }
 }
@@ -1071,6 +1115,7 @@ pub struct GetVolume {
 }
 
 impl Request for GetVolume {
+    const REQUEST_TYPE: &'static str = "GetVolume";
     type Response = responses::GetVolume;
 
     fn get_message_id(&self) -> &str {
@@ -1079,8 +1124,8 @@ impl Request for GetVolume {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "GetVolume",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "source": self.source,
         })
     }
@@ -1096,6 +1141,7 @@ pub struct SetVolume {
 }
 
 impl Request for SetVolume {
+    const REQUEST_TYPE: &'static str = "SetVolume";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -1104,8 +1150,8 @@ impl Request for SetVolume {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "SetVolume",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "source": self.source,
             "volume": self.volume,
         })
@@ -1121,6 +1167,7 @@ pub struct GetMute {
 }
 
 impl Request for GetMute {
+    const REQUEST_TYPE: &'static str = "GetMute";
     type Response = responses::GetMute;
 
     fn get_message_id(&self) -> &str {
@@ -1129,8 +1176,8 @@ impl Request for GetMute {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "GetMute",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "source": self.source,
         })
     }
@@ -1146,6 +1193,7 @@ pub struct SetMute {
 }
 
 impl Request for SetMute {
+    const REQUEST_TYPE: &'static str = "SetMute";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -1154,8 +1202,8 @@ impl Request for SetMute {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "SetMute",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "source": self.source,
             "mute": self.mute,
         })
@@ -1171,6 +1219,7 @@ pub struct ToggleMute {
 }
 
 impl Request for ToggleMute {
+    const REQUEST_TYPE: &'static str = "ToggleMute";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -1179,8 +1228,8 @@ impl Request for ToggleMute {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "ToggleMute",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "source": self.source,
         })
     }
@@ -1196,6 +1245,7 @@ pub struct SetSyncOffset {
 }
 
 impl Request for SetSyncOffset {
+    const REQUEST_TYPE: &'static str = "SetSyncOffset";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -1204,8 +1254,8 @@ impl Request for SetSyncOffset {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "SetSyncOffset",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "source": self.source,
             "offset": self.offset
         })
@@ -1221,6 +1271,7 @@ pub struct GetSyncOffset {
 }
 
 impl Request for GetSyncOffset {
+    const REQUEST_TYPE: &'static str = "GetSyncOffset";
     type Response = responses::GetSyncOffset;
 
     fn get_message_id(&self) -> &str {
@@ -1229,8 +1280,8 @@ impl Request for GetSyncOffset {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "GetSyncOffset",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "source": self.source,
         })
     }
@@ -1247,6 +1298,7 @@ pub struct GetSourceSettings {
 }
 
 impl Request for GetSourceSettings {
+    const REQUEST_TYPE: &'static str = "GetSourceSettings";
     type Response = responses::GetSourceSettings;
 
     fn get_message_id(&self) -> &str {
@@ -1255,8 +1307,8 @@ impl Request for GetSourceSettings {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "GetSourceSettings",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "sourceName": self.source_name,
             "sourceType": self.source_type,
         })
@@ -1276,6 +1328,7 @@ pub struct SetSourceSettings {
 }
 
 impl Request for SetSourceSettings {
+    const REQUEST_TYPE: &'static str = "SetSourceSettings";
     type Response = responses::SetSourceSettings;
 
     fn get_message_id(&self) -> &str {
@@ -1284,8 +1337,8 @@ impl Request for SetSourceSettings {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "SetSourceSettings",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "sourceName": self.source_name,
             "sourceType": self.source_type,
             "sourceSettings": self.source_settings,
@@ -1302,6 +1355,7 @@ pub struct GetTextGDIPlusProperties {
 }
 
 impl Request for GetTextGDIPlusProperties {
+    const REQUEST_TYPE: &'static str = "GetTextGDIPlusProperties";
     type Response = responses::GetTextGDIPlusProperties;
 
     fn get_message_id(&self) -> &str {
@@ -1310,8 +1364,8 @@ impl Request for GetTextGDIPlusProperties {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "GetTextGDIPlusProperties",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "source": self.source,
         })
     }
@@ -1388,6 +1442,7 @@ pub struct SetTextGDIPlusProperties {
 }
 
 impl Request for SetTextGDIPlusProperties {
+    const REQUEST_TYPE: &'static str = "SetTextGDIPlusProperties";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -1396,8 +1451,8 @@ impl Request for SetTextGDIPlusProperties {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "SetTextGDIPlusProperties",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "source": self.source,
             "align": self.align,
             "bk-color": self.bk_color,
@@ -1441,6 +1496,7 @@ pub struct GetTextFreetype2Properties {
 }
 
 impl Request for GetTextFreetype2Properties {
+    const REQUEST_TYPE: &'static str = "GetTextFreetype2Properties";
     type Response = responses::GetTextFreetype2Properties;
 
     fn get_message_id(&self) -> &str {
@@ -1449,8 +1505,8 @@ impl Request for GetTextFreetype2Properties {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "GetTextFreetype2Properties",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "source": self.source,
         })
     }
@@ -1493,6 +1549,7 @@ pub struct SetTextFreetype2Properties {
 }
 
 impl Request for SetTextFreetype2Properties {
+    const REQUEST_TYPE: &'static str = "SetTextFreetype2Properties";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -1501,8 +1558,8 @@ impl Request for SetTextFreetype2Properties {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "SetTextFreetype2Properties",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "source": self.source,
             "color1": self.color_1,
             "color2": self.color_2,
@@ -1533,6 +1590,7 @@ pub struct GetBrowserSourceProperties {
 }
 
 impl Request for GetBrowserSourceProperties {
+    const REQUEST_TYPE: &'static str = "GetBrowserSourceProperties";
     type Response = responses::GetBrowserSourceProperties;
 
     fn get_message_id(&self) -> &str {
@@ -1541,8 +1599,8 @@ impl Request for GetBrowserSourceProperties {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "GetBrowserSourceProperties",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "source": self.source,
         })
     }
@@ -1575,6 +1633,7 @@ pub struct SetBrowserSourceProperties {
 }
 
 impl Request for SetBrowserSourceProperties {
+    const REQUEST_TYPE: &'static str = "SetBrowserSourceProperties";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -1583,8 +1642,8 @@ impl Request for SetBrowserSourceProperties {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "SetBrowserSourceProperties",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "source": self.source,
             "is_local_file": self.is_local_file,
             "local_file": self.local_file,
@@ -1606,6 +1665,7 @@ pub struct GetSpecialSources {
 }
 
 impl Request for GetSpecialSources {
+    const REQUEST_TYPE: &'static str = "GetSpecialSources";
     type Response = responses::GetSpecialSources;
 
     fn get_message_id(&self) -> &str {
@@ -1614,8 +1674,8 @@ impl Request for GetSpecialSources {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "GetSpecialSources",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
         })
     }
 }
@@ -1629,6 +1689,7 @@ pub struct GetSourceFilters {
 }
 
 impl Request for GetSourceFilters {
+    const REQUEST_TYPE: &'static str = "GetSourceFilters";
     type Response = responses::GetSourceFilters;
 
     fn get_message_id(&self) -> &str {
@@ -1637,8 +1698,8 @@ impl Request for GetSourceFilters {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "GetSourceFilters",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "sourceName": self.source_name,
         })
     }
@@ -1655,6 +1716,7 @@ pub struct GetSourceFilterInfo {
 }
 
 impl Request for GetSourceFilterInfo {
+    const REQUEST_TYPE: &'static str = "GetSourceFilterInfo";
     type Response = responses::GetSourceFilterInfo;
 
     fn get_message_id(&self) -> &str {
@@ -1663,8 +1725,8 @@ impl Request for GetSourceFilterInfo {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "GetSourceFilterInfo",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "sourceName": self.source_name,
             "filterName": self.filter_name,
         })
@@ -1686,6 +1748,7 @@ pub struct AddFilterToSource {
 }
 
 impl Request for AddFilterToSource {
+    const REQUEST_TYPE: &'static str = "AddFilterToSource";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -1694,8 +1757,8 @@ impl Request for AddFilterToSource {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "AddFilterToSource",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "sourceName": self.source_name,
             "filterName": self.filter_name,
             "filterType": self.filter_type,
@@ -1715,6 +1778,7 @@ pub struct RemoveFilterFromSource {
 }
 
 impl Request for RemoveFilterFromSource {
+    const REQUEST_TYPE: &'static str = "RemoveFilterFromSource";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -1723,8 +1787,8 @@ impl Request for RemoveFilterFromSource {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "RemoveFilterFromSource",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "sourceName": self.source_name,
             "filterName": self.filter_name,
         })
@@ -1743,6 +1807,7 @@ pub struct ReorderSourceFilter {
 }
 
 impl Request for ReorderSourceFilter {
+    const REQUEST_TYPE: &'static str = "ReorderSourceFilter";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -1751,8 +1816,8 @@ impl Request for ReorderSourceFilter {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "ReorderSourceFilter",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "sourceName": self.source_name,
             "filterName": self.filter_name,
             "newIndex": self.new_index,
@@ -1780,6 +1845,7 @@ pub struct MoveSourceFilter {
 }
 
 impl Request for MoveSourceFilter {
+    const REQUEST_TYPE: &'static str = "MoveSourceFilter";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -1788,8 +1854,8 @@ impl Request for MoveSourceFilter {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "MoveSourceFilter",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "sourceName": self.source_name,
             "filterName": self.filter_name,
             "movementType": self.movement_type,
@@ -1810,6 +1876,7 @@ pub struct SetSourceFilterSettings {
 }
 
 impl Request for SetSourceFilterSettings {
+    const REQUEST_TYPE: &'static str = "SetSourceFilterSettings";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -1818,8 +1885,8 @@ impl Request for SetSourceFilterSettings {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "SetSourceFilterSettings",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "sourceName": self.source_name,
             "filterName": self.filter_name,
             "filterSettings": self.filter_settings,
@@ -1839,6 +1906,7 @@ pub struct SetSourceFilterVisibility {
 }
 
 impl Request for SetSourceFilterVisibility {
+    const REQUEST_TYPE: &'static str = "SetSourceFilterVisibility";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -1847,8 +1915,8 @@ impl Request for SetSourceFilterVisibility {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "SetSourceFilterVisibility",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "sourceName": self.source_name,
             "filterName": self.filter_name,
             "filterEnabled": self.filter_enabled,
@@ -1888,6 +1956,7 @@ pub struct TakeSourceScreenshot {
 }
 
 impl Request for TakeSourceScreenshot {
+    const REQUEST_TYPE: &'static str = "TakeSourceScreenshot";
     type Response = responses::TakeSourceScreenshot;
 
     fn get_message_id(&self) -> &str {
@@ -1896,8 +1965,8 @@ impl Request for TakeSourceScreenshot {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "TakeSourceScreenshot",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "sourceName": self.source_name,
             "embedPictureFormat": self.embed_picture_format,
             "saveToFilePath": self.save_to_file_path,
@@ -1914,6 +1983,7 @@ pub struct GetStreamingStatus {
 }
 
 impl Request for GetStreamingStatus {
+    const REQUEST_TYPE: &'static str = "GetStreamingStatus";
     type Response = responses::GetStreamingStatus;
 
     fn get_message_id(&self) -> &str {
@@ -1922,8 +1992,8 @@ impl Request for GetStreamingStatus {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "GetStreamingStatus",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
         })
     }
 }
@@ -1935,6 +2005,7 @@ pub struct StartStopStreaming {
 }
 
 impl Request for StartStopStreaming {
+    const REQUEST_TYPE: &'static str = "StartStopStreaming";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -1943,8 +2014,8 @@ impl Request for StartStopStreaming {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "StartStopStreaming",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
         })
     }
 }
@@ -1971,6 +2042,7 @@ pub struct StartStreaming {
 }
 
 impl Request for StartStreaming {
+    const REQUEST_TYPE: &'static str = "StartStreaming";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -1979,8 +2051,8 @@ impl Request for StartStreaming {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "StartStreaming",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "stream": {
                 "type": self.stream_type,
                 "metadata": self.stream_metadata,
@@ -2003,6 +2075,7 @@ pub struct StopStreaming {
 }
 
 impl Request for StopStreaming {
+    const REQUEST_TYPE: &'static str = "StopStreaming";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -2011,8 +2084,8 @@ impl Request for StopStreaming {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "StopStreaming",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
         })
     }
 }
@@ -2037,6 +2110,7 @@ pub struct SetStreamSettings {
 }
 
 impl Request for SetStreamSettings {
+    const REQUEST_TYPE: &'static str = "SetStreamSettings";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -2045,8 +2119,8 @@ impl Request for SetStreamSettings {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "SetStreamSettings",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "type": self.stream_type,
             "settings": {
                 "server": self.server,
@@ -2067,6 +2141,7 @@ pub struct GetStreamSettings {
 }
 
 impl Request for GetStreamSettings {
+    const REQUEST_TYPE: &'static str = "GetStreamSettings";
     type Response = responses::GetStreamSettings;
 
     fn get_message_id(&self) -> &str {
@@ -2075,8 +2150,8 @@ impl Request for GetStreamSettings {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "GetStreamSettings",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
         })
     }
 }
@@ -2088,6 +2163,7 @@ pub struct SaveStreamSettings {
 }
 
 impl Request for SaveStreamSettings {
+    const REQUEST_TYPE: &'static str = "SaveStreamSettings";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -2096,8 +2172,8 @@ impl Request for SaveStreamSettings {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "SaveStreamSettings",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
         })
     }
 }
@@ -2111,6 +2187,7 @@ pub struct SendCaptions {
 }
 
 impl Request for SendCaptions {
+    const REQUEST_TYPE: &'static str = "SendCaptions";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -2119,8 +2196,8 @@ impl Request for SendCaptions {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "SendCaptions",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "text": self.text,
         })
     }
@@ -2133,6 +2210,7 @@ pub struct GetStudioModeStatus {
 }
 
 impl Request for GetStudioModeStatus {
+    const REQUEST_TYPE: &'static str = "GetStudioModeStatus";
     type Response = responses::GetStudioModeStatus;
 
     fn get_message_id(&self) -> &str {
@@ -2141,8 +2219,8 @@ impl Request for GetStudioModeStatus {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "GetStudioModeStatus",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
         })
     }
 }
@@ -2154,6 +2232,7 @@ pub struct GetPreviewScene {
 }
 
 impl Request for GetPreviewScene {
+    const REQUEST_TYPE: &'static str = "GetPreviewScene";
     type Response = responses::GetPreviewScene;
 
     fn get_message_id(&self) -> &str {
@@ -2162,8 +2241,8 @@ impl Request for GetPreviewScene {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "GetPreviewScene",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
         })
     }
 }
@@ -2177,6 +2256,7 @@ pub struct SetPreviewScene {
 }
 
 impl Request for SetPreviewScene {
+    const REQUEST_TYPE: &'static str = "SetPreviewScene";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -2185,8 +2265,8 @@ impl Request for SetPreviewScene {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "SetPreviewScene",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "scene-name": self.scene_name,
         })
     }
@@ -2203,6 +2283,7 @@ pub struct TransitionToProgram {
 }
 
 impl Request for TransitionToProgram {
+    const REQUEST_TYPE: &'static str = "TransitionToProgram";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -2211,8 +2292,8 @@ impl Request for TransitionToProgram {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "TransitionToProgram",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "with-transition": {
                 "name": self.with_transition_name,
                 "duration": self.with_transition_duration,
@@ -2228,6 +2309,7 @@ pub struct EnableStudioMode {
 }
 
 impl Request for EnableStudioMode {
+    const REQUEST_TYPE: &'static str = "EnableStudioMode";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -2236,8 +2318,8 @@ impl Request for EnableStudioMode {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "EnableStudioMode",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
         })
     }
 }
@@ -2249,6 +2331,7 @@ pub struct DisableStudioMode {
 }
 
 impl Request for DisableStudioMode {
+    const REQUEST_TYPE: &'static str = "DisableStudioMode";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -2257,8 +2340,8 @@ impl Request for DisableStudioMode {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "DisableStudioMode",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
         })
     }
 }
@@ -2270,6 +2353,7 @@ pub struct ToggleStudioMode {
 }
 
 impl Request for ToggleStudioMode {
+    const REQUEST_TYPE: &'static str = "ToggleStudioMode";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -2278,8 +2362,8 @@ impl Request for ToggleStudioMode {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "ToggleStudioMode",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
         })
     }
 }
@@ -2291,6 +2375,7 @@ pub struct GetTransitionList {
 }
 
 impl Request for GetTransitionList {
+    const REQUEST_TYPE: &'static str = "GetTransitionList";
     type Response = responses::GetTransitionList;
 
     fn get_message_id(&self) -> &str {
@@ -2299,8 +2384,8 @@ impl Request for GetTransitionList {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "GetTransitionList",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
         })
     }
 }
@@ -2312,6 +2397,7 @@ pub struct GetCurrentTransition {
 }
 
 impl Request for GetCurrentTransition {
+    const REQUEST_TYPE: &'static str = "GetCurrentTransition";
     type Response = responses::GetCurrentTransition;
 
     fn get_message_id(&self) -> &str {
@@ -2320,8 +2406,8 @@ impl Request for GetCurrentTransition {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "GetCurrentTransition",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
         })
     }
 }
@@ -2335,6 +2421,7 @@ pub struct SetCurrentTransition {
 }
 
 impl Request for SetCurrentTransition {
+    const REQUEST_TYPE: &'static str = "SetCurrentTransition";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -2343,8 +2430,8 @@ impl Request for SetCurrentTransition {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "SetCurrentTransition",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "transition-name": self.transition_name,
         })
     }
@@ -2358,6 +2445,7 @@ pub struct SetTransitionDuration {
 }
 
 impl Request for SetTransitionDuration {
+    const REQUEST_TYPE: &'static str = "SetTransitionDuration";
     type Response = responses::Empty;
 
     fn get_message_id(&self) -> &str {
@@ -2366,8 +2454,8 @@ impl Request for SetTransitionDuration {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "SetTransitionDuration",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
             "duration": self.duration,
         })
     }
@@ -2380,6 +2468,7 @@ pub struct GetTransitionDuration {
 }
 
 impl Request for GetTransitionDuration {
+    const REQUEST_TYPE: &'static str = "GetTransitionDuration";
     type Response = responses::GetTransitionDuration;
 
     fn get_message_id(&self) -> &str {
@@ -2388,8 +2477,8 @@ impl Request for GetTransitionDuration {
 
     fn to_json(&self) -> Value {
         json!({
-            "request-type": "GetTransitionDuration",
-            "message-id": self.get_message_id(),
+            "request-type": Self::REQUEST_TYPE,
+            "message-id": self.message_id,
         })
     }
 }
