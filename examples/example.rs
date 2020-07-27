@@ -28,11 +28,11 @@ fn main() {
             stdin.read_line(&mut buffer).unwrap();
             match buffer.trim() {
                 "1" => {
-                    let gv = obs.request(&GetVersion::default()).await.unwrap();
+                    let gv = obs.request(&GetVersion::builder().build()).await.unwrap();
                     println!("version {:#?}", gv);
                 }
                 "2" => {
-                    let gs = obs.request(&GetStats::default()).await.unwrap();
+                    let gs = obs.request(&GetStats::builder().build()).await.unwrap();
 
                     println!("stats {:#?}", gs);
                 }

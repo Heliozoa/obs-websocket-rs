@@ -115,7 +115,7 @@ impl Obs {
             let (oneshot_sender, oneshot_receiver) = oneshot_channel();
 
             let message = Message {
-                message_id,
+                message_id: req.get_message_id().to_string(),
                 value,
                 sender: oneshot_sender,
             };
@@ -164,7 +164,7 @@ impl Obs {
             let auth_response_hash = Sha256::digest(auth_response_string.as_bytes());
             let auth_response = base64::encode(&auth_response_hash);
             log::info!("authing");
-            let req = Authenticate::builder().auth(&auth_response).build();
+            let req = Authenticate::builder().auth(auth_response).build();
             Ok(self.request(&req).await?)
         } else {
             Err(ObsError::NoAuthRequired)
@@ -229,7 +229,7 @@ impl Obs {
                             }
                         }
                     } else {
-                        log::warn!("unexpected response");
+                        log::warn!("unexpected response {:?}", response);
                     }
                 }
                 Ok(ResponseOrEvent::Event(event)) => {
@@ -403,17 +403,17 @@ mod test {
 
         let request = json!({
             "request-type": "GetVersion",
-            "message-id": "_0",
+            "message-id": "id",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "_0",
+            "message-id": "id",
             "version": 1.1,
             "obs-websocket-version": "4.7.0",
             "obs-studio-version": "24.0.3",
             "available-requests": "Request1,Request2"
         });
-        let req = GetVersion::default();
+        let req = GetVersion::builder().message_id("id").build();
         let expected = responses::GetVersion {
             version: 1.1,
             obs_websocket_version: "4.7.0".to_string(),
@@ -429,16 +429,16 @@ mod test {
 
         let request = json!({
             "request-type": "GetAuthRequired",
-            "message-id": "_0",
+            "message-id": "id",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "_0",
+            "message-id": "id",
             "authRequired": true,
             "challenge": "ch",
             "salt": "sa",
         });
-        let req = GetAuthRequired::default();
+        let req = GetAuthRequired::builder().message_id("id").build();
         let expected = responses::GetAuthRequired {
             auth_required: true,
             challenge: Some("ch".to_string()),
@@ -453,14 +453,14 @@ mod test {
 
         let request = json!({
             "request-type": "GetAuthRequired",
-            "message-id": "_0",
+            "message-id": "id",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "_0",
+            "message-id": "id",
             "authRequired": false,
         });
-        let req = GetAuthRequired::default();
+        let req = GetAuthRequired::builder().message_id("id").build();
         let expected = responses::GetAuthRequired {
             auth_required: false,
             challenge: None,
@@ -520,11 +520,11 @@ mod test {
 
         let request = json!({
             "request-type": "GetStats",
-            "message-id": "_0",
+            "message-id": "id",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "_0",
+            "message-id": "id",
             "stats": {
                 "fps": 0.0,
                 "render-total-frames": 1,
@@ -537,7 +537,7 @@ mod test {
                 "free-disk-space": 8.0,
             }
         });
-        let req = GetStats::default();
+        let req = GetStats::builder().message_id("id").build();
         let expected = responses::GetStats {
             stats: responses::ObsStats {
                 fps: 0.0,
@@ -560,11 +560,11 @@ mod test {
 
         let request = json!({
             "request-type": "GetVideoInfo",
-            "message-id": "_0",
+            "message-id": "id",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "_0",
+            "message-id": "id",
             "baseWidth": 0,
             "baseHeight": 1,
             "outputWidth": 2,
@@ -575,7 +575,7 @@ mod test {
             "colorSpace": "VIDEO_CS_601",
             "colorRange": "VIDEO_RANGE_PARTIAL",
         });
-        let req = GetVideoInfo::default();
+        let req = GetVideoInfo::builder().message_id("id").build();
         let expected = responses::GetVideoInfo {
             base_width: 0,
             base_height: 1,
@@ -596,11 +596,11 @@ mod test {
 
         let request = json!({
             "request-type": "ListOutputs",
-            "message-id": "_0",
+            "message-id": "id",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "_0",
+            "message-id": "id",
             "outputs": [
                 {
                     "name": "simple_file_output",
@@ -625,7 +625,7 @@ mod test {
                 }
             ],
         });
-        let req = ListOutputs::default();
+        let req = ListOutputs::builder().message_id("id").build();
         let expected = responses::ListOutputs {
             outputs: vec![responses::Output {
                 name: "simple_file_output".to_string(),
@@ -658,12 +658,12 @@ mod test {
 
         let request = json!({
             "request-type": "GetOutputInfo",
-            "message-id": "_0",
+            "message-id": "id",
             "outputName": "output1",
         });
         let response = json!({
             "status": "ok",
-            "message-id": "_0",
+            "message-id": "id",
             "outputInfo": {
                 "name": "simple_file_output",
                 "type": "ffmpeg_muxer",
@@ -686,7 +686,10 @@ mod test {
                 "totalBytes": 5,
             },
         });
-        let req = GetOutputInfo::builder().output_name("output1").build();
+        let req = GetOutputInfo::builder()
+            .message_id("id")
+            .output_name("output1")
+            .build();
         let expected = responses::GetOutputInfo {
             output_info: responses::Output {
                 name: "simple_file_output".to_string(),
@@ -719,13 +722,13 @@ mod test {
 
         let request = json!({
             "request-type": "GetSceneItemProperties",
-            "message-id": "_0",
+            "message-id": "id",
             "scene-name": "scene",
             "item": "source"
         });
         let response = json!({
             "status": "ok",
-            "message-id": "_0",
+            "message-id": "id",
             "name": "source",
             "position": {
                 "x": 0,
@@ -757,6 +760,7 @@ mod test {
             "height": 16.0,
         });
         let req = GetSceneItemProperties::builder()
+            .message_id("id")
             .scene_name("scene")
             .item("source")
             .build();
@@ -797,7 +801,7 @@ mod test {
 
         let request = json!({
             "request-type": "SetSceneItemProperties",
-            "message-id": "_0",
+            "message-id": "id",
             "scene-name": "scene",
             "item": "test",
             "position": {
@@ -826,10 +830,11 @@ mod test {
             },
         });
         let response = json!({
-            "message-id": "_0",
+            "message-id": "id",
             "status": "ok",
         });
         let req = SetSceneItemProperties::builder()
+            .message_id("id")
             .scene_name("scene")
             .item("test")
             .position_x(1.0)
@@ -859,7 +864,7 @@ mod test {
 
         let request = json!({
             "request-type": "ReorderSceneItems",
-            "message-id": "_0",
+            "message-id": "id",
             "scene": "s",
             "items": [
                 {
@@ -871,12 +876,13 @@ mod test {
             ],
         });
         let response = json!({
-            "message-id": "_0",
+            "message-id": "id",
             "status": "ok",
         });
         let req = ReorderSceneItems::builder()
+            .message_id("id")
             .scene("s")
-            .items(vec![ItemId::Name("n"), ItemId::Id(1)])
+            .items(vec![ItemId::Name("n".to_string()), ItemId::Id(1)])
             .build();
         let expected = responses::Empty {};
         request_test(vec![request], vec![response], req, expected);
@@ -896,7 +902,7 @@ mod test {
             websocket.close(None).expect("close");
         });
         smol::run(obs.connect("localhost", port)).expect("connect");
-        assert!(smol::run(obs.request(&GetVersion::default())).is_err());
+        assert!(smol::run(obs.request(&GetVersion::builder().message_id("id").build())).is_err());
     }
 
     #[test]
@@ -916,7 +922,7 @@ mod test {
             panic!();
         });
         smol::run(obs.connect("localhost", port)).expect("connect");
-        assert!(smol::run(obs.request(&GetVersion::default())).is_err());
+        assert!(smol::run(obs.request(&GetVersion::builder().message_id("id").build())).is_err());
     }
 
     #[test]
