@@ -1,6 +1,11 @@
 //! Contains Obs, the primary struct for interacting with the OBS WebSocket server.
 
-use crate::{error::ObsError, events, requests::*, responses};
+use crate::{
+    error::ObsError,
+    events::{self, Event},
+    requests::*,
+    responses,
+};
 
 use async_tungstenite::{
     tungstenite::{protocol::Role, Message as WebSocketMessage},
@@ -9,7 +14,7 @@ use async_tungstenite::{
 use futures::{
     channel::{
         mpsc::{self, UnboundedReceiver, UnboundedSender},
-        oneshot::{channel as oneshot_channel, Sender as OneshotSender},
+        oneshot::{self, Sender as OneshotSender},
     },
     future::{self, Either},
     sink::SinkExt,
@@ -23,7 +28,6 @@ use smol::{Async, Timer};
 use std::{
     collections::HashMap,
     net::{TcpStream, ToSocketAddrs},
-    num::Wrapping,
     thread::{self, JoinHandle},
     time::Duration,
 };
@@ -33,13 +37,16 @@ type WebSocketHandle = WebSocketStream<Arc<Async<TcpStream>>>;
 /// The primary struct for interacting with the OBS WebSocket server.
 #[derive(Default)]
 pub struct Obs {
-    running_message_id: Wrapping<u32>,
     connection_data: Option<ConnectionData>,
 }
 
 impl Obs {
     pub fn new() -> Self {
         Obs::default()
+    }
+
+    pub fn connected(&self) -> bool {
+        self.connection_data.is_some()
     }
 
     /// Attempts to connect to OBS. Starts a thread that handles
@@ -55,8 +62,8 @@ impl Obs {
 
         log::debug!("connecting to {}:{}", address, port);
 
-        let (thread_sender, thread_receiver) = mpsc::unbounded();
-        let (event_sender, event_receiver) = mpsc::unbounded();
+        let (thread_sender, thread_receiver) = mpsc::unbounded::<Message>();
+        let (event_sender, event_receiver) = mpsc::unbounded::<Event>();
         let (websocket_stream, send_socket, close_handle) =
             Obs::init_sockets(address, port).await?;
         let thread_handle =
@@ -70,7 +77,7 @@ impl Obs {
         Ok(event_receiver)
     }
 
-    /// Disconnects from OBS if connected. Does nothing if already connected.
+    /// Disconnects from OBS.
     /// Returns an error if not connected, or if there was an issue closing the WebSocket socket
     /// or closing the thread.
     pub async fn disconnect(&mut self) -> Result<(), ObsError> {
@@ -101,7 +108,6 @@ impl Obs {
     }
 
     /// Sends the given request to OBS.
-    /// If no message id is included in the request, a running number prepended with an underscore will be used.
     pub async fn request<T>(&mut self, req: &T) -> Result<T::Response, ObsError>
     where
         T: Request + std::fmt::Debug,
@@ -112,8 +118,9 @@ impl Obs {
             log::trace!("converted request to json {:#}", value);
 
             // channel for receiving the response
-            let (oneshot_sender, oneshot_receiver) = oneshot_channel();
+            let (oneshot_sender, oneshot_receiver) = oneshot::channel::<Result<Value, String>>();
 
+            // send to handler thread
             let message = Message {
                 message_id: req.get_message_id().to_string(),
                 value,
@@ -125,9 +132,8 @@ impl Obs {
                 .map_err(|_| ObsError::ConnectionInterrupted)?;
             log::trace!("sent");
 
-            let res = oneshot_receiver.await;
-            match res {
-                // received something from channel
+            // wait for response from handler thread
+            match oneshot_receiver.await {
                 Ok(res) => match res {
                     Ok(res) => {
                         log::debug!("received response {}", res);
@@ -153,8 +159,8 @@ impl Obs {
         let auth = self.request(&GetAuthRequired::builder().build()).await?;
         if auth.auth_required {
             log::info!("auth required");
-            let challenge = auth.challenge.expect("should have challenge");
-            let salt = auth.salt.expect("should have salt");
+            let challenge = auth.challenge.ok_or_else(|| ObsError::MissingChallenge)?;
+            let salt = auth.salt.ok_or_else(|| ObsError::MissingSalt)?;
 
             let secret_string = format!("{}{}", password, salt);
             let secret_hash = Sha256::digest(secret_string.as_bytes());
@@ -179,14 +185,21 @@ impl Obs {
         let addr = format!("{}:{}", address, port);
         let ws_addr = format!("ws://{}", addr);
 
-        let addr = addr.to_socket_addrs().unwrap().next().unwrap();
+        // parse addr
+        let addr = addr
+            .to_socket_addrs()
+            .map_err(|_| ObsError::InvalidAddress(addr.clone()))?
+            .next()
+            .ok_or_else(|| ObsError::InvalidAddress(addr.clone()))?;
         log::debug!("connecting tcp stream to {}", addr);
 
+        // connect to OBS
         let tcp_stream = Async::<TcpStream>::connect(addr).await?;
         let tcp_stream = Arc::new(tcp_stream);
         let send_stream = tcp_stream.clone();
         let close_stream = tcp_stream.clone();
 
+        // establish WS connection to OBS with timeout
         let tungstenite_future = async_tungstenite::client_async(ws_addr, tcp_stream);
         futures::pin_mut!(tungstenite_future);
         let timer = Timer::new(Duration::from_millis(100));
@@ -207,28 +220,25 @@ impl Obs {
         websocket_stream: WebSocketHandle,
         mut event_sender: UnboundedSender<events::Event>,
     ) -> JoinHandle<()> {
-        // handles incoming WebSocket messages
+        // handles incoming WebSocket messages from OBS
         async fn handle_incoming(
             pending_senders: &mut HashMap<String, OneshotSender<Result<Value, String>>>,
             event_sender: &mut UnboundedSender<events::Event>,
             message: String,
         ) {
             log::debug!("received text {}", message);
-            let parsed = serde_json::from_str::<ResponseOrEvent>(&message);
-            match parsed {
+            match serde_json::from_str::<ResponseOrEvent>(&message) {
                 Ok(ResponseOrEvent::Response(response)) => {
-                    if let Some(sender) = pending_senders.remove(&response.message_id) {
+                    // see if we have a sender with a matching message id
+                    if let Some(response_sender) = pending_senders.remove(&response.message_id) {
                         log::trace!("received response {:#?}", response);
-                        match response.response_data {
-                            responses::ResponseData::Ok(value) => {
-                                sender.send(Ok(value)).expect("failed to send");
-                            }
-                            responses::ResponseData::Error { error } => {
-                                log::error!("error: {}", error);
-                                sender.send(Err(error)).expect("failed to send");
-                            }
-                        }
+                        let response = match response.response_data {
+                            responses::ResponseData::Ok(value) => Ok(value),
+                            responses::ResponseData::Error { error } => Err(error),
+                        };
+                        response_sender.send(response).expect("failed to send");
                     } else {
+                        // ignore messages with no matching sender
                         log::warn!("unexpected response {:?}", response);
                     }
                 }
@@ -246,7 +256,7 @@ impl Obs {
             }
         }
 
-        // handles outgoing Messages
+        // handles outgoing Messages to OBS
         async fn handle_outgoing(
             send_socket: &mut WebSocketHandle,
             pending_senders: &mut HashMap<String, OneshotSender<Result<Value, String>>>,
@@ -257,13 +267,13 @@ impl Obs {
                 .send(WebSocketMessage::text(message.value.to_string()))
                 .await
                 .expect("failed to write message");
-            log::debug!("sent text {}", message.value);
+            log::debug!("sent text {:#}", message.value);
             pending_senders.insert(message.message_id, message.sender);
         }
 
         log::debug!("starting handler");
         thread::Builder::new()
-            .name("handler".to_string())
+            .name("message_handler".to_string())
             .spawn(move || {
                 smol::run(async move {
                     let mut pending_senders = HashMap::new();
@@ -276,14 +286,12 @@ impl Obs {
                                 None => break, // stream over
                             },
                             incoming = websocket_stream.next() => match incoming {
-                                Some(incoming) => match incoming {
-                                    Ok(incoming) => match incoming {
+                                Some(Ok(incoming)) => match incoming {
                                         WebSocketMessage::Text(incoming) => handle_incoming(&mut pending_senders, &mut event_sender, incoming).await,
                                         WebSocketMessage::Close(_) => break, //closing
                                         unexpected => log::warn!("unexpected websocket message {}", unexpected),
                                     }
-                                    Err(_) => break, // Tungstenite error
-                                }
+                                Some(Err(_)) => break, // Tungstenite error
                                 None => break, // stream over
                             }
                         }

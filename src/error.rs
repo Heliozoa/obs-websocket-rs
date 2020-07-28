@@ -42,6 +42,12 @@ pub enum ObsError {
     Json(#[from] serde_json::error::Error),
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
+    #[error("Authentication response field \"challenge\" was missing")]
+    MissingChallenge,
+    #[error("Authentication response field \"salt\" was missing")]
+    MissingSalt,
+    #[error("Invalid address: {0}")]
+    InvalidAddress(String),
 }
 
 impl<T: HandshakeRole> From<HandshakeError<T>> for ObsError {

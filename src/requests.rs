@@ -1,6 +1,12 @@
-//! Request types. Sent to the server
+//! Request types. Sent to the server.
+//!
+//! The request types will generate a running message-id by default, but they also support defining custom message-ids.
+//! When using custom IDs, avoid reusing them and if also using default IDs, avoid using custom ones in the form `_{integer}` to avoid clashing which may cause responses to be parsed incorrectly.
 
-use super::responses;
+use crate::responses;
+
+pub use crate::common_types::*;
+
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::{json, Value};
 use std::sync::atomic::{AtomicU32, Ordering};
@@ -28,6 +34,7 @@ fn make_message_id() -> String {
     format!("_{}", RUNNING_MESSAGE_ID.fetch_add(1, Ordering::Relaxed))
 }
 
+/// Returns the latest version of the plugin and the API.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetVersion {
     #[builder(default = make_message_id(), setter(into))]
@@ -50,6 +57,7 @@ impl Request for GetVersion {
     }
 }
 
+/// Tells the client if authentication is required.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetAuthRequired {
     #[builder(default = make_message_id(), setter(into))]
@@ -72,10 +80,12 @@ impl Request for GetAuthRequired {
     }
 }
 
+/// Attempt to authenticate the client to the server.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct Authenticate {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Response to the auth challenge.
     #[builder(setter(into))]
     auth: String,
 }
@@ -97,10 +107,12 @@ impl Request for Authenticate {
     }
 }
 
+/// Enable/disable sending of the Heartbeat event
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct SetHeartbeat {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Starts/Stops emitting heartbeat messages
     enable: bool,
 }
 
@@ -121,10 +133,12 @@ impl Request for SetHeartbeat {
     }
 }
 
+/// Set the filename formatting string
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct SetFilenameFormatting {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Filename formatting string to set.
     #[builder(setter(into))]
     filename_formatting: String,
 }
@@ -146,6 +160,7 @@ impl Request for SetFilenameFormatting {
     }
 }
 
+/// Get the filename formatting string
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetFilenameFormatting {
     #[builder(default = make_message_id(), setter(into))]
@@ -168,6 +183,7 @@ impl Request for GetFilenameFormatting {
     }
 }
 
+/// Get OBS stats (almost the same info as provided in OBS' stats window)
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetStats {
     #[builder(default = make_message_id(), setter(into))]
@@ -190,12 +206,15 @@ impl Request for GetStats {
     }
 }
 
+/// Broadcast custom message to all connected WebSocket clients
 #[derive(TypedBuilder, Debug, PartialEq)]
 pub struct BroadcastCustomMessage {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Identifier to be choosen by the client
     #[builder(setter(into))]
     realm: String,
+    /// User-defined data
     data: Value,
 }
 
@@ -217,6 +236,7 @@ impl Request for BroadcastCustomMessage {
     }
 }
 
+/// Get basic OBS video information
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetVideoInfo {
     #[builder(default = make_message_id(), setter(into))]
@@ -239,6 +259,7 @@ impl Request for GetVideoInfo {
     }
 }
 
+/// List existing outputs
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct ListOutputs {
     #[builder(default = make_message_id(), setter(into))]
@@ -261,10 +282,12 @@ impl Request for ListOutputs {
     }
 }
 
+/// Get information about a single output
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetOutputInfo {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Output name
     #[builder(setter(into))]
     output_name: String,
 }
@@ -286,10 +309,12 @@ impl Request for GetOutputInfo {
     }
 }
 
+/// Start an output
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct StartOutput {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Output name
     #[builder(setter(into))]
     output_name: String,
 }
@@ -311,12 +336,15 @@ impl Request for StartOutput {
     }
 }
 
+/// Stop an output
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct StopOutput {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Output name
     #[builder(setter(into))]
     output_name: String,
+    /// Force stop (default: false)
     #[builder(default, setter(strip_option))]
     force: Option<bool>,
 }
@@ -339,10 +367,12 @@ impl Request for StopOutput {
     }
 }
 
+/// Set the currently active profile.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct SetCurrentProfile {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Name of the desired profile.
     #[builder(setter(into))]
     profile_name: String,
 }
@@ -364,6 +394,7 @@ impl Request for SetCurrentProfile {
     }
 }
 
+/// Get the name of the current profile.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetCurrentProfile {
     #[builder(default = make_message_id(), setter(into))]
@@ -386,6 +417,7 @@ impl Request for GetCurrentProfile {
     }
 }
 
+/// Get a list of available profiles.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct ListProfiles {
     #[builder(default = make_message_id(), setter(into))]
@@ -408,6 +440,7 @@ impl Request for ListProfiles {
     }
 }
 
+/// Toggle recording on or off.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct StartStopRecording {
     #[builder(default = make_message_id(), setter(into))]
@@ -430,6 +463,7 @@ impl Request for StartStopRecording {
     }
 }
 
+/// Start recording. Will return an error if recording is already active.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct StartRecording {
     #[builder(default = make_message_id(), setter(into))]
@@ -452,6 +486,7 @@ impl Request for StartRecording {
     }
 }
 
+/// Stop recording. Will return an error if recording is not active.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct StopRecording {
     #[builder(default = make_message_id(), setter(into))]
@@ -474,6 +509,7 @@ impl Request for StopRecording {
     }
 }
 
+/// Pause the current recording. Returns an error if recording is not active or already paused.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct PauseRecording {
     #[builder(default = make_message_id(), setter(into))]
@@ -496,6 +532,7 @@ impl Request for PauseRecording {
     }
 }
 
+/// Resume/unpause the current recording (if paused). Returns an error if recording is not active or not paused.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct ResumeRecording {
     #[builder(default = make_message_id(), setter(into))]
@@ -518,10 +555,12 @@ impl Request for ResumeRecording {
     }
 }
 
+/// Please note: if SetRecordingFolder is called while a recording is in progress, the change won't be applied immediately and will be effective on the next recording.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct SetRecordingFolder {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Path of the recording folder.
     #[builder(setter(into))]
     rec_folder: String,
 }
@@ -543,6 +582,7 @@ impl Request for SetRecordingFolder {
     }
 }
 
+/// Get the path of the current recording folder.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetRecordingFolder {
     #[builder(default = make_message_id(), setter(into))]
@@ -565,6 +605,7 @@ impl Request for GetRecordingFolder {
     }
 }
 
+/// Toggle the Replay Buffer on/off.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct StartStopReplayBuffer {
     #[builder(default = make_message_id(), setter(into))]
@@ -587,6 +628,7 @@ impl Request for StartStopReplayBuffer {
     }
 }
 
+/// Start recording into the Replay Buffer. Will return an error if the Replay Buffer is already active or if the "Save Replay Buffer" hotkey is not set in OBS' settings. Setting this hotkey is mandatory, even when triggering saves only through obs-websocket.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct StartReplayBuffer {
     #[builder(default = make_message_id(), setter(into))]
@@ -609,6 +651,7 @@ impl Request for StartReplayBuffer {
     }
 }
 
+/// Stop recording into the Replay Buffer. Will return an error if the Replay Buffer is not active.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct StopReplayBuffer {
     #[builder(default = make_message_id(), setter(into))]
@@ -631,6 +674,7 @@ impl Request for StopReplayBuffer {
     }
 }
 
+/// Flush and save the contents of the Replay Buffer to disk. This is basically the same as triggering the "Save Replay Buffer" hotkey. Will return an error if the Replay Buffer is not active.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct SaveReplayBuffer {
     #[builder(default = make_message_id(), setter(into))]
@@ -653,10 +697,12 @@ impl Request for SaveReplayBuffer {
     }
 }
 
+/// Change the active scene collection.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct SetCurrentSceneCollection {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Name of the desired scene collection.
     #[builder(setter(into))]
     sc_name: String,
 }
@@ -678,6 +724,7 @@ impl Request for SetCurrentSceneCollection {
     }
 }
 
+/// Get the name of the current scene collection.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetCurrentSceneCollection {
     #[builder(default = make_message_id(), setter(into))]
@@ -700,6 +747,7 @@ impl Request for GetCurrentSceneCollection {
     }
 }
 
+/// List available scene collections
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct ListSceneCollections {
     #[builder(default = make_message_id(), setter(into))]
@@ -722,12 +770,15 @@ impl Request for ListSceneCollections {
     }
 }
 
+/// Gets the scene specific properties of the specified source item. Coordinates are relative to the item's parent (the scene or group it belongs to).
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetSceneItemProperties {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// the name of the scene that the source item belongs to. Defaults to the current scene.
     #[builder(default, setter(strip_option, into))]
     scene_name: Option<String>,
+    /// The name of the source.
     #[builder(setter(into))]
     item: String,
 }
@@ -750,62 +801,63 @@ impl Request for GetSceneItemProperties {
     }
 }
 
-#[derive(Serialize, Debug, PartialEq, Eq)]
-pub enum BoundsType {
-    #[serde(rename = "OBS_BOUNDS_NONE")]
-    None,
-    #[serde(rename = "OBS_BOUNDS_STRETCH")]
-    Stretch,
-    #[serde(rename = "OBS_BOUNDS_SCALE_INNER")]
-    ScaleInner,
-    #[serde(rename = "OBS_BOUNDS_SCALE_OUTER")]
-    ScaleOuter,
-    #[serde(rename = "OBS_BOUNDS_SCALE_TO_WIDTH")]
-    ScaleToWidth,
-    #[serde(rename = "OBS_BOUNDS_SCALE_TO_HEIGHT")]
-    ScaleToHeight,
-    #[serde(rename = "OBS_BOUNDS_MAX_ONLY")]
-    MaxOnly,
-}
-
+/// Sets the scene specific properties of a source. Unspecified properties will remain unchanged. Coordinates are relative to the item's parent (the scene or group it belongs to).
 #[derive(Debug, TypedBuilder, PartialEq)]
 pub struct SetSceneItemProperties {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// the name of the scene that the source item belongs to. Defaults to the current scene.
     #[builder(default, setter(strip_option, into))]
     scene_name: Option<String>,
+    /// The name of the source.
     #[builder(setter(into))]
     item: String,
+    /// The new x position of the source.
     #[builder(default, setter(strip_option))]
     position_x: Option<f64>,
+    /// The new y position of the source.
     #[builder(default, setter(strip_option))]
     position_y: Option<f64>,
+    /// The new alignment of the source.
     #[builder(default, setter(strip_option))]
     position_alignment: Option<i32>,
+    /// The new clockwise rotation of the item in degrees.
     #[builder(default, setter(strip_option))]
     rotation: Option<f64>,
+    /// The new x scale of the item.
     #[builder(default, setter(strip_option))]
     scale_x: Option<f64>,
+    /// The new y scale of the item.
     #[builder(default, setter(strip_option))]
     scale_y: Option<f64>,
+    /// The new amount of pixels cropped off the top of the source before scaling.
     #[builder(default, setter(strip_option))]
     crop_top: Option<i32>,
+    /// The new amount of pixels cropped off the bottom of the source before scaling.
     #[builder(default, setter(strip_option))]
     crop_bottom: Option<i32>,
+    /// The new amount of pixels cropped off the left of the source before scaling.
     #[builder(default, setter(strip_option))]
     crop_left: Option<i32>,
+    /// The new amount of pixels cropped off the right of the source before scaling.
     #[builder(default, setter(strip_option))]
     crop_right: Option<i32>,
+    /// The new visibility of the source. 'true' shows source, 'false' hides source.
     #[builder(default, setter(strip_option))]
     visible: Option<bool>,
+    /// The new locked status of the source. 'true' keeps it in its current position, 'false' allows movement.
     #[builder(default, setter(strip_option))]
     locked: Option<bool>,
+    /// The new bounds type of the source.
     #[builder(default, setter(strip_option))]
     bounds_type: Option<BoundsType>,
+    /// The new alignment of the bounding box. (0-2, 4-6, 8-10)
     #[builder(default, setter(strip_option))]
     bounds_alignment: Option<i32>,
+    /// The new width of the bounding box.
     #[builder(default, setter(strip_option))]
     bounds_x: Option<f64>,
+    /// The new height of the bounding box.
     #[builder(default, setter(strip_option))]
     bounds_y: Option<f64>,
 }
@@ -852,12 +904,15 @@ impl Request for SetSceneItemProperties {
     }
 }
 
+/// Reset a scene item.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct ResetSceneItem {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Name of the scene the source belongs to. Defaults to the current scene.
     #[builder(default, setter(strip_option, into))]
     scene_name: Option<String>,
+    /// Name of the source item.
     #[builder(setter(into))]
     item: String,
 }
@@ -880,12 +935,15 @@ impl Request for ResetSceneItem {
     }
 }
 
+/// Deletes a scene item.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct DeleteSceneItem {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Name of the scene the source belongs to. Defaults to the current scene.
     #[builder(default, setter(strip_option, into))]
     scene: Option<String>,
+    /// Id or name of the scene item, prefer id, including both is acceptable.
     #[builder(default, setter(strip_option))]
     item_id: Option<ItemId>,
 }
@@ -913,14 +971,18 @@ impl Request for DeleteSceneItem {
     }
 }
 
+/// Duplicates a scene item.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct DuplicateSceneItem {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Name of the scene to copy the item from. Defaults to the current scene.
     #[builder(default, setter(strip_option, into))]
     from_scene: Option<String>,
+    /// Name of the scene to create the item in. Defaults to the current scene.
     #[builder(default, setter(strip_option, into))]
     to_scene: Option<String>,
+    /// Id or name of the scene item, prefer id, including both is acceptable.
     #[builder(default, setter(strip_option))]
     item_id: Option<ItemId>,
 }
@@ -949,12 +1011,12 @@ impl Request for DuplicateSceneItem {
     }
 }
 
-// cont here
-
+/// Switch to the specified scene.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct SetCurrentScene {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Name of the scene to switch to.
     #[builder(setter(into))]
     scene_name: String,
 }
@@ -976,6 +1038,7 @@ impl Request for SetCurrentScene {
     }
 }
 
+/// Get the current scene's name and source items.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetCurrentScene {
     #[builder(default = make_message_id(), setter(into))]
@@ -998,6 +1061,7 @@ impl Request for GetCurrentScene {
     }
 }
 
+/// Get a list of scenes in the currently active profile.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetSceneList {
     #[builder(default = make_message_id(), setter(into))]
@@ -1020,12 +1084,15 @@ impl Request for GetSceneList {
     }
 }
 
+/// Changes the order of scene items in the requested scene.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct ReorderSceneItems {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Name of the scene to reorder (defaults to current).
     #[builder(default, setter(strip_option, into))]
     scene: Option<String>,
+    /// Ordered list of objects with name and/or id specified. Id preferred due to uniqueness per scene
     #[builder(default, setter(strip_option))]
     items: Option<Vec<ItemId>>,
 }
@@ -1062,6 +1129,7 @@ impl Request for ReorderSceneItems {
     }
 }
 
+/// List all sources available in the running OBS instance
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetSourcesList {
     #[builder(default = make_message_id(), setter(into))]
@@ -1084,6 +1152,7 @@ impl Request for GetSourcesList {
     }
 }
 
+/// Get a list of all available sources types
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetSourceTypesList {
     #[builder(default = make_message_id(), setter(into))]
@@ -1106,10 +1175,12 @@ impl Request for GetSourceTypesList {
     }
 }
 
+/// Get the volume of the specified source.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetVolume {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Source name.
     #[builder(setter(into))]
     source: String,
 }
@@ -1131,12 +1202,15 @@ impl Request for GetVolume {
     }
 }
 
+/// Set the volume of the specified source.
 #[derive(TypedBuilder, Debug, PartialEq)]
 pub struct SetVolume {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Source name.
     #[builder(setter(into))]
     source: String,
+    /// Desired volume. Must be between 0.0 and 1.0.
     volume: f64,
 }
 
@@ -1158,10 +1232,12 @@ impl Request for SetVolume {
     }
 }
 
+/// Get the mute status of a specified source.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetMute {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Source name.
     #[builder(setter(into))]
     source: String,
 }
@@ -1183,12 +1259,15 @@ impl Request for GetMute {
     }
 }
 
+/// Sets the mute status of a specified source.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct SetMute {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Source name.
     #[builder(setter(into))]
     source: String,
+    /// Desired mute status.
     mute: bool,
 }
 
@@ -1210,10 +1289,12 @@ impl Request for SetMute {
     }
 }
 
+/// Inverts the mute status of a specified source.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct ToggleMute {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Source name.
     #[builder(setter(into))]
     source: String,
 }
@@ -1235,12 +1316,15 @@ impl Request for ToggleMute {
     }
 }
 
+/// Set the audio sync offset of a specified source.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct SetSyncOffset {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Source name.
     #[builder(setter(into))]
     source: String,
+    /// The desired audio sync offset (in nanoseconds).
     offset: i32,
 }
 
@@ -1262,10 +1346,12 @@ impl Request for SetSyncOffset {
     }
 }
 
+/// Get the audio sync offset of a specified source.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetSyncOffset {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Source name.
     #[builder(setter(into))]
     source: String,
 }
@@ -1287,12 +1373,15 @@ impl Request for GetSyncOffset {
     }
 }
 
+/// Get settings of the specified source
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetSourceSettings {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Source name.
     #[builder(setter(into))]
     source_name: String,
+    /// Type of the specified source. Useful for type-checking if you expect a specific settings schema.
     #[builder(default, setter(strip_option, into))]
     source_type: Option<String>,
 }
@@ -1316,14 +1405,18 @@ impl Request for GetSourceSettings {
 }
 
 // TODO: source settings
+/// Set settings of the specified source.
 #[derive(TypedBuilder, Debug, PartialEq)]
 pub struct SetSourceSettings {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Source name.
     #[builder(setter(into))]
     source_name: String,
+    /// Type of the specified source. Useful for type-checking to avoid settings a set of settings incompatible with the actual source's type.
     #[builder(default, setter(strip_option, into))]
     source_type: Option<String>,
+    /// Source settings (varies between source types, may require some probing around).
     source_settings: Value,
 }
 
@@ -1346,10 +1439,12 @@ impl Request for SetSourceSettings {
     }
 }
 
+/// Get the current properties of a Text GDI Plus source.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetTextGDIPlusProperties {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Source name.
     #[builder(setter(into))]
     source: String,
 }
@@ -1379,64 +1474,93 @@ pub enum Alignment {
     Right,
 }
 
+/// Set the current properties of a Text GDI Plus source.
 #[derive(TypedBuilder, Debug, PartialEq)]
 pub struct SetTextGDIPlusProperties {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Name of the source.
     #[builder(setter(into))]
     source: String,
+    /// Text Alignment.
     #[builder(default, setter(strip_option))]
     align: Option<Alignment>,
+    /// Background color.
     #[builder(default, setter(strip_option))]
     bk_color: Option<i32>,
+    /// Background opacity (0-100).
     #[builder(default, setter(strip_option))]
     bk_opacity: Option<i32>,
+    /// Chat log.
     #[builder(default, setter(strip_option))]
     chatlog: Option<bool>,
+    /// Chat log lines.
     #[builder(default, setter(strip_option))]
     chatlog_lines: Option<i32>,
+    /// Text color.
     #[builder(default, setter(strip_option))]
     color: Option<i32>,
+    /// Extents wrap.
     #[builder(default, setter(strip_option))]
     extents: Option<bool>,
+    /// Extents cx.
     #[builder(default, setter(strip_option))]
     extents_cx: Option<i32>,
+    /// Extents cy.
     #[builder(default, setter(strip_option))]
     extents_cy: Option<i32>,
+    /// File path name.
     #[builder(default, setter(strip_option, into))]
     file: Option<String>,
+    /// Read text from the specified file.
     #[builder(default, setter(strip_option))]
     read_from_file: Option<bool>,
+    /// Font face.
     #[builder(default, setter(strip_option, into))]
     font_face: Option<String>,
+    /// Font text styling flag.
     #[builder(default, setter(strip_option))]
     font_flags: Option<i32>,
+    /// Font text size.
     #[builder(default, setter(strip_option))]
     font_size: Option<i32>,
+    /// Font Style (unknown function).
     #[builder(default, setter(strip_option, into))]
     font_style: Option<String>,
+    /// Gradient enabled.
     #[builder(default, setter(strip_option))]
     gradient: Option<bool>,
+    /// Gradient color.
     #[builder(default, setter(strip_option))]
     gradient_color: Option<i32>,
+    /// Gradient direction.
     #[builder(default, setter(strip_option))]
     gradient_dir: Option<f64>,
+    /// Gradient opacity (0-100).
     #[builder(default, setter(strip_option))]
     gradient_opacity: Option<i32>,
+    /// Outline.
     #[builder(default, setter(strip_option))]
     outline: Option<bool>,
+    /// Outline color.
     #[builder(default, setter(strip_option))]
     outline_color: Option<i32>,
+    /// Outline size.
     #[builder(default, setter(strip_option))]
     outline_size: Option<i32>,
+    /// Outline opacity (0-100).
     #[builder(default, setter(strip_option))]
     outline_opacity: Option<i32>,
+    /// Text content to be displayed.
     #[builder(default, setter(strip_option, into))]
     text: Option<String>,
+    /// Text vertical alignment.
     #[builder(default, setter(strip_option, into))]
     valign: Option<String>,
+    /// Vertical text enabled.
     #[builder(default, setter(strip_option, into))]
     vertical: Option<String>,
+    /// Visibility of the scene item.
     #[builder(default, setter(strip_option))]
     render: Option<bool>,
 }
@@ -1487,10 +1611,12 @@ impl Request for SetTextGDIPlusProperties {
     }
 }
 
+/// Get the current properties of a Text Freetype 2 source.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetTextFreetype2Properties {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Source name.
     #[builder(setter(into))]
     source: String,
 }
@@ -1512,38 +1638,54 @@ impl Request for GetTextFreetype2Properties {
     }
 }
 
+/// Set the current properties of a Text Freetype 2 source.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct SetTextFreetype2Properties {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Source name.
     #[builder(setter(into))]
     source: String,
+    /// Gradient top color.
     #[builder(default, setter(strip_option))]
     color_1: Option<i32>,
+    /// Gradient bottom color.
     #[builder(default, setter(strip_option))]
     color_2: Option<i32>,
+    /// Custom width (0 to disable).
     #[builder(default, setter(strip_option))]
     custom_width: Option<i32>,
+    /// Drop shadow.
     #[builder(default, setter(strip_option))]
     drop_shadow: Option<bool>,
+    /// Font face.
     #[builder(default, setter(strip_option, into))]
     font_face: Option<String>,
+    /// Font text styling flag.
     #[builder(default, setter(strip_option))]
     font_flags: Option<i32>,
+    /// Font text size.
     #[builder(default, setter(strip_option))]
     font_size: Option<i32>,
+    /// Font Style (unknown function).
     #[builder(default, setter(strip_option, into))]
     font_style: Option<String>,
+    /// Read text from the specified file.
     #[builder(default, setter(strip_option))]
     from_file: Option<bool>,
+    /// Chat log.
     #[builder(default, setter(strip_option))]
     log_mode: Option<bool>,
+    /// Outline.
     #[builder(default, setter(strip_option))]
     outline: Option<bool>,
+    /// Text content to be displayed.
     #[builder(default, setter(strip_option, into))]
     text: Option<String>,
+    /// File path.
     #[builder(default, setter(strip_option, into))]
     text_file: Option<String>,
+    /// Word wrap.
     #[builder(default, setter(strip_option))]
     word_wrap: Option<bool>,
 }
@@ -1581,10 +1723,12 @@ impl Request for SetTextFreetype2Properties {
     }
 }
 
+/// Get current properties for a Browser Source.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetBrowserSourceProperties {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Source name.
     #[builder(setter(into))]
     source: String,
 }
@@ -1606,28 +1750,39 @@ impl Request for GetBrowserSourceProperties {
     }
 }
 
+/// Set current properties for a Browser Source.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct SetBrowserSourceProperties {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Name of the source.
     #[builder(setter(into))]
     source: String,
+    /// Indicates that a local file is in use.
     #[builder(default, setter(strip_option))]
     is_local_file: Option<bool>,
+    /// file path.
     #[builder(default, setter(strip_option, into))]
     local_file: Option<String>,
+    /// Url.
     #[builder(default, setter(strip_option, into))]
     url: Option<String>,
+    /// CSS to inject.
     #[builder(default, setter(strip_option, into))]
     css: Option<String>,
+    /// Width.
     #[builder(default, setter(strip_option))]
     width: Option<i32>,
+    /// Height.
     #[builder(default, setter(strip_option))]
     height: Option<i32>,
+    /// Framerate.
     #[builder(default, setter(strip_option))]
     fps: Option<i32>,
+    /// Indicates whether the source should be shutdown when not visible.
     #[builder(default, setter(strip_option))]
     shutdown: Option<bool>,
+    /// Visibility of the scene item.
     #[builder(default, setter(strip_option))]
     render: Option<bool>,
 }
@@ -1658,6 +1813,7 @@ impl Request for SetBrowserSourceProperties {
     }
 }
 
+/// Get configured special sources like Desktop Audio and Mic/Aux sources.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetSpecialSources {
     #[builder(default = make_message_id(), setter(into))]
@@ -1680,10 +1836,12 @@ impl Request for GetSpecialSources {
     }
 }
 
+/// List filters applied to a source
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetSourceFilters {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Source name
     #[builder(setter(into))]
     source_name: String,
 }
@@ -1705,12 +1863,15 @@ impl Request for GetSourceFilters {
     }
 }
 
+/// List filters applied to a source
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetSourceFilterInfo {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Source name
     #[builder(setter(into))]
     source_name: String,
+    /// Source filter name
     #[builder(setter(into))]
     filter_name: String,
 }
@@ -1734,16 +1895,21 @@ impl Request for GetSourceFilterInfo {
 }
 
 // TODO: filter settings
+/// Add a new filter to a source. Available source types along with their settings properties are available from GetSourceTypesList.
 #[derive(TypedBuilder, Debug, PartialEq)]
 pub struct AddFilterToSource {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Name of the source on which the filter is added
     #[builder(setter(into))]
     source_name: String,
+    /// Name of the new filter
     #[builder(setter(into))]
     filter_name: String,
+    /// Filter type
     #[builder(setter(into))]
     filter_type: String,
+    /// Filter settings
     filter_settings: Value,
 }
 
@@ -1767,12 +1933,15 @@ impl Request for AddFilterToSource {
     }
 }
 
+/// Remove a filter from a source
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct RemoveFilterFromSource {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Name of the source from which the specified filter is removed
     #[builder(setter(into))]
     source_name: String,
+    /// Name of the filter to remove
     #[builder(setter(into))]
     filter_name: String,
 }
@@ -1795,14 +1964,18 @@ impl Request for RemoveFilterFromSource {
     }
 }
 
+/// Move a filter in the chain (absolute index positioning)
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct ReorderSourceFilter {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Name of the source to which the filter belongs
     #[builder(setter(into))]
     source_name: String,
+    /// Name of the filter to reorder
     #[builder(setter(into))]
     filter_name: String,
+    /// Desired position of the filter in the chain
     new_index: i32,
 }
 
@@ -1826,6 +1999,7 @@ impl Request for ReorderSourceFilter {
 }
 
 #[derive(Debug, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
 pub enum MovementType {
     Up,
     Down,
@@ -1833,14 +2007,18 @@ pub enum MovementType {
     Bottom,
 }
 
+/// Move a filter in the chain (relative positioning)
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct MoveSourceFilter {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Name of the source to which the filter belongs
     #[builder(setter(into))]
     source_name: String,
+    /// Name of the filter to reorder
     #[builder(setter(into))]
     filter_name: String,
+    /// How to move the filter around in the source's filter chain.
     movement_type: MovementType,
 }
 
@@ -1864,14 +2042,18 @@ impl Request for MoveSourceFilter {
 }
 
 // TODO: filter settings
+/// Update settings of a filter
 #[derive(TypedBuilder, Debug, PartialEq)]
 pub struct SetSourceFilterSettings {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Name of the source to which the filter belongs
     #[builder(setter(into))]
     source_name: String,
+    /// Name of the filter to reconfigure
     #[builder(setter(into))]
     filter_name: String,
+    /// New settings. These will be merged to the current filter settings.
     filter_settings: Value,
 }
 
@@ -1894,14 +2076,18 @@ impl Request for SetSourceFilterSettings {
     }
 }
 
+/// Change the visibility/enabled state of a filter
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct SetSourceFilterVisibility {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Source name
     #[builder(setter(into))]
     source_name: String,
+    /// Source filter name
     #[builder(setter(into))]
     filter_name: String,
+    /// New filter state
     filter_enabled: bool,
 }
 
@@ -1939,18 +2125,25 @@ pub enum EmbedPictureFormat {
     Xpm,
 }
 
+/// At least embedPictureFormat or saveToFilePath must be specified.
+/// Clients can specify width and height parameters to receive scaled pictures. Aspect ratio is preserved if only one of these two parameters is specified.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct TakeSourceScreenshot {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Source name. Note that, since scenes are also sources, you can also provide a scene name.
     #[builder(setter(into))]
     source_name: String,
+    /// Format of the Data URI encoded picture.
     #[builder(default, setter(strip_option))]
     embed_picture_format: Option<EmbedPictureFormat>,
+    /// Full file path (file extension included) where the captured image is to be saved. Can be in a format different from pictureFormat. Can be a relative path.
     #[builder(default, setter(strip_option, into))]
     save_to_file_path: Option<String>,
+    /// Screenshot width. Defaults to the source's base width.
     #[builder(default, setter(strip_option))]
     width: Option<i32>,
+    /// Screenshot height. Defaults to the source's base height.
     #[builder(default, setter(strip_option))]
     height: Option<i32>,
 }
@@ -1976,6 +2169,7 @@ impl Request for TakeSourceScreenshot {
     }
 }
 
+/// Get current streaming and recording status.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetStreamingStatus {
     #[builder(default = make_message_id(), setter(into))]
@@ -1998,6 +2192,7 @@ impl Request for GetStreamingStatus {
     }
 }
 
+/// Toggle streaming on or off.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct StartStopStreaming {
     #[builder(default = make_message_id(), setter(into))]
@@ -2020,23 +2215,30 @@ impl Request for StartStopStreaming {
     }
 }
 
-// TODO:
+/// Start streaming. Will return an error if streaming is already active.
 #[derive(TypedBuilder, Debug, PartialEq)]
 pub struct StartStreaming {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// If specified ensures the type of stream matches the given type (usually 'rtmp_custom' or 'rtmp_common'). If the currently configured stream type does not match the given stream type, all settings must be specified in the settings object or an error will occur when starting the stream.
     #[builder(default, setter(strip_option, into))]
     stream_type: Option<String>,
+    /// Adds the given object parameters as encoded query string parameters to the 'key' of the RTMP stream. Used to pass data to the RTMP service about the streaming. May be any String, Numeric, or Boolean field.
     #[builder(default, setter(strip_option))]
     stream_metadata: Option<Value>,
+    /// The publish URL.
     #[builder(default, setter(strip_option, into))]
     stream_server: Option<String>,
+    /// The publish key of the stream.
     #[builder(default, setter(strip_option, into))]
     stream_key: Option<String>,
+    /// Indicates whether authentication should be used when connecting to the streaming server.
     #[builder(default, setter(strip_option, into))]
     stream_use_auth: Option<String>,
+    /// If authentication is enabled, the username for the streaming server. Ignored if use-auth is not set to true.
     #[builder(default, setter(strip_option, into))]
     stream_username: Option<String>,
+    /// If authentication is enabled, the password for the streaming server. Ignored if use-auth is not set to true.
     #[builder(default, setter(strip_option, into))]
     stream_password: Option<String>,
 }
@@ -2068,6 +2270,7 @@ impl Request for StartStreaming {
     }
 }
 
+/// Stop streaming. Will return an error if streaming is not active.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct StopStreaming {
     #[builder(default = make_message_id(), setter(into))]
@@ -2090,22 +2293,30 @@ impl Request for StopStreaming {
     }
 }
 
+/// Sets one or more attributes of the current streaming server settings. Any options not passed will remain unchanged. Returns the updated settings in response. If 'type' is different than the current streaming service type, all settings are required. Returns the full settings of the stream (the same as GetStreamSettings).
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct SetStreamSettings {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// The type of streaming service configuration, usually rtmp_custom or rtmp_common.
     #[builder(default, setter(strip_option, into))]
     stream_type: Option<String>,
+    /// The publish URL.
     #[builder(default, setter(strip_option, into))]
     server: Option<String>,
+    /// The publish key.
     #[builder(default, setter(strip_option, into))]
     key: Option<String>,
+    /// Indicates whether authentication should be used when connecting to the streaming server.
     #[builder(default, setter(strip_option, into))]
     use_auth: Option<String>,
+    /// The username for the streaming service.
     #[builder(default, setter(strip_option, into))]
     username: Option<String>,
+    /// The password for the streaming service.
     #[builder(default, setter(strip_option, into))]
     password: Option<String>,
+    /// Persist the settings to disk.
     save: bool,
 }
 
@@ -2134,6 +2345,7 @@ impl Request for SetStreamSettings {
     }
 }
 
+/// Get the current streaming server settings.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetStreamSettings {
     #[builder(default = make_message_id(), setter(into))]
@@ -2156,6 +2368,7 @@ impl Request for GetStreamSettings {
     }
 }
 
+/// Save the current streaming server settings to disk.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct SaveStreamSettings {
     #[builder(default = make_message_id(), setter(into))]
@@ -2178,10 +2391,12 @@ impl Request for SaveStreamSettings {
     }
 }
 
+/// Send the provided text as embedded CEA-608 caption data. As of OBS Studio 23.1, captions are not yet available on Linux.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct SendCaptions {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Captions text
     #[builder(setter(into))]
     text: String,
 }
@@ -2203,6 +2418,7 @@ impl Request for SendCaptions {
     }
 }
 
+/// Indicates if Studio Mode is currently enabled.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetStudioModeStatus {
     #[builder(default = make_message_id(), setter(into))]
@@ -2225,6 +2441,7 @@ impl Request for GetStudioModeStatus {
     }
 }
 
+/// Get the name of the currently previewed scene and its list of sources. Will return an error if Studio Mode is not enabled.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetPreviewScene {
     #[builder(default = make_message_id(), setter(into))]
@@ -2247,10 +2464,12 @@ impl Request for GetPreviewScene {
     }
 }
 
+/// Set the active preview scene. Will return an error if Studio Mode is not enabled.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct SetPreviewScene {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// The name of the scene to preview.
     #[builder(setter(into))]
     scene_name: String,
 }
@@ -2272,12 +2491,15 @@ impl Request for SetPreviewScene {
     }
 }
 
+/// Transitions the currently previewed scene to the main output. Will return an error if Studio Mode is not enabled.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct TransitionToProgram {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Name of the transition.
     #[builder(default, setter(strip_option, into))]
     with_transition_name: Option<String>,
+    /// Transition duration (in milliseconds).
     #[builder(default, setter(strip_option, into))]
     with_transition_duration: Option<String>,
 }
@@ -2302,6 +2524,7 @@ impl Request for TransitionToProgram {
     }
 }
 
+/// Enables Studio Mode.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct EnableStudioMode {
     #[builder(default = make_message_id(), setter(into))]
@@ -2324,6 +2547,7 @@ impl Request for EnableStudioMode {
     }
 }
 
+/// Disables Studio Mode.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct DisableStudioMode {
     #[builder(default = make_message_id(), setter(into))]
@@ -2346,6 +2570,7 @@ impl Request for DisableStudioMode {
     }
 }
 
+/// Toggles Studio Mode.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct ToggleStudioMode {
     #[builder(default = make_message_id(), setter(into))]
@@ -2368,6 +2593,7 @@ impl Request for ToggleStudioMode {
     }
 }
 
+/// List of all transitions available in the frontend's dropdown menu.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetTransitionList {
     #[builder(default = make_message_id(), setter(into))]
@@ -2390,6 +2616,7 @@ impl Request for GetTransitionList {
     }
 }
 
+/// Get the name of the currently selected transition in the frontend's dropdown menu.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetCurrentTransition {
     #[builder(default = make_message_id(), setter(into))]
@@ -2412,10 +2639,12 @@ impl Request for GetCurrentTransition {
     }
 }
 
+/// Set the active transition.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct SetCurrentTransition {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// The name of the transition.
     #[builder(setter(into))]
     transition_name: String,
 }
@@ -2437,10 +2666,12 @@ impl Request for SetCurrentTransition {
     }
 }
 
+/// Set the duration of the currently selected transition if supported.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct SetTransitionDuration {
     #[builder(default = make_message_id(), setter(into))]
     message_id: String,
+    /// Desired duration of the transition (in milliseconds).
     duration: i32,
 }
 
@@ -2461,6 +2692,7 @@ impl Request for SetTransitionDuration {
     }
 }
 
+/// Get the duration of the currently selected transition if supported.
 #[derive(TypedBuilder, Debug, PartialEq, Eq)]
 pub struct GetTransitionDuration {
     #[builder(default = make_message_id(), setter(into))]
@@ -2486,14 +2718,16 @@ impl Request for GetTransitionDuration {
 // #### other typedefs ####
 #[derive(Debug, PartialEq, Eq)]
 pub enum ItemId {
+    /// Name of a scene item. Sufficiently unique if no scene items share sources within the scene.
     Name(String),
+    /// Id of a specific scene item. Unique on a scene by scene basis.
     Id(i32),
 }
 
 impl ItemId {
-    fn to_name(&self) -> Option<String> {
+    fn to_name(&self) -> Option<&str> {
         match self {
-            Self::Name(s) => Some(s.clone()),
+            Self::Name(s) => Some(s),
             _ => None,
         }
     }
