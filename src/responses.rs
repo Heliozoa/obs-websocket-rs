@@ -1,7 +1,7 @@
 pub use crate::common_types::*;
 
 use serde::{de, Deserialize, Deserializer};
-use serde_json::{Number, Value};
+use serde_json::Value;
 use std::{collections::HashMap, convert::TryFrom};
 
 #[derive(Debug, Deserialize, PartialEq)]
