@@ -201,7 +201,7 @@ pub enum EventType {
         /// Source kind.
         source_kind: String,
         /// Source settings
-        source_settings: HashMap<String, Value>,
+        source_settings: Value,
     },
     /// A source has been destroyed/removed. A source can be an input, a scene or a transition.
     #[serde(rename_all = "camelCase")]
@@ -265,7 +265,7 @@ pub enum EventType {
         /// Filter type
         filter_type: String,
         /// Filter settings
-        filter_settings: HashMap<String, Value>,
+        filter_settings: Value,
     },
     /// A filter was removed from a source.
     #[serde(rename_all = "camelCase")]

@@ -575,7 +575,7 @@ pub struct Output {
     /// Output flags
     pub flags: Flags,
     /// Output name
-    pub settings: HashMap<String, Value>,
+    pub settings: Value,
     /// Output status (active or not)
     pub active: bool,
     /// Output reconnection status (reconnecting or not)
@@ -663,7 +663,7 @@ pub struct SourceTypes {
     #[serde(rename = "type")]
     pub source_type: SourceTypesType,
     /// Default settings of this source type
-    pub default_settings: HashMap<String, Value>,
+    pub default_settings: Value,
     /// Source type capabilities
     pub caps: Caps,
 }
@@ -734,7 +734,7 @@ pub struct Filter {
     /// Filter name
     pub name: String,
     /// Filter settings
-    pub settings: HashMap<String, Value>,
+    pub settings: Value,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
