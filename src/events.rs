@@ -1,25 +1,25 @@
-//! Event types. Sent by the server as they occur in OBS.
+//! Event types. Sent by the server as events occur in OBS.
 
-pub use crate::common_types::*;
-
-use crate::responses::SourceTypesType;
+use crate::common_types::*;
 use serde::Deserialize;
 use serde_json::Value;
-use std::collections::HashMap;
 
-/// HH:MM:SS.mmm
+/// Events are broadcast by the server to each connected client when a recognized action occurs within OBS.
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub struct Event {
     /// time elapsed between now and stream start (only present if OBS Studio is streaming)
-    stream_timecode: Option<String>,
+    /// Format: HH:MM:SS.mmm
+    pub stream_timecode: Option<String>,
     /// time elapsed between now and recording start (only present if OBS Studio is recording)
-    rec_timecode: Option<String>,
+    /// Format: HH:MM:SS.mmm
+    pub rec_timecode: Option<String>,
     /// the type of event
     #[serde(flatten)]
-    update_type: EventType,
+    pub update_type: EventType,
 }
 
+/// Contains all the different kinds of events that can occur.
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(tag = "update-type")]
 pub enum EventType {
@@ -388,54 +388,56 @@ pub enum EventType {
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct SceneItemTransform {
-    position: Position,
+    pub position: Position,
     /// The clockwise rotation of the scene item in degrees around the point of alignment.
-    rotation: f64,
-    scale: Scale,
-    crop: Crop,
+    pub rotation: f64,
+    pub scale: Scale,
+    pub crop: Crop,
     /// If the scene item is visible.
-    visible: bool,
+    pub visible: bool,
     /// If the scene item is locked in position.
-    locked: bool,
-    bounds: Bounds,
+    pub locked: bool,
+    pub bounds: Bounds,
     /// Base width (without scaling) of the source
-    source_width: i32,
+    pub source_width: i32,
     /// Base source (without scaling) of the source
-    source_height: i32,
+    pub source_height: i32,
     /// Scene item width (base source width multiplied by the horizontal scaling factor)
-    width: f64,
+    pub width: f64,
     /// Scene item height (base source height multiplied by the vertical scaling factor)
-    height: f64,
+    pub height: f64,
     /// Name of the item's parent (if this item belongs to a group)
-    parent_group_name: Option<String>,
+    pub parent_group_name: Option<String>,
     /// List of children (if this item is a group)
-    group_children: Option<Vec<SceneItemTransform>>,
+    pub group_children: Option<Vec<SceneItemTransform>>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct Mixer {
     /// Mixer number
-    id: i32,
+    pub id: i32,
     /// Routing status
-    enabled: bool,
+    pub enabled: bool,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct Filter {
     /// Filter name
-    name: String,
+    pub name: String,
     /// Filter type
+    // todo: enum?
     #[serde(rename = "type")]
-    filter_type: String,
+    pub filter_type: String,
 }
 
+/// Scene item.
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub struct EventSceneItem {
     /// Item source name
-    source_name: String,
+    pub source_name: String,
     /// Scene item unique ID
-    item_id: String,
+    pub item_id: String,
 }
 
 #[cfg(test)]

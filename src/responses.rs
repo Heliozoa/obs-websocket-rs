@@ -1,8 +1,11 @@
-pub use crate::common_types::*;
+//! Response types. Received from the server in response to requests.
+//! For documentation on which response corresponds to which request, see the requests type.
+
+use crate::common_types::*;
 
 use serde::{de, Deserialize, Deserializer};
 use serde_json::Value;
-use std::{collections::HashMap, convert::TryFrom};
+use std::convert::TryFrom;
 
 #[derive(Debug, Deserialize, PartialEq)]
 pub(crate) struct ResponseWrapper {

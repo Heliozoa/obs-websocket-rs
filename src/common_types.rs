@@ -2,7 +2,6 @@
 
 use serde::{Deserialize, Serialize};
 
-/// SceneItem in the reference.
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct SceneItem {
     pub cy: f32,
@@ -62,6 +61,7 @@ pub struct Scale {
     pub y: f64,
 }
 
+/// Rectangular crop for scene items.
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct Crop {
     /// pixels cropped off the top
@@ -74,8 +74,10 @@ pub struct Crop {
     pub left: i32,
 }
 
+/// Bounding box for scene items.
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Bounds {
+    /// bounds scaling type
     #[serde(rename = "type")]
     pub bounds_type: BoundsType,
     /// new alignment of the bounding box. (0-2, 4-6, 8-10)
@@ -86,6 +88,7 @@ pub struct Bounds {
     pub y: f64,
 }
 
+/// Bounds scaling type.
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub enum BoundsType {
     #[serde(rename = "OBS_BOUNDS_NONE")]
@@ -104,6 +107,7 @@ pub enum BoundsType {
     MaxOnly,
 }
 
+/// Contains various statistics.
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub struct ObsStats {

@@ -333,7 +333,7 @@ struct ConnectionData {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::common_types;
+    use crate::common_types::{self, *};
     use async_tungstenite::tungstenite::server::accept;
     use serde_json::{json, Value};
     use std::{
@@ -547,7 +547,7 @@ mod test {
         });
         let req = GetStats::builder().message_id("id").build();
         let expected = responses::GetStats {
-            stats: responses::ObsStats {
+            stats: ObsStats {
                 fps: 0.0,
                 render_total_frames: 1,
                 render_missed_frames: 2,
@@ -648,7 +648,7 @@ mod test {
                     multi_track: true,
                     service: true,
                 },
-                settings: std::collections::HashMap::new(),
+                settings: Value::Object(serde_json::Map::new()),
                 active: false,
                 reconnecting: false,
                 congestion: 2.0,
@@ -712,7 +712,7 @@ mod test {
                     multi_track: true,
                     service: true,
                 },
-                settings: std::collections::HashMap::new(),
+                settings: Value::Object(serde_json::Map::new()),
                 active: false,
                 reconnecting: false,
                 congestion: 2.0,
