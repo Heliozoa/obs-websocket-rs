@@ -9,5 +9,6 @@ mod error;
 mod obs;
 
 pub use error::ObsError;
+pub use events::{Event, EventType};
 pub use futures;
 pub use obs::Obs;

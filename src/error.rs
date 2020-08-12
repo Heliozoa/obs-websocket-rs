@@ -21,8 +21,6 @@ pub enum ObsError {
     NoAuthRequired,
     #[error("Tungstenite timed out")]
     TungsteniteTimeout,
-    #[error("Already connected")]
-    AlreadyConnected,
     #[error("Handler thread panicked")]
     HandlerThreadError(Box<dyn Any + Send + 'static>),
     #[error("Error(s) while disconnecting: socket: {socket_error:?}, thread: {thread_error:?}")]
@@ -48,6 +46,8 @@ pub enum ObsError {
     MissingSalt,
     #[error("Invalid address: {0}")]
     InvalidAddress(String),
+    #[error("Failed to start thread")]
+    Thread(#[source] std::io::Error),
 }
 
 impl<T: HandshakeRole> From<HandshakeError<T>> for ObsError {
@@ -57,4 +57,13 @@ impl<T: HandshakeRole> From<HandshakeError<T>> for ObsError {
             HandshakeError::Interrupted(_) => ObsError::HandshakeInterrupted,
         }
     }
+}
+
+/// Errors that can occur in the handler thread
+#[derive(Debug, Error)]
+pub enum HandlerError {
+    #[error("Failed to send response")]
+    SendResponse,
+    #[error("Tungstenite error")]
+    Tungstenite(#[source] tungstenite::Error),
 }

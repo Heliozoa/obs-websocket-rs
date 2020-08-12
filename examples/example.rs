@@ -6,9 +6,8 @@ use smol::Task;
 fn main() {
     env_logger::init();
 
-    let mut obs = Obs::new();
     smol::run(async {
-        let mut event_receiver = obs.connect("localhost", 4444).await.unwrap();
+        let (mut obs, mut event_receiver) = Obs::connect("localhost", 4444).await.unwrap();
         obs.authenticate("1234").await.unwrap();
 
         // this Task will keep running in the background and print any events that arrive

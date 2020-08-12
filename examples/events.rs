@@ -7,8 +7,7 @@ fn main() {
     env_logger::init();
 
     let future = async {
-        let mut obs = Obs::new();
-        let mut event_receiver = obs.connect("localhost", 4444).await.unwrap();
+        let (mut obs, mut event_receiver) = Obs::connect("localhost", 4444).await.unwrap();
         obs.authenticate("1234").await.unwrap();
         while let Some(event) = event_receiver.next().await {
             println!("{:#?}", event);

@@ -1,5 +1,4 @@
 //! Common types used several other modules.
-
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
@@ -32,14 +31,17 @@ pub struct SceneItem {
 
 /// Note: Contains more variants than documented in the reference, more variants may be missing.
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "snake_case")]
+#[non_exhaustive]
 pub enum SceneItemType {
     Input,
     Filter,
     Transition,
     Scene,
+    ImageSource,
     #[serde(rename = "xcomposite_input")]
     XCompositeInput,
+    #[serde(other)]
     Unknown,
 }
 
@@ -138,4 +140,66 @@ pub enum SourceTypesType {
     Filter,
     Transition,
     Other,
+}
+
+#[derive(Deserialize, Serialize, Debug, PartialEq)]
+#[non_exhaustive]
+pub enum FilterType {
+    #[serde(rename = "clut_filter")]
+    ApplyLUT,
+    #[serde(rename = "chroma_key_filter")]
+    ChromaKey,
+    #[serde(rename = "color_filter")]
+    ColorCorrection,
+    #[serde(rename = "color_key_filter")]
+    ColorKey,
+    #[serde(rename = "crop_filter")]
+    CropOrPad,
+    #[serde(rename = "mask_filter")]
+    ImageMaskOrBlend,
+    #[serde(rename = "luma_key_filter")]
+    LumaKey,
+    #[serde(rename = "gpu_delay")]
+    RenderDelay,
+    #[serde(rename = "scale_filter")]
+    ScalingOrAspectRatio,
+    #[serde(rename = "scroll_filter")]
+    Scroll,
+    #[serde(rename = "sharpness_filter")]
+    Sharpen,
+    #[serde(other)]
+    Unknown,
+}
+
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq)]
+#[non_exhaustive]
+pub enum SourceKind {
+    #[serde(rename = "alsa_input_capture")]
+    AudioCaptureDeviceAlsa,
+    #[serde(rename = "pulse_input_capture")]
+    AudioInputCapturePulseAudio,
+    #[serde(rename = "pulse_output_capture")]
+    AudioOutputCapturePulseAudio,
+    #[serde(rename = "color_source_v2")]
+    ColorSource,
+    #[serde(rename = "image_source")]
+    Image,
+    #[serde(rename = "slideshow")]
+    ImageSlideShow,
+    #[serde(rename = "jack_output_capture")]
+    JACKInputClient,
+    #[serde(rename = "ffmpeg_source")]
+    MediaSource,
+    #[serde(rename = "scene")]
+    Scene,
+    #[serde(rename = "xshm_input")]
+    ScreenCaptureXSHM,
+    #[serde(rename = "text_ft2_source_v2")]
+    TextFreeType2,
+    #[serde(rename = "v4l2_input")]
+    VideoCaptureDeviceV4L2,
+    #[serde(rename = "xcomposite_input")]
+    WindowCaptureXcomposite,
+    #[serde(other)]
+    Unknown,
 }

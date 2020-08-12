@@ -1,7 +1,7 @@
 //! Event types. Sent by the server as events occur in OBS.
 
 use crate::common_types::*;
-use serde::Deserialize;
+use serde::{de::Deserializer, Deserialize};
 use serde_json::Value;
 
 /// Events are broadcast by the server to each connected client when a recognized action occurs within OBS.
@@ -199,7 +199,7 @@ pub enum EventType {
         /// Source type.
         source_type: SourceTypesType,
         /// Source kind.
-        source_kind: String,
+        source_kind: SourceKind,
         /// Source settings
         source_settings: Value,
     },
@@ -211,7 +211,7 @@ pub enum EventType {
         /// Source type.
         source_type: SourceTypesType,
         /// Source kind.
-        source_kind: String,
+        source_kind: SourceKind,
     },
     /// The volume of a source has changed.
     #[serde(rename_all = "camelCase")]
@@ -242,10 +242,12 @@ pub enum EventType {
     SourceAudioMixersChanged {
         /// Source name
         source_name: String,
-        /// Routing status of the source for each audio mixer (array of 6 values)
-        mixers: Vec<Mixer>,
-        /// Raw mixer flags (little-endian, one bit per mixer) as an hexadecimal value
-        hex_mixers_value: String,
+        /// Routing status of the source for each audio mixer
+        mixers: [Mixer; 6],
+        /// Raw mixer flags (little-endian, one bit per mixer)
+        /// Bit layout: 1 1 [mixer 6] [mixer 5] [mixer 4] [mixer 3] [mixer 2] [mixer 1]
+        #[serde(deserialize_with = "de_hex_string")]
+        hex_mixers_value: u8,
     },
     /// A source has been renamed.
     #[serde(rename_all = "camelCase")]
@@ -263,7 +265,7 @@ pub enum EventType {
         /// Filter name
         filter_name: String,
         /// Filter type
-        filter_type: String,
+        filter_type: FilterType,
         /// Filter settings
         filter_settings: Value,
     },
@@ -275,7 +277,7 @@ pub enum EventType {
         /// Filter name
         filter_name: String,
         /// Filter type
-        filter_type: String,
+        filter_type: FilterType,
     },
     /// The visibility/enabled state of a filter changed
     #[serde(rename_all = "camelCase")]
@@ -427,7 +429,7 @@ pub struct Filter {
     /// Filter type
     // todo: enum?
     #[serde(rename = "type")]
-    pub filter_type: String,
+    pub filter_type: FilterType,
 }
 
 /// Scene item.
@@ -437,7 +439,34 @@ pub struct EventSceneItem {
     /// Item source name
     pub source_name: String,
     /// Scene item unique ID
-    pub item_id: String,
+    pub item_id: i32,
+}
+
+// used to deserialize "0xFF" => 255
+fn de_hex_string<'de, D>(d: D) -> Result<u8, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    use serde::de::{self, Visitor};
+    use std::fmt;
+    struct HexVisitor;
+    impl<'de> Visitor<'de> for HexVisitor {
+        type Value = u8;
+
+        fn expecting(&self, fmt: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+            write!(fmt, "a string")
+        }
+
+        fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+        where
+            E: de::Error,
+        {
+            u8::from_str_radix(v.trim_start_matches("0x"), 16)
+                .map_err(|e| E::custom(format!("failed to parse \"{}\" into a u8: {}", v, e)))
+        }
+    }
+
+    d.deserialize_str(HexVisitor)
 }
 
 #[cfg(test)]
@@ -468,5 +497,20 @@ mod test {
             "update-type": "SwitchScenes"
         }"#;
         let _event: Event = serde_json::from_str(text).unwrap();
+    }
+
+    #[test]
+    fn source_order_changed() {
+        let soc = r#"{
+        "scene-items": [
+            {
+                "item-id": 2,
+                "source-name": "asd"
+            }
+        ],
+        "scene-name": "Scene",
+        "update-type": "SourceOrderChanged"
+    }"#;
+        let _soc: Event = serde_json::from_str(soc).unwrap();
     }
 }

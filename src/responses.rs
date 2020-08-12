@@ -5,7 +5,6 @@ use crate::common_types::*;
 
 use serde::{de, Deserialize, Deserializer};
 use serde_json::Value;
-use std::convert::TryFrom;
 
 #[derive(Debug, Deserialize, PartialEq)]
 pub(crate) struct ResponseWrapper {
@@ -253,7 +252,7 @@ pub struct GetSourceSettings {
     /// Source name
     pub source_name: String,
     /// Type of the specified source
-    pub source_type: String,
+    pub source_type: SourceKind,
     /// Source settings (varies between source types, may require some probing around).
     pub source_settings: Value,
 }
@@ -265,7 +264,7 @@ pub struct SetSourceSettings {
     /// Source name
     pub source_name: String,
     /// Type of the specified source
-    pub source_type: String,
+    pub source_type: SourceKind,
     /// Updated source settings
     pub source_settings: Value,
 }
@@ -391,7 +390,7 @@ pub struct GetSourceFilterInfo {
     pub enabled: bool,
     /// Filter type
     #[serde(rename = "type")]
-    pub filter_type: String,
+    pub filter_type: FilterType,
     /// Filter name
     pub name: String,
     /// Filter settings
@@ -472,6 +471,7 @@ pub struct GetTransitionDuration {
 // #### non-response typedefs ####
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum ScaleType {
     #[serde(rename = "VIDEO_SCALE_DEFAULT")]
     Default,
@@ -483,9 +483,12 @@ pub enum ScaleType {
     Bilinear,
     #[serde(rename = "VIDEO_SCALE_BICUBIC")]
     Bicubic,
+    #[serde(other)]
+    Unknown,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum VideoFormat {
     #[serde(rename = "VIDEO_FORMAT_NONE")]
     None,
@@ -521,9 +524,12 @@ pub enum VideoFormat {
     YUVA,
     #[serde(rename = "VIDEO_FORMAT_AYUV")]
     AYUV,
+    #[serde(other)]
+    Unknown,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum ColorSpace {
     #[serde(rename = "VIDEO_CS_DEFAULT")]
     Default,
@@ -533,9 +539,12 @@ pub enum ColorSpace {
     CS709,
     #[serde(rename = "VIDEO_CS_SRGB")]
     SRGB,
+    #[serde(other)]
+    Unknown,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum ColorRange {
     #[serde(rename = "VIDEO_RANGE_DEFAULT")]
     Default,
@@ -543,6 +552,8 @@ pub enum ColorRange {
     Partial,
     #[serde(rename = "VIDEO_RANGE_FULL")]
     Full,
+    #[serde(other)]
+    Unknown,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
@@ -569,6 +580,7 @@ pub struct Output {
     /// Output name
     pub name: String,
     /// Output type/kind
+    // todo: enum
     #[serde(rename = "type")]
     pub output_type: String,
     /// Video output width
@@ -694,32 +706,33 @@ pub struct Font {
 // font flags are sent from the server as an integer
 // Bold=1, Italic=2, Bold Italic=3, Underline=5, Strikeout=8
 #[derive(Deserialize, Debug, PartialEq, Eq)]
-#[serde(try_from = "i32")]
+#[serde(from = "i32")]
+#[non_exhaustive]
 pub enum FontFlags {
     Bold,
     Italic,
     BoldItalic,
     Underline,
     Strikeout,
+    Unknown(i32),
 }
 
-impl TryFrom<i32> for FontFlags {
-    type Error = String;
-
-    fn try_from(value: i32) -> Result<Self, Self::Error> {
+impl From<i32> for FontFlags {
+    fn from(value: i32) -> Self {
         match value {
-            1 => Ok(Self::Bold),
-            2 => Ok(Self::Italic),
-            3 => Ok(Self::BoldItalic),
-            5 => Ok(Self::Underline),
-            8 => Ok(Self::Strikeout),
-            unexpected => Err(format!("Unexpected font flag value \"{}\"", unexpected)),
+            1 => Self::Bold,
+            2 => Self::Italic,
+            3 => Self::BoldItalic,
+            5 => Self::Underline,
+            8 => Self::Strikeout,
+            unexpected => Self::Unknown(unexpected),
         }
     }
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
+#[non_exhaustive]
 pub enum VerticalAlign {
     Top,
     Center,
@@ -733,7 +746,7 @@ pub struct Filter {
     pub enabled: bool,
     /// Filter type
     #[serde(rename = "type")]
-    pub filter_type: String,
+    pub filter_type: FilterType,
     /// Filter name
     pub name: String,
     /// Filter settings
@@ -742,11 +755,14 @@ pub struct Filter {
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
+#[non_exhaustive]
 pub enum StreamType {
     #[serde(rename = "rtmp_custom")]
     Custom,
     #[serde(rename = "rtmp_common")]
     Common,
+    #[serde(other)]
+    Unknown,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
