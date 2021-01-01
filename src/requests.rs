@@ -1280,7 +1280,6 @@ impl Request for GetSourceSettings {
     }
 }
 
-// TODO: source settings
 /// Set settings of the specified source.
 #[derive(TypedBuilder, Debug, PartialEq)]
 pub struct SetSourceSettings {
@@ -1291,6 +1290,7 @@ pub struct SetSourceSettings {
     #[builder(default, setter(strip_option))]
     pub source_type: Option<SourceKind>,
     /// Source settings (varies between source types, may require some probing around).
+    // todo: serialize properly
     pub source_settings: Value,
 }
 
@@ -1749,7 +1749,6 @@ impl Request for GetSourceFilterInfo {
     }
 }
 
-// TODO: filter settings
 /// Add a new filter to a source. Available source types along with their settings properties are available from GetSourceTypesList.
 #[derive(TypedBuilder, Debug, PartialEq)]
 pub struct AddFilterToSource {
@@ -1763,6 +1762,7 @@ pub struct AddFilterToSource {
     #[builder(setter(into))]
     pub filter_type: FilterType,
     /// Filter settings
+    // todo: serialize properly
     pub filter_settings: Value,
 }
 
@@ -1888,7 +1888,6 @@ impl Request for MoveSourceFilter {
     }
 }
 
-// TODO: filter settings
 /// Update settings of a filter
 #[derive(TypedBuilder, Debug, PartialEq)]
 pub struct SetSourceFilterSettings {
@@ -1899,6 +1898,7 @@ pub struct SetSourceFilterSettings {
     #[builder(setter(into))]
     pub filter_name: String,
     /// New settings. These will be merged to the current filter settings.
+    // todo: serialize properly
     pub filter_settings: Value,
 }
 

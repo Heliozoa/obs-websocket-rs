@@ -141,8 +141,8 @@ impl Obs {
         let auth = self.request(&GetAuthRequired::builder().build()).await?;
         if auth.auth_required {
             log::debug!("Authentication required");
-            let challenge = auth.challenge.ok_or_else(|| ObsError::MissingChallenge)?;
-            let salt = auth.salt.ok_or_else(|| ObsError::MissingSalt)?;
+            let challenge = auth.challenge.ok_or(ObsError::MissingChallenge)?;
+            let salt = auth.salt.ok_or(ObsError::MissingSalt)?;
 
             let secret_string = format!("{}{}", password, salt);
             let secret_hash = Sha256::digest(secret_string.as_bytes());
@@ -184,7 +184,7 @@ impl Obs {
         // establish WS connection to OBS with timeout
         let tungstenite_future = async_tungstenite::client_async(ws_addr, tcp_stream);
         futures::pin_mut!(tungstenite_future);
-        let timer = Timer::new(Duration::from_millis(100));
+        let timer = Timer::after(Duration::from_millis(100));
         let (recv_socket, _res) = match future::select(tungstenite_future, timer).await {
             Either::Left((tungstenite_client, _)) => tungstenite_client?,
             Either::Right(_) => return Err(ObsError::TungsteniteTimeout),
@@ -258,7 +258,7 @@ impl Obs {
         thread::Builder::new()
             .name("message_handler".to_string())
             .spawn(move || {
-                smol::run(async move {
+                smol::block_on(async move {
                     // { request's message-id -> oneshot sender for sending the response }
                     let mut pending_senders = HashMap::new();
                     // combine streams for outgoing (JSON from user) and incoming (WS from OBS) messages to thread
@@ -367,7 +367,7 @@ mod test {
 
     fn init_without_server(port: u16) -> Obs {
         log::debug!("initiating without server at {}", port);
-        smol::run(Obs::connect("localhost", port))
+        smol::block_on(Obs::connect("localhost", port))
             .expect("failed to connect")
             .0
     }
@@ -421,9 +421,9 @@ mod test {
         T::Response: PartialEq + std::fmt::Debug,
     {
         let (obs, handle) = init(expected_responses);
-        let res = smol::run(obs.request(&request)).expect("request returned err");
+        let res = smol::block_on(obs.request(&request)).expect("request returned err");
         let actual_requests = handle.join().expect("failed to join");
-        smol::run(obs.disconnect()).unwrap();
+        smol::block_on(obs.disconnect()).unwrap();
         for (request, mut actual_request) in expected_requests.into_iter().zip(actual_requests) {
             // ignore message-id in the comparison
             actual_request
@@ -534,9 +534,9 @@ mod test {
         ];
         let expected = responses::Empty {};
         let (mut obs, handle) = init(responses);
-        let res = smol::run(obs.authenticate("todo")).expect("authenticate");
+        let res = smol::block_on(obs.authenticate("todo")).expect("authenticate");
         let actual_requests = handle.join().expect("join");
-        smol::run(obs.disconnect()).unwrap();
+        smol::block_on(obs.disconnect()).unwrap();
         for (request, mut actual_request) in requests.into_iter().zip(actual_requests) {
             // remove message-id
             actual_request
@@ -921,10 +921,10 @@ mod test {
             log::info!("mock obs closing");
             websocket.close(None).expect("close");
         });
-        let obs = smol::run(Obs::connect("localhost", port))
+        let obs = smol::block_on(Obs::connect("localhost", port))
             .expect("connect")
             .0;
-        assert!(smol::run(obs.request(&GetVersion::builder().build())).is_err());
+        assert!(smol::block_on(obs.request(&GetVersion::builder().build())).is_err());
     }
 
     #[test]
@@ -942,10 +942,10 @@ mod test {
             panic::set_hook(Box::new(|_| {}));
             panic!();
         });
-        let obs = smol::run(Obs::connect("localhost", port))
+        let obs = smol::block_on(Obs::connect("localhost", port))
             .expect("connect")
             .0;
-        assert!(smol::run(obs.request(&GetVersion::builder().build())).is_err());
+        assert!(smol::block_on(obs.request(&GetVersion::builder().build())).is_err());
     }
 
     #[test]
@@ -962,7 +962,7 @@ mod test {
             panic::set_hook(Box::new(|_| {}));
             panic!();
         });
-        let res = smol::run(Obs::connect("localhost", port));
+        let res = smol::block_on(Obs::connect("localhost", port));
         assert!(res.is_err());
     }
 
@@ -973,7 +973,7 @@ mod test {
         let server = TcpListener::bind("localhost:0").expect("bind");
         let port = server.local_addr().expect("local addr").port();
 
-        let res = smol::run(Obs::connect("localhost", port));
+        let res = smol::block_on(Obs::connect("localhost", port));
         assert!(res.is_err());
     }
 
@@ -981,7 +981,7 @@ mod test {
     fn obs_offline() {
         init_logger();
 
-        let res = smol::run(Obs::connect("localhost", 1234));
+        let res = smol::block_on(Obs::connect("localhost", 1234));
         assert!(res.is_err());
     }
 }

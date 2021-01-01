@@ -201,6 +201,7 @@ pub enum EventType {
         /// Source kind.
         source_kind: SourceKind,
         /// Source settings
+        // todo: deserialize properly
         source_settings: Value,
     },
     /// A source has been destroyed/removed. A source can be an input, a scene or a transition.
@@ -267,6 +268,7 @@ pub enum EventType {
         /// Filter type
         filter_type: FilterType,
         /// Filter settings
+        // todo: deserialize properly
         filter_settings: Value,
     },
     /// A filter was removed from a source.
